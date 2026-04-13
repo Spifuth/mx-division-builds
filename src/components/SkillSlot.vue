@@ -20,8 +20,7 @@
 				<span class="expertise">Expertise</span>
 				<ExpertiseInput
 					v-if="currentSkill['expertise']"
-					v-model="currentSkill['expertise'].StatValueExpertise"
-					v-bind:max="currentSkill['expertise'].max"
+					v-model="expertiseValue"
 				></ExpertiseInput>
 			</div>
 			<template
@@ -74,7 +73,9 @@
 						v-if="currentSkill[`mod${slot}`]"
 						v-model="currentSkill[`mod${slot}`][`StatValueMod${slot}`]"
 						v-bind:max="currentSkill[`mod${slot}`][`Max`]"
-						v-bind:step="getStepStatValue(currentSkill[`mod${slot}`][`Mod Attribute`])"
+						v-bind:step="
+							getStepStatValue(currentSkill[`mod${slot}`][`Mod Attribute`])
+						"
 					></StatInput>
 				</div>
 			</template>
@@ -112,6 +113,19 @@
 				modSlots: modSlots,
 			};
 		},
+		computed: {
+			expertiseValue: {
+				get() {
+					return (
+						this.currentSkill.expertise.StatValueExpertise || 0
+						// this.currentSkill.expertise.max
+					);
+				},
+				set(value) {
+					Vue.set(this.currentSkill.expertise, "StatValueExpertise", value);
+				},
+			},
+		},
 		created() {
 			this.typeToImgSrc = typeToImgSrc;
 			this.initSkillsList();
@@ -135,7 +149,7 @@
 				skillsData.SkillMods.then((res) => {
 					this.skillMods = getUniqueObject(res);
 					this.skillMods.sort((a, b) =>
-						a["Mod Attribute"] > b["Mod Attribute"] ? 1 : -1
+						a["Mod Attribute"] > b["Mod Attribute"] ? 1 : -1,
 					);
 
 					if (this.skillMods.length) {
@@ -175,7 +189,7 @@
 				if (this.debug) {
 					console.groupCollapsed(
 						`%conModalClose:`,
-						`background: #222; color: #bada55`
+						`background: #222; color: #bada55`,
 					);
 				}
 				this.currentSkill = new SkillBase(data);
@@ -198,7 +212,7 @@
 				if (this.debug) {
 					console.groupCollapsed(
 						`%cfilterSkillMods(${slot}):`,
-						`background: #222; color: #bada55`
+						`background: #222; color: #bada55`,
 					);
 					console.log(`Current Skill:`, this.currentSkill);
 				}
@@ -206,7 +220,7 @@
 					return (
 						mod["Skill Mod Slot"] === "A" ||
 						(mod["Skill Type"] === this.currentSkill.itemName &&
-						mod["Skill Mod Slot"] === this.currentSkill[`slot${slot}`])
+							mod["Skill Mod Slot"] === this.currentSkill[`slot${slot}`])
 					);
 				});
 				if (this.debug) {
@@ -220,7 +234,7 @@
 					if (this.debug) {
 						console.groupCollapsed(
 							`%cinitSkillSlot (${this.name}):`,
-							`background: #222; color: #bada55`
+							`background: #222; color: #bada55`,
 						);
 					}
 					const splittedIdS = ids.split("-");
@@ -228,8 +242,8 @@
 					if (skillId) {
 						const fromUrlGear = new SkillBase(
 							this.skillsList.find(
-								(skill) => parseInt(skill["Skill ID"]) === parseInt(skillId)
-							)
+								(skill) => parseInt(skill["Skill ID"]) === parseInt(skillId),
+							),
 						);
 						this.currentSkill = fromUrlGear;
 						if (this.debug) {
@@ -258,7 +272,7 @@
 								`(currentSkill Mods) :`,
 								`modOne: ${this.currentSkill.modOne}`,
 								`modTwo: ${this.currentSkill.modTwo}`,
-								`modThree: ${this.currentSkill.modThree}`
+								`modThree: ${this.currentSkill.modThree}`,
 							);
 						}
 
@@ -280,7 +294,7 @@
 									`currentStatToUpdate:`,
 									currentStatToUpdate,
 									`StatValue${slot}`,
-									`valueToImport: ${valueToImport}`
+									`valueToImport: ${valueToImport}`,
 								);
 							}
 							if (currentStatToUpdate && valueToImport > 0) {
@@ -301,8 +315,8 @@
 			},
 			getStepStatValue(attribute) {
 				// mod attributes with any of these words are not percentages
-				const words = ['Ammo','Charges','Targets','Mines','Bombs'];
-				return words.some(word => attribute.includes(word)) ? 1 : 0.1;
+				const words = ["Ammo", "Charges", "Targets", "Mines", "Bombs"];
+				return words.some((word) => attribute.includes(word)) ? 1 : 0.1;
 			},
 			clearSkillSlot() {
 				this.currentSkill.name = null;
@@ -318,7 +332,7 @@
 					if (this.debug) {
 						console.groupCollapsed(
 							`%cwatching->currentSkill (${this.name} / ${this.currentSkill.variant} ${this.currentSkill.itemName}):`,
-							`background: #222; color: #bada55`
+							`background: #222; color: #bada55`,
 						);
 						console.warn(`this.currentSkill:`, this.currentSkill);
 					}

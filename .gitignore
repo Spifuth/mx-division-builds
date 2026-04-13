@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 /dist*
+.nvmrc
 
 # Editor directories and files
 .vscode/*
