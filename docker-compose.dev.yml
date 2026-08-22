@@ -75,5 +75,26 @@ services:
     entrypoint: []
     command: ["node", "--version"]
 
+  # Headless browser for scripts/check-app-renders.mjs. Every other check in
+  # this repo runs from the server's side; this one stands where the user does.
+  browser:
+    image: zenika/alpine-chrome:latest
+    container_name: mxdiv-browser
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    profiles: ["tools"]
+    # Loopback only. Nothing is published: the tools container reaches it over
+    # the compose network as browser:9222, and a DevTools endpoint is remote
+    # code execution to anything that can talk to it.
+    command:
+      - --no-sandbox
+      - --headless
+      - --disable-gpu
+      - --remote-debugging-address=0.0.0.0
+      - --remote-debugging-port=9222
+      - --remote-allow-origins=*
+      - about:blank
+
 volumes:
   node_modules:

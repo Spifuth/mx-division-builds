@@ -45,17 +45,31 @@ from `tailscale0`.
 mxrun npm test                                # unit tests -- the damage math, offline, no network
 mxrun npm run check http://<TAILNET_IP>:8090/ # data layer -- reachable, CSV-shaped, schema-valid, and every icon it names ships
 mxrun npm run build-prod                      # types + production build into dist/
+
+./scripts/dev.sh --profile tools up -d browser        # headless chromium sidecar
+mxrun npm run check:render http://<TAILNET_IP>:8090/  # does it actually render?
 ```
 
-All three cover different failure modes and none of them substitutes for
-another. `npm run check` needs the dev server up; the other two do not.
+All four cover different failure modes and none of them substitutes for
+another. `npm run check` and `check:render` need the dev server up; the other
+two do not.
 
 `build-prod` belongs here rather than under "run anything else": it runs
 `vue-tsc` first, and that is the **only** type-check gate in the repo — neither
 `npm test` nor `npm run check` type-checks a thing. Skip it before merging and
 nothing has.
 
-**None of them proves the app renders.** A green run on all three held while
-the app showed nothing but an error screen — and a missing image is quieter
-still, because Vite answers a missing asset with its SPA fallback (200
-`text/html`) so the browser simply fails to decode it. Open it in a browser.
+`check:render` exists because the other three cannot see runtime. It drives a
+real browser over the DevTools protocol and fails on any uncaught exception or
+on an empty `#app`. It was written after a green run on all three of the others
+held while the app rendered **nothing at all** — a CommonJS interop error that
+happened only in the dev server and never in a production build, so
+`build-prod` was green precisely because it took a different code path.
+
+**Even `check:render` does not prove the app is correct** — only that it mounted
+without throwing. It does catch the catch-all data-failure screen, since a
+successful mount displaying an error is still a failure. What it cannot catch is
+a missing image: Vite answers a missing asset with its SPA fallback (200
+`text/html`), so the browser just fails to decode it and renders a broken tile.
+`npm run check` reconciles the icons the data names; nothing reconciles the rest.
+Open it in a browser.
