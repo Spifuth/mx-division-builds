@@ -844,6 +844,21 @@ curl -s -o /dev/null -w "%{http_code}\n" http://<TAILNET_IP>:8090/
 ```
 Expected: `npm run check` 20/20 OK; curl `200`.
 
+The published port is `${DEV_BIND_IP}:8090`, so a `200` only happens if Vite
+actually bound `0.0.0.0:8090` **inside** the container. Vite's own defaults
+are `localhost:5173`; if Step 3's `server` block does not take, the publish
+maps to a dead port and curl fails. That is the check — do not substitute
+`docker exec … curl localhost`, which would pass either way.
+
+- [ ] **Step 5b: Walk every command in `docs/dev.md` and make each one true**
+
+`docs/dev.md` was carried verbatim from the webpack branch in Task 3.2 and
+four of its six claims were false on arrival: `npm run serve` (no such
+script), `npm run check` (no such script), "the data tables ship in
+`public/data/`" (they did not yet), and `scripts/import-snapshot.mjs` (not
+present). Steps 1–4 fix all four **as a side effect**. Do not assume that;
+run each command the doc gives and correct the doc where it still lies.
+
 - [ ] **Step 6: Open the app in a browser and confirm gear renders**
 
 The owner must confirm from their own workstation. **A 200 and a green check do not prove the app works** — that exact combination held while the app showed nothing but an error screen. Ask for confirmation that the inventory populates.
