@@ -74,7 +74,7 @@ Conflict surface: 6 of those 7 files were also rewritten on the Vite branch. `We
 - Create: `.dockerignore`
 
 **Interfaces:**
-- Produces: service names `app` (long-running dev server) and `tools` (one-shot runner). Later tasks invoke `docker compose -f docker-compose.dev.yml run --rm tools <cmd>`.
+- Produces: service names `app` (long-running dev server) and `tools` (one-shot runner). Later tasks invoke `./scripts/dev.sh run --rm tools <cmd>`.
 
 - [ ] **Step 1: Write `.dockerignore`**
 
@@ -145,10 +145,10 @@ services:
       DEV_PORT: 8090
     ports:
       # Tailnet-only, same pattern as immich-ml. NEVER 0.0.0.0.
-      # `:?` on purpose: if DEV_BIND_IP were unset, compose substitutes an
+      # `:?` on purpose: an unset DEV_BIND_IP makes compose substitute an
       # empty string and ":8090:8090" binds EVERY interface -- publishing the
       # dev server publicly. Hard-fail instead.
-      - "${DEV_BIND_IP:?set DEV_BIND_IP in .env - refusing to bind all interfaces}:8090:8090"
+      - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8090:8090"
 
   # One-shot runner: npm/vitest/lint without touching the host.
   tools:
@@ -171,39 +171,62 @@ volumes:
   node_modules:
 ```
 
-- [ ] **Step 4: Create `.env` for compose interpolation — NOT `.env.local`**
+- [ ] **Step 4: Write `scripts/dev.sh` — derive the bind address, don't store it**
 
-> **This trips people up and fails silently.** `env_file:` sets variables
-> *inside the container*; it does **not** feed `${...}` interpolation in the
-> compose file itself. Compose interpolates from the shell or from a file
-> named exactly `.env`. Verified: with `MYVAR` defined only in `.env.local`,
-> `docker compose config` rendered `${MYVAR:-default}` as the default.
-> Putting `DEV_BIND_IP` in `.env.local` would leave the port binding unset.
+> **`env_file:` does not feed compose interpolation.** It sets variables
+> *inside the container*; `${...}` in the compose file resolves from the shell
+> or a file named exactly `.env`. Verified: with `MYVAR` defined only in
+> `.env.local`, `docker compose config` rendered `${MYVAR:-default}` as the
+> default. So `DEV_BIND_IP` must reach compose through the shell.
+>
+> A wrapper beats a committed `.env` here: the tailnet address is *derivable*
+> from the interface, so the repo never has to contain an internal IP at all —
+> which matters because this fork is public. It also fails loudly when
+> Tailscale is down instead of falling back to something reachable.
 
 ```bash
-# .env is the compose interpolation source. Gitignored - it names an
-# internal address and must not reach the public fork.
-cat > .env <<'EOF'
-# Compose interpolation only (NOT the app's env - that's .env.local).
-# Tailnet IP of the host. The dev server binds 0.0.0.0 *inside* the container;
-# this is what restricts it to the tailnet on the host side.
-DEV_BIND_IP=100.120.243.105
-UID=1000
-GID=1000
-EOF
+#!/usr/bin/env sh
+# Wrapper around docker compose for the dev stack.
+#
+# Exists because compose interpolates ${DEV_BIND_IP} from the shell, not from
+# env_file:. Rather than storing the host's tailnet address in a file, derive
+# it from the interface -- the repo is public and should contain no internal
+# addresses, and a missing interface should be a loud failure, not a silent
+# fallback to something publicly reachable.
+#
+# Usage: ./scripts/dev.sh up -d app
+#        ./scripts/dev.sh --profile tools run --rm tools npm test
+set -eu
 
-printf '\n# compose interpolation source; contains an internal address\n.env\n' >> .gitignore
+DEV_BIND_IP="$(ip -4 -o addr show tailscale0 2>/dev/null | awk '{print $4}' | cut -d/ -f1)"
+
+if [ -z "${DEV_BIND_IP}" ]; then
+  echo "error: no IPv4 address on tailscale0 - is Tailscale up?" >&2
+  echo "       refusing to start: without it the port would bind every interface." >&2
+  exit 1
+fi
+
+UID_="$(id -u)"
+GID_="$(id -g)"
+
+export DEV_BIND_IP
+export UID="${UID_}"
+export GID="${GID_}"
+
+exec docker compose -f "$(dirname "$0")/../docker-compose.dev.yml" "$@"
 ```
+
+Make it executable: `chmod +x scripts/dev.sh`
 
 - [ ] **Step 4b: Prove the interpolation resolves before building**
 
-Run: `docker compose -f docker-compose.dev.yml config | grep -A2 'published'`
-Expected: shows `published: "8090"` with `host_ip: 100.120.243.105`.
-If it errors with "refusing to bind all interfaces", `.env` is missing or misnamed — fix it rather than removing the guard.
+Run: `./scripts/dev.sh config | grep -A3 published`
+Expected: `host_ip: 100.120.243.105` and `published: "8090"`.
+If it errors with "refusing to bind all interfaces", the wrapper is not exporting — fix that rather than removing the guard.
 
 - [ ] **Step 5: Build the image**
 
-Run: `docker compose -f docker-compose.dev.yml build app`
+Run: `./scripts/dev.sh build app`
 Expected: build succeeds, ends with `naming to docker.io/library/mx-division-builds-app`.
 
 - [ ] **Step 6: Commit**
@@ -220,12 +243,12 @@ git commit -m "feat: containerise the dev server so the host needs no Node"
 
 - [ ] **Step 1: Install into the volume**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm ci`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm ci`
 Expected: `added NNNN packages`. If `npm ci` fails because the lockfile drifted, use `npm install` and commit the resulting `package-lock.json`.
 
 - [ ] **Step 2: Verify the toolchain is in the container, not on the host**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools node -e "console.log(process.version, require('vue/package.json').version)"`
+Run: `./scripts/dev.sh --profile tools run --rm tools node -e "console.log(process.version, require('vue/package.json').version)"`
 Expected: `v22.x.x 2.6.11`
 
 - [ ] **Step 3: Commit any lockfile change**
@@ -251,8 +274,8 @@ done
 
 - [ ] **Step 2: Start the container**
 
-Run: `docker compose -f docker-compose.dev.yml up -d app`
-Then: `docker compose -f docker-compose.dev.yml logs -f app` until `Compiled successfully`.
+Run: `./scripts/dev.sh up -d app`
+Then: `./scripts/dev.sh logs -f app` until `Compiled successfully`.
 
 - [ ] **Step 3: Verify tailnet-only binding**
 
@@ -265,7 +288,7 @@ Expected: tailnet `200`; public refused; `docker port` shows `8090/tcp -> 100.12
 
 - [ ] **Step 4: Verify data still loads**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run check`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm run check`
 Expected: `All 20 data sources reachable, CORS-clear and schema-valid`.
 
 > The check resolves relative URLs against the app origin. Pass the origin explicitly if it defaults wrong:
@@ -291,7 +314,7 @@ git commit --allow-empty -m "chore: verify containerised dev server is tailnet-o
 ```bash
 rm -rf /srv/project/Web/mx-division-builds/node_modules
 ```
-Verify the container is unaffected: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools node -e "require('vue')"` → no output, exit 0.
+Verify the container is unaffected: `./scripts/dev.sh --profile tools run --rm tools node -e "require('vue')"` → no output, exit 0.
 
 - [ ] **Step 2: Write `docs/dev.md`**
 
@@ -304,8 +327,8 @@ no npm, no yarn.
 ## Start the dev server
 
 ```sh
-docker compose -f docker-compose.dev.yml up -d app
-docker compose -f docker-compose.dev.yml logs -f app
+./scripts/dev.sh up -d app
+./scripts/dev.sh logs -f app
 ```
 
 Serves on `http://100.120.243.105:8090/` — tailnet-only. Hot reload is on;
@@ -314,7 +337,7 @@ edit a file and the browser updates.
 ## Run anything else
 
 ```sh
-alias mxrun='docker compose -f docker-compose.dev.yml --profile tools run --rm tools'
+alias mxrun='./scripts/dev.sh --profile tools run --rm tools'
 
 mxrun npm run check      # data sources: reachable, CORS-clear, schema-valid
 mxrun npm run lint
@@ -400,7 +423,7 @@ if (files.length !== 20) {
 
 - [ ] **Step 2: Run it**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm -v /srv/project/data:/data:ro tools node scripts/import-snapshot.mjs /data/td2-reference/2026-08-22`
+Run: `./scripts/dev.sh --profile tools run --rm -v /srv/project/data:/data:ro tools node scripts/import-snapshot.mjs /data/td2-reference/2026-08-22`
 Expected: `20 tables -> public/data/`
 
 - [ ] **Step 3: Commit**
@@ -443,16 +466,16 @@ Delete the whole `proxy: { "/td2data": {...} }` key and its comment. The file's 
 - [ ] **Step 3: Restart and verify**
 
 ```bash
-docker compose -f docker-compose.dev.yml restart app
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run check
+./scripts/dev.sh restart app
+./scripts/dev.sh --profile tools run --rm tools npm run check
 ```
 Expected: 20/20 OK, each reported `same-origin`.
 
 - [ ] **Step 4: Verify a production build works — the thing that was impossible before**
 
 ```bash
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run build-prod
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools sh -c 'ls dist/data | wc -l'
+./scripts/dev.sh --profile tools run --rm tools npm run build-prod
+./scripts/dev.sh --profile tools run --rm tools sh -c 'ls dist/data | wc -l'
 ```
 Expected: build succeeds; `20` (or 21 with `SNAPSHOT.txt`) files under `dist/data`.
 
@@ -498,7 +521,7 @@ fs.writeFileSync("package.json", JSON.stringify(p,null,"\t")+"\n");
 
 - [ ] **Step 3: Verify the build still works**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run build-prod`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm run build-prod`
 Expected: succeeds. Then `grep -rc GTM dist/index.html` → `0`.
 
 - [ ] **Step 4: Commit**
@@ -568,8 +591,8 @@ git cherry-pick f157214
 - [ ] **Step 4: Verify it builds**
 
 ```bash
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm install
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run build-prod
+./scripts/dev.sh --profile tools run --rm tools npm install
+./scripts/dev.sh --profile tools run --rm tools npm run build-prod
 ```
 Expected: build succeeds.
 
@@ -641,10 +664,10 @@ In `docker-compose.dev.yml` the `app` service command becomes `npm run dev`; add
 - [ ] **Step 6: Rebuild and verify end to end**
 
 ```bash
-docker compose -f docker-compose.dev.yml build app
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm install
-docker compose -f docker-compose.dev.yml up -d app
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run check
+./scripts/dev.sh build app
+./scripts/dev.sh --profile tools run --rm tools npm install
+./scripts/dev.sh up -d app
+./scripts/dev.sh --profile tools run --rm tools npm run check
 curl -s -o /dev/null -w "%{http_code}\n" http://100.120.243.105:8090/
 ```
 Expected: `npm run check` 20/20 OK; curl `200`.
@@ -676,10 +699,10 @@ git rm vue.config.js .npmrc babel.config.js .browserslistrc
 - [ ] **Step 2: Verify a clean build from scratch**
 
 ```bash
-docker compose -f docker-compose.dev.yml down
+./scripts/dev.sh down
 docker volume rm mx-division-builds_node_modules
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm install
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run build-prod
+./scripts/dev.sh --profile tools run --rm tools npm install
+./scripts/dev.sh --profile tools run --rm tools npm run build-prod
 ```
 Expected: install and build both succeed with no `.npmrc` present.
 
@@ -707,7 +730,7 @@ provider for webpack 4's md4 hashing."
 
 - [ ] **Step 1: Add the dependency inside the container**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm install -D vitest`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm install -D vitest`
 
 - [ ] **Step 2: Write `vitest.config.ts`**
 
@@ -734,7 +757,7 @@ export default defineConfig({
 
 - [ ] **Step 4: Verify the runner starts**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm test`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm test`
 Expected: `No test files found` — the runner works, there is nothing to run yet.
 
 - [ ] **Step 5: Commit**
@@ -792,7 +815,7 @@ describe("flatWeaponDamage", () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm test`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm test`
 Expected: both fail — `expected '1150' to be 1150` and `expected 'string' to be 'number'`.
 
 - [ ] **Step 3: Fix the source**
@@ -817,7 +840,7 @@ In `src/utils/statsService.js`, wrap the return in `Number()` to match its sibli
 
 - [ ] **Step 4: Run to verify it passes**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm test`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm test`
 Expected: `2 passed`.
 
 - [ ] **Step 5: Check nothing downstream depended on the string**
@@ -913,7 +936,7 @@ describe("getStatValueFromGunMods", () => {
 
 - [ ] **Step 2: Run to see which fail**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm test`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm test`
 
 > Expect some of these to **pass immediately**. That is information, not a
 > process failure — it is how the Heolstor `author_id` false premise got
@@ -927,7 +950,7 @@ For each failure, confirm against the formula in `src/utils/Notes.md` before dec
 
 - [ ] **Step 4: Run the full suite**
 
-Run: `docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm test`
+Run: `./scripts/dev.sh --profile tools run --rm tools npm test`
 Expected: all pass.
 
 - [ ] **Step 5: Commit**
@@ -964,8 +987,8 @@ showed nothing but an error screen — open it in a browser.
 - [ ] **Step 2: Run both**
 
 ```bash
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm test
-docker compose -f docker-compose.dev.yml --profile tools run --rm tools npm run check
+./scripts/dev.sh --profile tools run --rm tools npm test
+./scripts/dev.sh --profile tools run --rm tools npm run check
 ```
 Expected: both green.
 
@@ -980,7 +1003,7 @@ git commit -m "docs: what each check proves, and what neither proves"
 
 ## Done when
 
-- `docker compose -f docker-compose.dev.yml up -d app` serves on `100.120.243.105:8090`, tailnet-only, with hot reload.
+- `./scripts/dev.sh up -d app` serves on `100.120.243.105:8090`, tailnet-only, with hot reload.
 - The host has no Node, no npm, no `node_modules`.
 - No runtime request leaves the machine — data is served from `public/data/`.
 - `npm run build-prod` produces a working artifact (it could not before).
