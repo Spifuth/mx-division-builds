@@ -85,6 +85,10 @@ def validate_candidate(
 
         rows = list(csv.DictReader(io.StringIO(text)))
         if not rows:
+            # A bare header row, or nothing at all. Not merely tidiness: every
+            # check below indexes rows[0], so without this branch a header-only
+            # body raises IndexError inside run_refresh, which has no guard --
+            # turning a bad fetch into an HTTP 500 instead of a rejection.
             reasons.append(f"{name}: parsed to zero rows")
             continue
 

@@ -114,6 +114,27 @@ def test_a_realistic_spa_fallback_is_rejected_as_markup_not_by_accident(seed_dir
     assert any("weaponAttributes" in r for r in reasons)
 
 
+def test_a_header_only_table_is_rejected(seed_dir):
+    """The "parsed to zero rows" branch, which shipped with nothing reaching
+    it -- the markup tests stop at the markup branch, the missing-table test at
+    the missing branch, and the column and row-count tests both arrive with a
+    row in hand. Deleting the branch left all 11 tests green.
+
+    It is not decoration. Every check after it indexes rows[0], so without it a
+    header-only body raises IndexError inside run_refresh, which has no guard:
+    upstream serving a bare header becomes an HTTP 500 rather than a rejection.
+    weapon is used deliberately -- it has a REQUIRED_COLUMNS entry, so the
+    IndexError is reachable rather than skipped by an empty comprehension.
+    """
+    tables = _good(seed_dir)
+    tables["weapon"] = tables["weapon"].splitlines()[0] + "\n"
+    assert _rows(tables["weapon"]) == 0
+
+    reasons = validate_candidate(tables, previous_counts=None)
+
+    assert reasons == ["weapon: parsed to zero rows"]
+
+
 def test_the_row_count_floor_sits_exactly_at_half(seed_dir):
     """MIN_ROW_RATIO's value was unpinned: anything in roughly (0.004, 1.0]
     left every test green. Both asserts below are needed -- the first fails if
