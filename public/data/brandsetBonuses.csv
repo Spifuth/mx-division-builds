@@ -1,0 +1,242 @@
+Brand,stat,val,stat1,val1,Talent
+5.11 Tactical0,Health,30,,,
+5.11 Tactical1,Incoming Repairs,30,,,
+5.11 Tactical2,Hazard Protection,30,,,
+Airaldi Holdings0,Marksman Rifle Damage,10,,,
+Airaldi Holdings1,Headshot Damage,13,,,
+Airaldi Holdings2,Damage to Armor,5,,,
+Alps Summit Armaments0,Repair Skills,18,,,
+Alps Summit Armaments1,Skill Duration,30,,,
+Alps Summit Armaments2,Skill Haste,30,,,
+Badger Tuff0,Shotgun Damage,10,,,
+Badger Tuff1,Total Armor,5,,,
+Badger Tuff2,Armor on Kill %,15,,,
+Ceska Vyroba s.r.o.0,Critical Hit Chance,8,,,
+Ceska Vyroba s.r.o.1,Hazard Protection,20,,,
+Ceska Vyroba s.r.o.2,Health,90,,,
+China Light Industries Corporation0,Explosive Damage,15,,,
+China Light Industries Corporation1,Skill Haste,20,,,
+China Light Industries Corporation2,Status Effects,25,,,
+Douglas & Harding0,Pistol Damage,20,,,
+Douglas & Harding1,Stability,30,,,
+Douglas & Harding2,Accuracy,50,,,
+Fenris Group AB0,Assault Rifle Damage,10,,,
+Fenris Group AB1,Reload Speed %,30,,,
+Fenris Group AB2,Stability,50,,,
+Gila Guard0,Total Armor,5,,,
+Gila Guard1,Health,60,,,
+Gila Guard2,Armor Regeneration %,2,,,
+Golan Gear Ltd0,Status Effects,10,,,
+Golan Gear Ltd1,Armor Regeneration %,1.5,,,
+Golan Gear Ltd2,Total Armor,10,,,
+Grupo Sombra S.A.0,Critical Hit Damage,13,,,
+Grupo Sombra S.A.1,Explosive Damage,20,,,
+Grupo Sombra S.A.2,Headshot Damage,13,,,
+Hana-U Corporation0,Skill Haste,10,,,
+Hana-U Corporation1,Skill Damage,10,,,
+Hana-U Corporation2,Weapon Damage,15,,,
+Murakami Industries0,Skill Duration,15,,,
+Murakami Industries1,Repair Skills,35,,,
+Murakami Industries2,Skill Damage,18,,,
+Overlord Armaments0,Rifle Damage,10,,,
+Overlord Armaments1,Accuracy,30,,,
+Overlord Armaments2,Weapon Handling,30,,,
+Petrov Defense Group0,LMG Damage,10,,,
+Petrov Defense Group1,Weapon Handling,15,,,
+Petrov Defense Group2,Ammo Capacity,50,,,
+Providence Defense0,Headshot Damage,13,,,
+Providence Defense1,Critical Hit Chance,8,,,
+Providence Defense2,Critical Hit Damage,13,,,
+Richter & Kaiser GmbH0,Incoming Repairs,15,,,
+Richter & Kaiser GmbH1,Explosive Resistance,40,,,
+Richter & Kaiser GmbH2,Repair Skills,52,,,
+Sokolov Concern0,SMG Damage,10,,,
+Sokolov Concern1,Critical Hit Damage,13,,,
+Sokolov Concern2,Critical Hit Chance,8,,,
+Wyvern Wear0,Skill Damage,8,,,
+Wyvern Wear1,Status Effects,18,,,
+Wyvern Wear2,Skill Duration,45,,,
+Yaahl Gear0,Hazard Protection,10,,,
+Yaahl Gear1,Weapon Damage,10,,,
+Yaahl Gear2,Pulse Resistance,40,,,
+Hard Wired1,Skill Haste,15,,,
+Hard Wired2,Repair Skills,30,Skill Damage,15,
+Hard Wired3,Talent,,,,"Whenever you use or cancel a skill, your other skill's cooldown is automatically reduced by 30s while increasing total skill damage and repair by 10% for 10s. Feedback Loop can occur once every 10s. Cooldown 10s"
+Ongoing Directive1,Status Effects,15,,,
+Ongoing Directive2,Reload Speed %,30,,,
+Ongoing Directive3,Talent,,,,"Shooting a status affected enemy will apply a mark.
+
+Killing a marked enemy grants a full clip of Hollow-Point Ammo for your active weapon, and half a clip of the agent's active weapon to the rest of the party
+
+Mark lasts for 10 seconds.
+
+Hollow-Point Ammo amplifies weapon damage by 20% and applies bleed on hit."
+True Patriot1,Ammo Capacity,30,,,
+True Patriot2,Magazine Size %,30,,,
+True Patriot3,Talent,,,,"Every 2s, enemies you shoot receive a stacking debuff of Red, White and Blue. Red: Amplifies the enemy's damage taken by 8%. White: Shooting the enemy repairs the attacking agent's armor by 2% once every second. Blue: Decreases the enemy's damage dealt by 8%. Full Flag: Enemies that die while under the effect of all 3 debuffs create a 5m explosion, dealing damage equal to their total health and armor. (Explosion damage reduced on Named enemy deaths.)"
+Aces & Eights1,Marksman Rifle Damage,15,Rifle Damage,15,
+Aces & Eights2,Headshot Damage,30,,,
+Aces & Eights3,Talent,,,,"Flip a card when landing shots with a Marksman Rifle. After 5 cards are flipped, the damage of your next shot is amplified by 30%. More shots are enhanced the better the hand revealed. Four of a Kind: 4 shots. Full House: 3 shots. Aces and Eights: 2 shots. Flip an additional card on headshots."
+Negotiator's Dilemma1,Critical Hit Chance,15,,,
+Negotiator's Dilemma2,Critical Hit Damage,20,,,
+Negotiator's Dilemma3,Talent,,,,"Critical hits mark enemies for 20s, up to 3 marks total. When you critically hit a marked enemy, all other marked enemies take 60% of the damage dealt. Whenever a marked enemy dies, gain +2% critical hit damage, stacking up to 20 times, or until combat ends."
+Tip of the Spear1,Signature Weapon Damage,20,,,
+Tip of the Spear2,Weapon Damage,10,,,
+Tip of the Spear3,Talent,,,,"Getting a Signature Weapon kill gives +15%. Signature Weapon Damage for 10s and +25% Reload Speed for the next reload of the weapon (the bonuses do not stack).
+
+Automatically regenerate Signature Weapon Ammo every 60s."
+Foundry Bulwark1,Total Armor,10,,,
+Foundry Bulwark2,Armor Regeneration %,1,Shield Health,50,
+Foundry Bulwark3,Talent,,,,"Whenever you or your shield take damage, 20% of that amount is repaired to both over 15s."
+Future Initiative1,Repair Skills,30,,,
+Future Initiative2,Skill Duration,30,Skill Haste,15,
+Future Initiative3,Talent,,,,"Increases you and your allies' total weapon and skill damage by 15% when at full armor. When you repair an ally, you and all allies within 5m of you are also repaired for 60% of that amount."
+Striker's Battlegear1,Weapon Handling,15,,,
+Striker's Battlegear2,Rate of Fire %,15,,,
+Striker's Battlegear3,Talent,,,,"Weapon hits increase total weapon damage by 0.65%, stacking up to 100 times. 1 stack is lost per second between 0 and 50 stacks 2 stacks lost per second between 50 and 100."
+System Corruption1,Armor on Kill %,15,,,
+System Corruption2,Pulse Resistance,40,Disrupt Resistance,40,
+System Corruption3,Talent,,,,"Replaces armor kits with an instant, infinite-use ability on a 20s cooldown, that repairs 20% armor, grants 50% bonus armor and hides your nameplate for 5s. Increases total weapon damage by 1% per 5% bonus armor gained, up to 20%."
+"Walker, Harris & Co.0",Weapon Damage,5,,,
+"Walker, Harris & Co.1",Damage to Armor,5,,,
+"Walker, Harris & Co.2",Damage to Health,10,,,
+Eclipse Protocol1,Status Effects,15,,,
+Eclipse Protocol2,Skill Haste,15,Hazard Protection,30,
+Eclipse Protocol3,Talent,,,,Your status effects now spread to all enemies within 10m and refresh 50% of the duration.
+Hunter's Fury1,SMG Damage,15,Shotgun Damage,15,
+Hunter's Fury2,Armor on Kill %,20,Health on Kill %,50,
+Hunter's Fury3,Talent,,,,"Enemies within 15m receive a debuff, amplifying your weapon damage against them by 20%. Killing a debuffed enemy with your weapon disorients other enemies within 5m, and amplifies weapon damage by 5% for 10s, stacking up to 5 times."
+Empress International0,Skill Health,10,,,
+Empress International1,Skill Damage,10,,,
+Empress International2,Skill Efficiency,8,,,
+Rigger1,Skill Haste,15,,,
+Rigger2,Skill Duration,15,,,
+Rigger3,Talent,,,,"Interacting with your deployed skills grants the skill 25% skill damage for 10s. This buff cannot be refreshed.
+
+Interactions include:
+Using / Deploying the Skill
+Changing the skills target
+Healing the skill"
+Belstone Armory0,Armor Regeneration %,1,,,
+Belstone Armory1,Armor on Kill %,10,,,
+Belstone Armory2,Incoming Repairs,45,,,
+Uzina Getica0,Total Armor,5,,,
+Uzina Getica1,Armor on Kill %,10,,,
+Uzina Getica2,Hazard Protection,30,,,
+Heartbreaker1,Assault Rifle Damage,15,LMG Damage,15,
+Heartbreaker2,Weapon Handling,15,,,
+Heartbreaker3,Talent,,,,"Headshots apply pulse for 5s.
+
+Weapon hits on pulsed enemies add a stack of +1% bonus armor and +1.1% damage to pulsed enemies, up to a max of 50 stacks.
+
+2 stacks are lost each second."
+Brazos de Arcabuz0,Skill Haste,10,,,
+Brazos de Arcabuz1,Skill Tier,1,,,
+Brazos de Arcabuz2,Magazine Size %,50,,,
+Umbra Initiative1,Critical Hit Chance,15,,,
+Umbra Initiative2,Reload Speed %,30,,,
+Umbra Initiative3,Talent,,,,"Talent: From The Shadows / Into The Light
+
+From The Shadows: While in cover, gain 10 stacks per seconds up to 50. Each stack gives 1% Critical Hit Damage increase and 0.3% RPM. Buff only applies while out of cover. While out of cover, you will lose 2 stacks per seconds at normal speed and 1 stack per second if sprinting.
+
+Into The Light: While out of cover and in combat, gain 10 stacks per seconds up to 50. Each stack gives 0.8% Armor Regen when consumed. Stacks are consumed at 10 stacks per second while in cover."
+Hotshot1,Marksman Rifle Damage,30,Weapon Handling,30,
+Hotshot2,Headshot Damage,30,,,
+Hotshot3,Talent,,,,"First Headshot with a MR will increase next headshot by 20%, second consecutive headshot with a MR will give +10% armor (if at full armor it will give bonus armor max +50% of current armor value), third consecutive headshot will refill magazine.
+
+From the 4th headshot forward agents will get all 3 bonuses for each consecutive headshot kill. Missing a headshot will reset the cycle."
+Habsburg Guard0,Headshot Damage,13,,,
+Habsburg Guard1,Marksman Rifle Damage,20,,,
+Habsburg Guard2,Status Effects,25,,,
+Electrique0,Status Effects,10,,,
+Electrique1,Shock Resistance,20,,,
+Electrique2,SMG Damage,30,,,
+Cavalier1,Hazard Protection,30,,,
+Cavalier2,Repair Skills,40,,,
+Cavalier3,Talent,,,,"Charging
+For each second spent out of cover, during combat, Agents will get 5% reduced incoming damage. Max 50%
+
+Charged
+While fully charged, gain immunity to any movement speed debuff and share this alongside with all of the agent's hazard protection and the skill damage reduction with all allies for 10 seconds.
+
+After Charged is consumed, Charging buff will resume, if still in combat and out of cover!"
+Lengmo0,Explosive Resistance,20,,,
+Lengmo1,Skill Health,20,,,
+Lengmo2,LMG Damage,30,,,
+Ortiz: Exuro1,Burn Duration,20,Skill Health,15,
+Ortiz: Exuro2,Burn Damage,40,,,
+Ortiz: Exuro3,Talent,,,,"The Incinerator Turret spins 360°.
+The Incinerator Turret explodes when disabled."
+Aegis1,Health,70,,,
+Aegis2,Total Armor,15,,,
+Aegis3,Talent,,,,"Get +4% Damage Resistance for every enemy that is targeting you.
+The bonus is multiplied by 1.X, where X is the number of agents in your group."
+Palisade Steelworks0,Armor on Kill %,10,,,
+Palisade Steelworks1,Health,60,,,
+Palisade Steelworks2,Skill Tier,1,,,
+Zwiadowka Sp. z o.o.0,Magazine Size %,15,,,
+Zwiadowka Sp. z o.o.1,Rifle Damage,20,,,
+Zwiadowka Sp. z o.o.2,Weapon Handling,30,,,
+Breaking Point1,Rifle Damage,25,Marksman Rifle Damage,25,
+Breaking Point2,Headshot Damage,30,Weapon Handling,15,
+Breaking Point3,Talent,,,,"Hitting a shot with a Rifle or MMR grants a stack. Max stack is equal to the weapon's Magazine Size. Reloading will grant +2% Weapon Handling and +4% Weapon Damage per stack, for 10s.
+No stacks are acquired while the bonuses are active. The timer running out will refill your magazine.
+Switching weapons while the bonuses are active will stop the effect and refill your magazine. Switching weapons while the bonuses are not active will remove all stacks and refill your magazine."
+Legatus S.P.A0,Swap Speed,30,,,
+Legatus S.P.A1,Optimal Range,70,,,
+Legatus S.P.A2,Weapon Damage,15,,,
+Virtuoso1,Weapon Handling,15,Magazine Size %,15,
+Virtuoso2,Weapon Damage,15,,,
+Virtuoso3,Talent,,,,"Killing an enemy further than 25m will provide +40% Weapon Damage to Shotguns, SMG's and Pistols, +20% Weapon Damage to AR's and LMG's and 25% Bonus Armor for 15s.
+
+Killing an enemy within 25m will provide +40% Weapon Damage to MMR's and Rifles, +20% Weapon Damage to AR's and LMG's and +30% Headshot Damage for 15s.
+
+Intermittently killing enemies from both ranges will build up stacks. At 4 stacks, all bonuses are doubled and triggered at the same time for 15s. No stacks are acquired while these bonuses are active."
+Shiny Monkey Gear0,Skill Duration,15,,,
+Shiny Monkey Gear1,Skill Efficiency,5,,,
+Shiny Monkey Gear2,Repair Skills,52,,,
+Refactor1,Status Effects,15,,,
+Refactor2,Skill Damage,25,,,
+Refactor3,Talent,,,,"Receive repairs of 10% of the damage dealt by your Skills.
+Your allies receive repairs of 20% of the damage dealt by your Skills."
+Imminence Armaments0,Weapon Damage,5,,,
+Imminence Armaments1,Increased Threat,100,,,
+Imminence Armaments2,Pistol Damage,60,,,
+Measured Assembly1,Skill Haste,15,,,
+Measured Assembly2,Repair Skills,60,Explosive Resistance,40,
+Measured Assembly3,Talent,,,,"Receive +1 Skill Tier for each ally Agent that is within the range of you Hive or Smart Cover.
+While at Skill Tier 6, having at least one ally Agent in the range of your Hive of Smart Cover for 4s will grant Overcharge for 15s. Cooldown: 40s
+Mortars and enemy Skills that enter the range of your Hive or Smart Cover will be destroyed. Cooldown 10s. The cooldown is 20% faster for each ally Agent within the range of your Hive or Smart Cover."
+Urban Lookout0,Accuracy,10,,,
+Urban Lookout1,Skill Duration,30,,,
+Urban Lookout2,Marksman Rifle Damage,30,,,
+Tipping Scales1,Magazine Size %,30,,,
+Tipping Scales2,LMG Damage,30,,,
+Tipping Scales3,Talent,,,,"Throttle Control: Shooting builds stacks to a max of 50. Each stack provides +0.5% Weapon Handling and +4% Critical Hit Damage.
+
+Lose 6 stacks per second while not shooting. No stacks are lost if an enemy is Suppressed."
+Unit Alloys0,Rate of Fire %,5,,,
+Unit Alloys1,Assault Rifle Damage,20,,,
+Unit Alloys2,Magazine Size %,50,,,
+Concentrated Company1,Weapon Damage,10,,,
+Concentrated Company2,Weapon Handling,30,,,
+Concentrated Company3,Talent,,,,"Shooting an enemy marks them for 7s.
+When a marked enemy dies, receive one stack of 3% Weapon Damage & 2% Critical Hit Damage for each Ally or Skill that has contributed to killing that enemy, including yourself.
+
+Max stacks is 35. Stacks decay every 10s.
+
+Maximum amount of marks that can be placed is 4."
+Royal Works0,Weapon Handling,5,,,
+Royal Works1,Magazine Size %,32.5,,,
+Royal Works2,Critical Hit Damage,15,,,
+Core Strength1,Weapon Handling,10,,,
+Core Strength2,Weapon Damage,5,Armor,5,
+Core Strength3,Talent,,,,"For each Core attribute, receive 40% of the other two Core Attributes' bonuses.Skill Tiers count as 15% Skill Efficiency when these attributes are applied.All pieces from this Gear Set, apart from the Backpack, will feature random Core Attributes"
+Edelweiss GPz0,Repair Skills,18,,,
+Edelweiss GPz1,Skill Haste,20,,,
+Edelweiss GPz2,Skill Efficiency,8,,,
+Ortiz: Reficere1,Skill Efficiency,8,,,
+Ortiz: Reficere2,Repair Skills,60,,,
+Ortiz: Reficere3,Talent,,,,"Healing Skills' Duration and Range are decreased by 75%, but their Healing Efficiency is increased by 100%.
+
+Healing an Ally with a Skill will provide them 30% Hazard Protection for 10s. Cooldown per ally: 10s."

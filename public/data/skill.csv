@@ -1,0 +1,68 @@
+Skill ID,Item Name,Icon,Variant,Quality,Specialization,Mod 1,Mod 2,Mod 3,Desc,Status,Expertise Bonus,Slot One,Slot Two,Slot Three
+1,Sticky Bomb,stickybomb_burn.png,Burn,High End,,A,A,A,The Sticky Bomb Launcher Burn variant shoots an adhesive payload that burns the target and creates a flame that can ignite nearby hostiles. It can be remote detonated to burn a large area.,Burn,Burn Damage,Launcher Slot,Payload Slot,
+2,Sticky Bomb,stickybomb_emp.png,EMP,High End,,A,A,A,The Sticky Bomb Launcher EMP variant shoots an adhesive payload that disrupts the target continuously. It can be remote detonated to create a large EMP blast.,Disrupt,EMP Blast Radius,Launcher Slot,Payload Slot,
+3,Sticky Bomb,stickybomb_explosive.png,Explosive,High End,,A,A,A,"The Sticky Bomb Launcher Explosive variant shoots an adhesive payload that causes panic in targets, and can be remote detonated for a large explosion.",,Damage,Launcher Slot,Payload Slot,
+4,Trap,trap_repair.png,Repair,High End,,A,A,A,"The Repair Trap scatters a minefield of small devices capable of repairing friendlies in their proximity.
+
+Cooldown reduced when traps expire.",,Repair,Charge Slot,Electronics Slot,
+5,Trap,trap_shock.png,Shock,High End,,A,A,A,"The Shock Trap scatters a minefield of small devices capable of shocking targets moving in their proximity.
+
+Cooldown reduced when traps expire.",Shock,Shock Duration,Charge Slot,Electronics Slot,
+6,Trap,trap_shrapnel.png,Shrapnel,High End,,A,A,A,The Shrapnel Tap scatters a minefield of small explosive devices that can attach to any surface (including enemies) and then detonate based on enemy proximity.,Bleed,Damage,Charge Slot,Electronics Slot,
+7,Decoy,decoy_holographic.png,Holographic Distraction,High End,,A,A,A,"The Distraction Decoy creates a lifelike projection of a threat to hostiles, drawing their attention from the user.",,Threat,Projector Slot,Housing Slot,
+8,Pulse,pulse_achillies.png,Achilles,High End,,A,A,A,"Target a single enemy with a pulse which identifies weaknesses, highlights them and causes damage to those areas to take headshot damage.
+
+Useful for solo snipers, or as a support skill user painting targets for your teammates.",,Damage,Coil Slot,Housing Slot,
+9,Pulse,pulse_banshee.png,Banshee,High End,Gunner,A,A,A,The banshee launches a forward arc of pulse energy that disorients enemies caught in the wave. Penetrates cover.,Disoriented,Disorient Duration,Coil Slot,Housing Slot,
+10,Pulse,pulse_jammer.png,Jammer,High End,,A,A,A,"The jammer pulses outwards, overloading and disabling hostile electronics.",Disrupt,Radius,Coil Slot,Housing Slot,
+11,Pulse,pulse_remote.png,Remote,High End,,A,A,A,The remote is deployed at a set location and continually pulses the nearby area for hostiles and visually highlights them on the agent's HUD.,,Radius,Coil Slot,Housing Slot,
+12,Pulse,pulse_scanner.png,Scanner,High End,,A,A,A,The scanner pulses the surrounding area for hostiles and visually highlights them on the agent's HUD.,,Duration,Coil Slot,Housing Slot,
+13,Turret,turret_artillery.png,Artillery,High End,Demolitionist,A,A,A,The artillery turret launches ordnance at nearby targeted locations.,Bleed,Damage,Firing Mechanism Slot,Housing Slot,Targeting Slot
+14,Turret,turret_assault.png,Assault,High End,,A,A,A,"The assault turret automatically tracks and attacks hostile targets, but this behavior can be manually overridden to target a specific enemy.",,Damage,Firing Mechanism Slot,Housing Slot,Targeting Slot
+15,Turret,turret_incinerator.png,Incinerator,High End,,A,A,A,The incinerator turret is manually controlled by the deploying agent to dispense streams of flame in a forward-facing cone.,Burn,Damage,Firing Mechanism Slot,Housing Slot,Targeting Slot
+16,Turret,turret_sniper.png,Sniper,High End,,A,A,A,The sniper turret fires high-caliber rounds at manually selected targets.,,Damage,Firing Mechanism Slot,Housing Slot,Targeting Slot
+17,Hive,hive_artificer.png,Artificer,High End,Technician,A,A,A,"The Artificer sends out micro electro-booster drones that expend themselves to increase allied skills efficiency and refresh their duration.  Periodically releases a drone whilst holstered, this drone affects only your skills.",,Tech Efficiency,Drones Slot,Launcher Slot,System Slot
+18,Hive,hive_booster.png,Booster,High End,,A,A,A,"The booster hive delivers a stimulant to nearby allies that increases their weapon handling, hazard protection, and melee damage.",,Stim Efficiency,Drones Slot,Launcher Slot,System Slot
+19,Hive,hive_restorer.png,Restorer,High End,,A,A,A,The restorer hive sends out micro repair drones that expend themselves to repair allies' armor.,,Duration,Drones Slot,Launcher Slot,System Slot
+20,Hive,hive_reviver.png,Reviver,High End,,A,A,A,The reviver hive deploys small drones that revive nearby downed allies.,,Range,Drones Slot,Launcher Slot,System Slot
+21,Hive,hive_stinger.png,Stinger,High End,,A,A,A,The stinger hive sends out micro drones that attack and distract nearby enemy targets.,Bleed,Damage,Drones Slot,Launcher Slot,System Slot
+22,Chem Launcher,chemlauncher_firestarter.png,Firestarter,High End,,A,A,A,"The firestarter cannister creates a cloud of explosive gas that can be ignited through explosives, weapon fire, etc.",Burn,Damage,Agitator Slot,Pneumatics Slot,
+23,Chem Launcher,chemlauncher_oxidizer.png,Oxidizer,High End,,A,A,A,"The oxidizer cannister releases a cloud of corrosive gas that damages enemy armor, skill proxies and causes damage over time.",,Damage,Agitator Slot,Pneumatics Slot,
+24,Chem Launcher,chemlauncher_reinforcer.png,Reinforcer,High End,,A,A,A,The reinforcer cannister disperses a cloud of gas that repairs and reinforces armor of anyone inside the cloud.,,Duration,Agitator Slot,Pneumatics Slot,
+25,Chem Launcher,chemlauncher_foam.png,Riot Foam,High End,,A,A,A,The riot foam cannister fires a payload of sticky foam that immobilizes targets.,Ensnare,Ensnare Health,Agitator Slot,Pneumatics Slot,
+26,Firefly,firefly_blinder.png,Blinder,High End,,A,A,A,"The blinder firefly blinds enemies that it passes over, causing them to be unable to function at full combat effectiveness.",Blind,Blind Effect Duration,Propulsion Slot,Payload Slot,Targeting Slot
+27,Firefly,firefly_burster.png,Burster,High End,,A,A,A,The burster firefly attaches explosive charges to targets that detonate if two are in close proximity.,,Damage,Propulsion Slot,Payload Slot,Targeting Slot
+28,Firefly,firefly_demolisher.png,Demolisher,High End,,A,A,A,"The demolisher firefly damages or destroys enemy weak points, skill proxies and environmental explosives.",,Damage,Propulsion Slot,Payload Slot,Targeting Slot
+29,Seeker Mine,seeker_airburst.png,Airburst,High End,,A,A,A,"The airburst seeker mine rolls toward its target, and launches an explosive burst into the air on reaching close proximity.",Burn,Damage,Drive Slot,Targeting Slot,Payload Slot
+30,Seeker Mine,seeker_cluster.png,Cluster,High End,,A,A,A,"The cluster seeker mine splits into smaller seekers and track down enemies, exploding when reaching proximity. No more than one seeker may target an individual enemy.",,Damage,Drive Slot,Targeting Slot,Payload Slot
+31,Seeker Mine,seeker_explosive.png,Explosive,High End,,A,A,A,The explosive seeker mine can be deployed to track down hostiles and explode on reaching close proximity.,Bleed,Damage,Drive Slot,Targeting Slot,Payload Slot
+32,Seeker Mine,seeker_mender.png,Mender,High End,Survivalist,A,A,A,"The mender seeker mine follows allies, repairing their armor.",,Healing,Drive Slot,Targeting Slot,Payload Slot
+33,Drone,drone_bombardier.png,Bombardier,High End,,A,A,A,"The bombardier requires that an agent set two points, and then deploy a payload of miniature explosives between them.",,Blast Damage,Battery Slot,Hull Slot,Feed Slot
+34,Drone,drone_defender.png,Defender,High End,,A,A,A,The defender attempts to deflect incoming bullets from a microwave emitter mounted beneath the drone.,,Damage Reduction,Battery Slot,Hull Slot,Feed Slot
+35,Drone,drone_fixer.png,Fixer,High End,,A,A,A,"The fixer replenishes nearby allies' armor, or can be manually targeted on a specfic ally.",,Duration,Battery Slot,Hull Slot,Feed Slot
+36,Drone,drone_striker.png,Striker,High End,,A,A,A,The striker tracks targets and attempts to maintain line of sight while continuously firing.,,Striker Damage,Battery Slot,Hull Slot,Feed Slot
+37,Drone,drone_tactician.png,Tactician,High End,Sharpshooter,A,A,A,"The tactician scouts and marks hostile targets, feeding them to the agent and other allies' HUD.",,Scan Range,Battery Slot,Hull Slot,Feed Slot
+38,Ballistic Shield,shield_bulwark.png,Bulwark,High End,,A,A,A,"The bulwark shield provides near full-body coverage, but its bulk means that only sidearms may be used while it's equipped.
+
+Shield Skill Tier increases with both [Armor] and [Skill] core attributes.
+
+Agents are briefly disoriented when shield breaks from hostile damage.",,Active Regeneration,Circuit Board Slot,Hard Coating Slot,Gyro Slot
+39,Ballistic Shield,shield_crusader.png,Crusader,High End,,A,A,A,"The crusader shield allows primary weapons (excluding light machine guns and marksman rifles) to be used while it's equipped, but exposes the agent's legs.
+
+Shield Skill Tier increases with both [Armor] and [Skill] core attributes.
+
+Agents are briefly disoriented when shield breaks from hostile damage.",,Active Regeneration,Circuit Board Slot,Hard Coating Slot,Gyro Slot
+40,Ballistic Shield,shield_deflector.png,Deflector,High End,,A,A,A,"The deflector shield causes incoming bullets to ricochet at nearby highlighted targets with clear line of sight to the agent. Though not a full-body shield, lack of a brace means that only a sidearm may be used alongside the shield.
+
+Shield Skill Tier increases with both [Armor] and [Skill] core attributes.
+
+Agents are briefly disoriented when shield breaks from hostile damage.",,Active Regeneration,Circuit Board Slot,Hard Coating Slot,Gyro Slot
+41,Ballistic Shield,shield_striker.png,Striker,High End,Firewall,A,A,A,"The striker shield is a modified version of the crusader shield, allowing the K8-JetStream Flamethrower signature weapon to be used while equipped.
+
+In addition, the striker shield boosts the damage of the user and all allies behind them based on the number of enemies in front of the shield.
+
+Shield Skill Tier increases with both [Armor] and [Skill] core attributes.
+
+Agents are briefly disoriented when shield breaks from hostile damage.",,Regeneration,Circuit Board Slot,Hard Coating Slot,Gyro Slot
+42,Smart Cover,smartcover_precision.png,Precision,High End,,A,A,,"The Precision Smart Cover Launcher fires a projectile that drills into any surface, reinforcing nearby covers and granting enhanced weapon handling, damage and automatic reload on swapping to all agents using it.",,Duration,Smart Projectile Slot,,Smart Launcher Slot
+43,Smart Cover,smartcover_fortified.png,Fortified,High End,,A,A,,"The Fortified Smart Cover Launcher fires a projectile that drills into any surface, reinforcing nearby covers and granting extra armor, resistances and immunity to stagger effects to all agents using it.",,Bonus Armor,Smart Projectile Slot,,Smart Launcher Slot

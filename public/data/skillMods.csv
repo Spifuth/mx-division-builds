@@ -1,0 +1,92 @@
+Skill Mod ID,Skill Type,Skill Mod Slot,Mod Attribute,Specialization Mod,Max
+1,Sticky Bomb,Launcher Slot,Blast Radius,,6
+2,Sticky Bomb,Launcher Slot,Duration,,7.5
+3,Sticky Bomb,Launcher Slot,Skill Haste,,5
+4,Sticky Bomb,Payload Slot,Blast Radius,,6
+5,Sticky Bomb,Payload Slot,Burn Duration,,5
+6,Sticky Bomb,Payload Slot,Damage,,7.5
+7,Trap,Charge Slot,Duration,,5
+8,Trap,Electronics Slot,Duration,,7.5
+9,Trap,Electronics Slot,Shock Radius,,7.5
+10,Decoy,Housing Slot,Health,,7.5
+11,Decoy,Projector Slot,Duration,,7.5
+12,Pulse,Coil Slot,Cone Size,,7.5
+13,Pulse,Coil Slot,Radius,,10
+14,Pulse,Coil Slot,Radius,Gunner,15
+15,Pulse,Housing Slot,Effect Duration,,10
+16,Pulse,Housing Slot,Effect Duration,Gunner,15
+17,Pulse,Housing Slot,Health,,18.6
+18,Pulse,Housing Slot,Skill Haste,,6
+19,Turret,Firing Mechanism Slot,Burn Damage,,5
+20,Turret,Firing Mechanism Slot,Damage,,5
+21,Turret,Firing Mechanism Slot,Damage,Demolitionist,10
+22,Turret,Housing Slot,Duration,,7.5
+23,Turret,Housing Slot,Extra Mortar Ammo,Demolitionist,1
+24,Turret,Housing Slot,Extra Sniper Ammo,,1
+25,Turret,Housing Slot,Health,,10
+26,Turret,Targeting Slot,Duration,,7.5
+27,Turret,Targeting Slot,Skill Haste,,7.5
+28,Hive,Drones Slot,Damage,,5
+29,Hive,Drones Slot,Healing,,5
+30,Hive,Drones Slot,Reviver Armor Repair,,10
+31,Hive,Drones Slot,Stim Efficiency,,10
+32,Hive,Launcher Slot,Range,,5
+33,Hive,Launcher Slot,Range,Technician,10
+34,Hive,Launcher Slot,Repair Charges,,4
+35,Hive,Launcher Slot,Stim Charges,,4
+36,Hive,Launcher Slot,Stinger Charges,,4
+37,Hive,System Slot,Duration,,5
+38,Hive,System Slot,Duration,Technician,10
+39,Hive,System Slot,Health,,10
+40,Chem Launcher,Agitator Slot,Burn Strength,,7.5
+41,Chem Launcher,Agitator Slot,Damage,,5
+42,Chem Launcher,Agitator Slot,Ensnare Duration,,10
+43,Chem Launcher,Agitator Slot,Ensnare Health,,18.6
+44,Chem Launcher,Agitator Slot,Heal,,7.5
+45,Chem Launcher,Pneumatics Slot,Ammo,,1
+46,Chem Launcher,Pneumatics Slot,Duration,,5
+47,Chem Launcher,Pneumatics Slot,Radius,,7.5
+48,Chem Launcher,Pneumatics Slot,Skill Haste,,7.5
+49,Firefly,Payload Slot,Blind Effect Duration,,7.5
+50,Firefly,Payload Slot,Damage,,7.5
+51,Firefly,Propulsion Slot,Skill Haste,,7.5
+52,Firefly,Propulsion Slot,Speed,,10
+53,Firefly,Targeting Slot,Max Targets,,1
+54,Seeker Mine,Drive Slot,Damage,,5
+55,Seeker Mine,Drive Slot,Radius,,5
+56,Seeker Mine,Drive Slot,Skill Haste,,6
+57,Seeker Mine,Payload Slot,Damage,,5
+58,Seeker Mine,Payload Slot,Healing,,7.5
+59,Seeker Mine,Payload Slot,Healing,Survivalist,15
+60,Seeker Mine,Payload Slot,Skill Haste,,6
+61,Seeker Mine,Targeting Slot,Cluster Mines,,1
+62,Seeker Mine,Targeting Slot,Health,,7.5
+63,Seeker Mine,Targeting Slot,Health,Survivalist,15
+64,Drone,Battery Slot,Deflect Duration,,7.5
+65,Drone,Battery Slot,Duration,,7.5
+66,Drone,Battery Slot,Duration,Sharpshooter,15
+67,Drone,Feed Slot,Armor Repair,,7.5
+68,Drone,Feed Slot,Damage,,5
+69,Drone,Feed Slot,Damage Reduction,,6
+70,Drone,Hull Slot,Extra Bombs,,2
+71,Drone,Hull Slot,Health,,10
+72,Drone,Hull Slot,Scan Range,,10
+73,Drone,Hull Slot,Scan Range,Sharpshooter,20
+74,Ballistic Shield,Circuit Board Slot,Damage Bonus (Per Enemy),,1
+75,Ballistic Shield,Circuit Board Slot,Deflector Damage,,5
+76,Ballistic Shield,Circuit Board Slot,Holstered Regeneration,,5
+77,Ballistic Shield,Circuit Board Slot,Shield Health,,5
+78,Ballistic Shield,Circuit Board Slot,Shield Health,Firewall,8
+79,Ballistic Shield,Gyro Slot,Damage Bonus (Per Enemy),,5
+80,Ballistic Shield,Gyro Slot,Deflector Damage,,5
+81,Ballistic Shield,Gyro Slot,Holstered Regeneration,,5
+82,Ballistic Shield,Hard Coating Slot,Active Regeneration,,5
+83,Ballistic Shield,Hard Coating Slot,Active Regeneration,Firewall,8
+84,Ballistic Shield,Hard Coating Slot,Deflector Damage,,5
+85,Ballistic Shield,Hard Coating Slot,Shield Health,,5
+86,Smart Cover,Smart Projectile Slot,Damage to Targets Out of Cover,,5
+87,Smart Cover,Smart Projectile Slot,Weapon Handling,,5
+88,Smart Cover,Smart Projectile Slot,Pulse Resistance,,5
+89,Smart Cover,Smart Projectile Slot,Explosive Resistance,,7
+90,Smart Cover,Smart Launcher Slot,Duration,,5
+91,Smart Cover,Smart Launcher Slot,Radius,,7.5

@@ -1,0 +1,64 @@
+Type,Stat
+O,Weapon Handling
+O,Critical Hit Chance
+O,Critical Hit Damage
+O,Headshot Damage
+D,Armor Regeneration
+D,Hazard Protection
+D,Health
+D,Explosive Resistance
+U,Skill Damage
+U,Repair Skills
+U,Skill Haste
+U,Status Effects
+O,Damage to TOC
+O,Damage to Armor
+U,Scanner Pulse Haste
+O,Health Damage
+O,Melee Damage
+D,Armor on Kill %
+U,Skill Health
+U,Status Effects 
+U,Shield Health
+U,Ammo Capacity
+D,Armor Regeneration %
+O,Pistol Damage
+U,Skill Efficiency
+O,Rate of Fire %
+O,Stability
+O,Accuracy
+O,Reload Speed %
+O,Mag Size %
+O,Optimal Range
+O,Swap Speed
+D,Armor on Kill %
+D,Incoming Repairs
+D,Protection from Elites
+D,Bleed Resistance
+D,Blind/Deaf Resistance
+D,Burn Resistance
+D,Disrupt Resistance
+D,Shock Resistance
+U,Skill Duration
+D,Disorient Resistance
+D,Ensnare Resistance
+O,Marksman Rifle Damage
+O,Shotgun Damage
+D,Total Armor
+U,Explosive Damage
+O,Assault Rifle Damage
+O,Weapon Damage
+O,Rifle Damage
+O,LMG Damage
+O,SMG Damage
+D,Pulse Resistance
+O,Magazine Size %
+O,Signature Weapon Damage
+O,Damage to Health
+D,Health on Kill
+D,Health on Kill %
+D,Armor on Kill
+U,Skill Tier
+U,Burn Duration
+U,Burn Damage
+U,Increased Threat

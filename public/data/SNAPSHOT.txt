@@ -1,0 +1,7 @@
+snapshot: 2026-08-22
+upstream DB.Version: 26.0-mdb
+source: https://buildstation.app/api/td2/v2/data/mx
+tables: 20
+
+Regenerate with the snapshot script in the reference store, then re-run
+scripts/import-snapshot.mjs <snapshot-dir> to refresh these files.

@@ -4,6 +4,13 @@ import {
 	getAppRootPath,
 	groupArrayOfObjectsByKey,
 } from "./utils";
+
+// Data ships with the app as static CSV under public/data/. It used to come
+// from a third-party API behind twenty VUE_APP_DATA_URL_* env vars; that
+// indirection is why a fresh clone rendered a blank app, since upstream never
+// committed the .env those vars lived in. A path built from the table name
+// needs no configuration and cannot be misconfigured.
+const dataUrl = (name) => `${getAppRootPath()}data/${name}.csv`;
 let IsEverythingLoadedPromiseResolve, IsEverythingLoadedPromiseReject;
 
 const IsEverythingLoadedPromise = new Promise(function(resolve, reject) {
@@ -12,7 +19,11 @@ const IsEverythingLoadedPromise = new Promise(function(resolve, reject) {
 });
 
 const ClientDBVersion = localStorage.getItem("localDBversion") || "";
-let RemoteDBVersion = import.meta.env.VITE_APP_DB_VERSION;
+// Assigned below from the fetched public/DB.Version (the real cache key) and
+// only read inside that fetch's callback chain. Its old VUE_APP_DB_VERSION
+// seed was dead weight under webpack and a ReferenceError under Vite, whose
+// browser bundle has no `process`.
+let RemoteDBVersion;
 
 function getFromGoogleDrive(dataSources, listToPopulate) {
 	for (let i = 0; i < dataSources.length; i++) {
@@ -53,14 +64,17 @@ const urls = ["gear", "weapons"];
 
 const VendorPromises = Promise.all(
 	urls.map((url) =>
-		fetch(
-			`${getAppRootPath()}vendors/${url}.json?${new Date().toISOString()}`
-		).then((e) => e.json())
+		fetch(`${getAppRootPath()}vendors/${url}.json?${new Date().toISOString()}`)
+			.then((e) => e.json())
+			.catch((error) => {
+				console.warn(`Failed to parse ${url} vendor data:`, error);
+				return []; // Return empty array if json() fails
+			})
 	)
 ).then((data) => {
 	const gear = data[0].map((g) => {
 		return {
-			Name: g.rarity.includes("named") ? g.name : g.brand,
+			Name: g.rarity?.includes("named") ? g.name : g.brand,
 			Slot: g.slot,
 			Vendor: g.vendor,
 		};
@@ -68,8 +82,8 @@ const VendorPromises = Promise.all(
 
 	const weapons = data[1].map((g) => {
 		return {
-			Name: g.rarity.includes("named")
-				? g.name.replace(/-.*/i, "").trim()
+			Name: g.rarity?.includes("named")
+				? g.name?.replace(/-.*/i, "").trim()
 				: g.name,
 			Vendor: g.vendor,
 		};
@@ -125,15 +139,15 @@ const skillsData = {
 const skillsDataSource = [
 	{
 		key: "Skills",
-		url: import.meta.env.VITE_APP_DATA_URL_SKILLS,
+		url: dataUrl("skill"),
 	},
 	{
 		key: "SkillStats",
-		url: import.meta.env.VITE_APP_DATA_URL_SKILL_STATS,
+		url: dataUrl("skillStats"),
 	},
 	{
 		key: "SkillMods",
-		url: import.meta.env.VITE_APP_DATA_URL_SKILL_MODS,
+		url: dataUrl("skillMods"),
 	},
 ];
 
@@ -147,19 +161,19 @@ const weaponsData = {
 const weaponsDataSource = [
 	{
 		key: "Weapons",
-		url: import.meta.env.VITE_APP_DATA_URL_WEAPONS,
+		url: dataUrl("weapon"),
 	},
 	{
 		key: "WeaponAttributes",
-		url: import.meta.env.VITE_APP_DATA_URL_WEAPON_ATTRIBUTES,
+		url: dataUrl("weaponAttributes"),
 	},
 	{
 		key: "WeaponMods",
-		url: import.meta.env.VITE_APP_DATA_URL_WEAPON_MODS,
+		url: dataUrl("weaponMods"),
 	},
 	{
 		key: "WeaponTalents",
-		url: import.meta.env.VITE_APP_DATA_URL_WEAPON_TALENTS,
+		url: dataUrl("weaponTalents"),
 	},
 ];
 
@@ -170,7 +184,7 @@ const specializationList = {
 const specializationListSource = [
 	{
 		key: "Specialization",
-		url: import.meta.env.VITE_APP_DATA_URL_SPECIALIZATION,
+		url: dataUrl("specialization"),
 	},
 ];
 
@@ -192,51 +206,51 @@ const gearData = {
 const wearableSource = [
 	{
 		key: "Chest",
-		url: import.meta.env.VITE_APP_DATA_URL_CHEST,
+		url: dataUrl("chest"),
 	},
 	{
 		key: "Gloves",
-		url: import.meta.env.VITE_APP_DATA_URL_GLOVES,
+		url: dataUrl("gloves"),
 	},
 	{
 		key: "Holster",
-		url: import.meta.env.VITE_APP_DATA_URL_HOLSTER,
+		url: dataUrl("holster"),
 	},
 	{
 		key: "Kneepads",
-		url: import.meta.env.VITE_APP_DATA_URL_KNEEPADS,
+		url: dataUrl("kneepads"),
 	},
 	{
 		key: "Backpack",
-		url: import.meta.env.VITE_APP_DATA_URL_BACKPACK,
+		url: dataUrl("backpack"),
 	},
 	{
 		key: "Mask",
-		url: import.meta.env.VITE_APP_DATA_URL_MASK,
+		url: dataUrl("mask"),
 	},
 	{
 		key: "Attributes",
-		url: import.meta.env.VITE_APP_DATA_URL_GEAR_ATTRIBUTES,
+		url: dataUrl("gearAttributes"),
 	},
 	{
 		key: "GearMods",
-		url: import.meta.env.VITE_APP_DATA_URL_GEAR_MODS,
+		url: dataUrl("gearMods"),
 	},
 	{
 		key: "GearTalents",
-		url: import.meta.env.VITE_APP_DATA_URL_GEAR_TALENTS,
+		url: dataUrl("gearTalents"),
 	},
 	{
 		key: "BrandSetBonuses",
-		url: import.meta.env.VITE_APP_DATA_URL_BRAND_SET_BONUSES,
+		url: dataUrl("brandsetBonuses"),
 	},
 	{
 		key: "StatsMapping",
-		url: import.meta.env.VITE_APP_DATA_URL_STATS_MAPPING,
+		url: dataUrl("statsMapping"),
 	},
 	{
 		key: "BrandsData",
-		url: import.meta.env.VITE_APP_DATA_URL_BRANDS_DATA,
+		url: dataUrl("brands"),
 	},
 ];
 
