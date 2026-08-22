@@ -122,6 +122,11 @@ services:
     ports:
       # Tailnet-only, same guard as the app service: an unset DEV_BIND_IP would
       # render ":8000:8000" and publish on every interface, so it hard-fails.
+      #
+      # 8000 is written in three places -- here, the --port below, and
+      # Dockerfile.api's EXPOSE. Compose cannot interpolate one into the other,
+      # so change all three together or the publish forwards to a dead port
+      # while the container logs a healthy startup.
       - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8000:8000"
 
   api-tests:

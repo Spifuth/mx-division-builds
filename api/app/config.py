@@ -12,13 +12,23 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# api/app/config.py -> api/app -> api -> repo root
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="TD2_", extra="ignore")
 
     # The seed dataset shipped in the repo. A fresh clone with no network boots
     # and serves from this.
-    data_dir: Path = Path("public/data")
+    #
+    # Anchored to the repo root rather than the process's cwd: the container's
+    # working_dir is /srv/api, so a relative "public/data" resolved to
+    # /srv/api/public/data, which does not exist. Both compose services override
+    # this with TD2_DATA_DIR so nothing was broken -- but a default that cannot
+    # work is worse than no default, because the comment above it reads as a
+    # promise the code does not keep.
+    data_dir: Path = REPO_ROOT / "public" / "data"
 
     # Where validated snapshots are written. Outside the repo tree: this is
     # mutable runtime state, not source.
