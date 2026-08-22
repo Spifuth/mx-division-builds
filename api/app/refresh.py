@@ -228,6 +228,9 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
             )
         )
 
+    # `force` reaches here and no further. It buys a caller one thing -- the
+    # right to re-fetch a version that has not moved -- and never the right to
+    # skip a check. The route that sets it is unauthenticated.
     reasons = validate_candidate(
         tables,
         previous_counts=current.counts,

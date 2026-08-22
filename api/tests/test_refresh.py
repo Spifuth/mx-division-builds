@@ -408,6 +408,62 @@ async def test_a_validated_candidate_does_replace_the_live_dataset(tmp_path, see
     assert app.state.snapshots.live() is not None
 
 
+# --- force: the one caller-controllable input to the whole feature ---------
+
+
+async def test_force_refetches_a_version_that_has_not_moved(tmp_path, seed_dir):
+    """What force is for. Without this the two tests below could both pass with
+    force wired to nothing at all."""
+    app = _app(tmp_path, seed_dir, _FetchesTables(_good(seed_dir), version=SEED_VERSION))
+
+    unforced = await run_refresh(app)
+    assert unforced.changed is False, "an unmoved version is a no-op without force"
+
+    forced = await run_refresh(app, force=True)
+    assert forced.changed is True
+
+
+async def test_force_does_not_bypass_validation(tmp_path, seed_dir):
+    """force=true is unauthenticated and reachable by anyone who can reach the
+    service. It may buy a re-fetch of an unmoved version and nothing else: a
+    forced refresh that skipped the validation gate would be a way to ask the
+    API to replace good data with whatever upstream is serving right now."""
+    tables = _good(seed_dir)
+    tables["gearMods"] = _truncate(tables["skillMods"], 9)
+    app = _app(tmp_path, seed_dir, _FetchesTables(tables, version=SEED_VERSION))
+    before = app.state.dataset
+
+    result = await run_refresh(app, force=True)
+
+    assert result.changed is False
+    assert app.state.dataset is before, "a forced refresh must not promote a bad candidate"
+    assert app.state.snapshots.live() is None
+    assert any("gearMods" in r for r in result.reasons)
+
+
+def test_force_is_wired_through_the_admin_route(tmp_path, seed_dir, monkeypatch):
+    """grep -rn force api/tests/ returned nothing before this. The query
+    parameter could have been dropped from the call in admin.py and every test
+    would have stayed green."""
+    monkeypatch.setenv("TD2_SNAPSHOT_DIR", str(tmp_path))
+    app = create_app()
+    with TestClient(app) as client:
+        # Swapped in after startup, so the real BuildstationSource is
+        # constructed but never called: the suite stays offline.
+        app.state.source = _FetchesTables(_good(seed_dir), version=SEED_VERSION)
+        unforced = client.post("/api/admin/refresh").json()
+        forced = client.post("/api/admin/refresh?force=true").json()
+
+    assert unforced == {
+        "changed": False,
+        "version": SEED_VERSION,
+        "snapshot": None,
+        "reasons": [],
+    }
+    assert forced["changed"] is True
+    assert forced["snapshot"]
+
+
 # --- the version token, which decides whether any of the above runs --------
 
 
