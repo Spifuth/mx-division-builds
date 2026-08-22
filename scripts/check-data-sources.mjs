@@ -13,7 +13,11 @@
  *
  * Each referenced table is then checked in three layers:
  *
- *   1. REACHABLE -- does the URL answer 200?
+ *   1. REACHABLE -- does the URL answer 200 *with a CSV*? A bare 200 proves
+ *      nothing: Vite answers any unmatched path with its SPA fallback, which
+ *      is 200 text/html carrying the whole of index.html, and PapaParse finds
+ *      enough "rows" in that markup that the row-count guard never trips. So
+ *      the body is sniffed as well as the status.
  *   2. SAME-ORIGIN BY CONSTRUCTION -- does dataUrl() in dataImporter.js still
  *      build every path relative to getAppRootPath(), with no third-party
  *      host hardcoded in? This used to be a live CORS probe, but after
@@ -204,9 +208,36 @@ for (const name of referenced) {
     const res = await fetch(url);
     const body = await res.text();
 
+    // A 200 is not evidence a CSV was served. Vite answers any unmatched path
+    // with its SPA fallback: 200, Content-Type text/html, the whole of
+    // index.html. Measured on this branch before the guard existed --
+    // GET /data/nosuchtable.csv returned 200 text/html and 1573 bytes of
+    // markup, which PapaParse happily reports as 40-odd "rows", so neither
+    // the row-count guard nor the contract check below could catch it, and 12
+    // of the 20 tables have no contract at all. That is not a hypothetical:
+    // vite.config.ts sets `base: env.BASE_URL`, so a BASE_URL of
+    // /mx-division-builds/ moves every data path and this script would have
+    // reported 12 of 20 green while the app 404s all 20.
+    //
+    // The body is the primary test, not Content-Type: a document whose first
+    // non-whitespace character is "<" is markup, and that is true whatever
+    // MIME type the host attached. Content-Type is a second net only, because
+    // it is the less portable of the two -- hosts disagree about .csv
+    // (Vite/sirv say text/csv, stock nginx says application/octet-stream), so
+    // "must be text/csv" would fail on hosts that serve the file perfectly.
+    const ctype = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+    const looksLikeMarkup = body.trimStart().startsWith("<");
+
     if (!res.ok) {
       verdict = "FAIL";
       detail = `HTTP ${res.status}`;
+    } else if (looksLikeMarkup || ctype === "text/html") {
+      verdict = "FAIL";
+      detail =
+        `200 but the body is not CSV (content-type ${ctype || "(absent)"}` +
+        `${looksLikeMarkup ? ", body starts with \"<\"" : ""}) -- almost certainly the ` +
+        `SPA fallback serving index.html, i.e. public/data/${name}.csv is not ` +
+        `being served at ${url.pathname}`;
     } else {
       const rows = Papa.parse(body.trim()).data;
       const headers = rows.shift() ?? [];
