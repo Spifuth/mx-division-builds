@@ -9,6 +9,10 @@ services:
         UID: ${HOST_UID:-1000}
         GID: ${HOST_GID:-1000}
     container_name: mxdiv-dev
+    # Overrides the image CMD, which is vue-cli's `npm run serve` -- a script
+    # the Vite toolchain does not have. Set here rather than in Dockerfile.dev
+    # so the `tools` service, which shares the image, is unaffected.
+    command: ["npm", "run", "dev"]
     init: true
     security_opt:
       - no-new-privileges:true
