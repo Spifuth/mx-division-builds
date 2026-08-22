@@ -9,9 +9,10 @@ services:
         UID: ${HOST_UID:-1000}
         GID: ${HOST_GID:-1000}
     container_name: mxdiv-dev
-    # Overrides the image CMD, which is vue-cli's `npm run serve` -- a script
-    # the Vite toolchain does not have. Set here rather than in Dockerfile.dev
-    # so the `tools` service, which shares the image, is unaffected.
+    # Explicit despite matching the image's own CMD (Dockerfile.dev:22,
+    # "npm run dev"). Set here rather than relying on the image default so
+    # the `tools` service, which shares the image but sets its own command,
+    # is unaffected by whatever this service runs.
     command: ["npm", "run", "dev"]
     init: true
     security_opt:
@@ -29,12 +30,24 @@ services:
       # Bind inside the container; the tailnet restriction is done by the
       # published-port address below, not by the app.
       DEV_HOST: 0.0.0.0
+      # 8090 is one of three hardcoded copies of this port -- also the
+      # literal in the `ports:` publish just below and the `|| 8090`
+      # fallback in vite.config.ts. Compose cannot interpolate environment:
+      # values into ports:, so there is no single source of truth: change
+      # this alone and the container listens on the new port while the
+      # publish still forwards to 8090 -- a dead publish next to a healthy
+      # container and a "ready in Xms" log line. Change all three together.
       DEV_PORT: 8090
     ports:
       # Tailnet-only, same pattern as immich-ml. NEVER 0.0.0.0.
       # `:?` on purpose: if DEV_BIND_IP were unset, compose substitutes an
       # empty string and ":8090:8090" binds EVERY interface -- publishing the
       # dev server publicly. Hard-fail instead.
+      #
+      # Both 8090s here are the other two of three hardcoded copies of this
+      # port -- see DEV_PORT above and the `|| 8090` fallback in
+      # vite.config.ts. Change all three together or the publish and the
+      # container end up on different ports.
       - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8090:8090"
 
   # One-shot runner: npm/vitest/lint without touching the host.

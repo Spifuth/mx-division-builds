@@ -23,7 +23,7 @@ alias mxrun='./scripts/dev.sh --profile tools run --rm tools'
 
 mxrun npm run check http://<TAILNET_IP>:8090/   # data sources: reachable + schema-valid
 mxrun npm run build-prod # production build into dist/
-mxrun npm run lint       # exits 1 on 4 pre-existing parser errors
+mxrun npm run lint       # exits non-zero on pre-existing issues -- expected, not a regression
 mxrun npm test           # not wired up yet -- lands in a later phase
 mxrun npm install <pkg>
 ```

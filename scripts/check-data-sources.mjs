@@ -33,7 +33,7 @@
  * splitting overcounts (gearTalents reads as 414 lines but is 206 rows).
  *
  * Usage:  node scripts/check-data-sources.mjs <appOrigin>
- *         e.g. node scripts/check-data-sources.mjs http://10.0.0.5:8090/
+ *         e.g. node scripts/check-data-sources.mjs http://<TAILNET_IP>:8090/
  */
 import { readdirSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -63,7 +63,7 @@ const originArg = process.argv[2];
 if (!originArg) {
   console.error("usage: node scripts/check-data-sources.mjs <appOrigin>");
   console.error("");
-  console.error("  e.g. npm run check http://10.0.0.5:8090/");
+  console.error("  e.g. npm run check http://<TAILNET_IP>:8090/");
   console.error("  Run `./scripts/dev.sh config` to see the address the app is published on.");
   process.exit(1);
 }

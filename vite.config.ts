@@ -19,6 +19,12 @@ export default ({ mode }) => {
       // loadEnv() with an empty prefix also reads process.env, which is how
       // compose's `environment:` DEV_HOST/DEV_PORT reach this file.
       host: env.DEV_HOST || 'localhost',
+      // 8090 here is the third of three hardcoded copies of this port --
+      // also DEV_PORT and the `ports:` publish in docker-compose.dev.yml.
+      // This fallback only bites when DEV_PORT is unset (e.g. running vite
+      // outside the container). Change it to match if the other two ever
+      // change, or an outside-the-container run silently disagrees with the
+      // containerised one.
       port: Number(env.DEV_PORT) || 8090,
       // Never silently fall through to another port; the publish is fixed.
       strictPort: true,
