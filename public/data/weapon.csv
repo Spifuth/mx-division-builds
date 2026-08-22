@@ -1,0 +1,324 @@
+Variant,Name,Slot,Quality,Weapon Type,Base Damage,Optimal Range,RPM,Mag Size,Reload Speed (ms),HSD,Core 1,Core 1 Max,Core 2,Core 2 Max,Attribute 1,Talent,Optics,Under Barrel,Magazine,Muzzle,Icon,Icon Ref
+AUG,The Bighorn Full-Auto Mode,P,Exotic,Assault Rifle,57218,40,800,42,1800,55,Assault Rifle Damage,15,Health Damage,21,Critical Hit Damage,Big Game Hunter,The Bighorn,The Bighorn,The Bighorn,The Bighorn,the-bighorn.png,w_ar_steyr_aug_a3_ar_t1
+P416,Eagle Bearer,P,Exotic,Assault Rifle,47364.5,26,850,30,2130,55,Assault Rifle Damage,15,Health Damage,21,Damage to TOC,Eagle's Strike,Eagle Bearer,Eagle Bearer,Eagle Bearer,Eagle Bearer,eagle-bearer.png,w_ar_m4_exotic_t1
+Vector,Chameleon,P,Exotic,Assault Rifle,44670.5,20,900,30,2400,50,Assault Rifle Damage,15,Health Damage,21,Damage to TOC,Adaptive Instincts,Chameleon,Chameleon,Chameleon,Chameleon,chameleon.png,w_ar_krissvector_exotic_t1
+ACR,ACR,P,High End,Assault Rifle,58896.5,31,650,30,1910,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,acr.png,w_ar_acr_t1
+ACR,ACR-E,P,High End,Assault Rifle,58896.5,31,650,30,1910,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,acr.png,w_ar_acr_t1
+AK-47,AK-M,P,High End,Assault Rifle,67175,27,600,30,2300,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short,8.02,,ak47.png,w_ar_ak47_t1
+AK-47,Black Market AK-M,P,High End,Assault Rifle,64716.5,27,600,30,2300,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,ak47.png,w_ar_ak47_t1
+AK-47,Black Market AK-M Replica,P,High End,Assault Rifle,64716.5,27,600,30,2300,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,ak47.png,w_ar_ak47_t1
+AK-47,Military AK-M,P,High End,Assault Rifle,64716.5,27,600,30,2300,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,ak47.png,w_ar_ak47_t1
+AUG,AUG A3-CQC,P,High End,Assault Rifle,57218,26,680,42,2160,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short,5.56,5.56,aug.png,w_ar_aug_t1
+Carbine 7,Carbine 7,P,High End,Assault Rifle,49790,28,790,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,carbine_7.png,w_ar_carbine_7_t1
+F2000,F2000,P,High End,Assault Rifle,49104,31,850,30,2400,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,,5.56,5.56,f2000.png,w_ar_f2000_t1
+F2000,F2000 Replica,P,High End,Assault Rifle,49104,31,850,30,2400,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,,5.56,5.56,f2000.png,w_ar_f2000_t1
+FAL,FAL,P,High End,Assault Rifle,57646,35,700,20,2140,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,fal.png,w_ar_fal_t1
+FAL,FAL SA-58,P,High End,Assault Rifle,57646,35,700,20,2140,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,fal.png,w_ar_fal_t1
+FAL,FAL SA-58 Para,P,High End,Assault Rifle,57646,35,700,20,2140,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,fal.png,w_ar_fal_t1
+FAL,FAL SA-58 Para Replica,P,High End,Assault Rifle,57646,35,700,20,2140,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,fal.png,w_ar_fal_t1
+FAMAS,FAMAS 2010,P,High End,Assault Rifle,45272.5,26,900,30,2490,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short,5.56,5.56,famas.png,w_ar_famas_t1
+FAMAS,FAMAS 2010 Replica,P,High End,Assault Rifle,45272.5,26,900,30,2490,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short,5.56,5.56,famas.png,w_ar_famas_t1
+G36,G36 C,P,High End,Assault Rifle,52564,35,750,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short,5.56,5.56,g36.png,w_ar_g36_t1
+G36,G36 Enhanced,P,High End,Assault Rifle,52564,35,750,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,g36.png,w_ar_g36_t1
+G36,G36 Enhanced Replica,P,High End,Assault Rifle,52564,35,750,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,g36.png,w_ar_g36_t1
+G36,Military G36,P,High End,Assault Rifle,52564,35,750,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,g36.png,w_ar_g36_t1
+M4,Police M4,P,High End,Assault Rifle,46917.5,31,850,30,2240,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,m4.png,w_ar_m4_t1
+M4,Police M4 Replica,P,High End,Assault Rifle,46917.5,31,850,30,2240,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,m4.png,w_ar_m4_t1
+P416,Custom P416 G3,P,High End,Assault Rifle,47364.5,26,850,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,p416.png,w_ar_pof_p416_t1
+P416,Military P416,P,High End,Assault Rifle,47364.5,26,850,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,p416.png,w_ar_pof_p416_t1
+Honey Badger,Honey Badger,P,High End,Assault Rifle,51271,28,800,30,2060,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,,honey_badger.png,w_ar_q_honey_badger_t1
+SCAR,Mk16,P,High End,Assault Rifle,59221,31,650,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,scar.png,w_ar_fnscar-l_t1
+SCAR,SOCOM Mk16,P,High End,Assault Rifle,59221,31,650,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,scar.png,w_ar_fnscar-l_t1
+SCAR,Tactical Mk 16,P,High End,Assault Rifle,59221,31,650,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,scar.png,w_ar_fnscar-l_t1
+SCAR,Tactical Mk 16 Replica,P,High End,Assault Rifle,59221,31,650,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,scar.png,w_ar_fnscar-l_t1
+TAR-21,CTAR-21,P,High End,Assault Rifle,44802,32,900,30,2390,55,Assault Rifle Damage,15,Health Damage,21,A,A,Micro / Neutral / Short,Side,5.56,5.56,tar_21.png,w_ar_tar21_t1
+AK-47,Manic,P,Named,Assault Rifle,64716.5,27,600,30,2300,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Overflowing,Neutral / Short / Long,Side / Short / Long,8.02,8.02,ak47.png,w_ar_ak47_t1
+AUG,Invisible Hand,P,Named,Assault Rifle,57218,26,782,42,2160,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Allegro,Neutral / Short / Long / Ironsights,Side / Short,5.56,5.56,aug.png,w_ar_aug_t1
+F2000,Shield Splinterer,P,Named,Assault Rifle,49104,31,850,30,2400,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Optimist,Neutral / Short / Long / Ironsights,,5.56,5.56,f2000.png,w_ar_f2000_t1
+FAMAS,Burn Out,P,Named,Assault Rifle,45272.5,26,900,30,2490,55,Assault Rifle Damage,15,Health Damage,21,A,Perfectly On Empty,Neutral / Short / Long,Side / Short,5.56,5.56,famas.png,w_ar_famas_t1
+M4,Pyromaniac,P,Named,Assault Rifle,46917.5,31,850,30,2240,55,Assault Rifle Damage,15,Health Damage,21,A,Perfectly Ignited,Neutral / Short / Long,Side / Short / Long,5.56,5.56,m4.png,w_ar_m4_t1
+P416,Glory Daze,P,Named,Assault Rifle,47364.5,17,850,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Near Sighted,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,glory_daze.png,w_ar_pof_p416_t2
+Honey Badger,Savage Wolverine,P,Named,Assault Rifle,51271,28,800,30,2060,55,Assault Rifle Damage,15,Health Damage,21,A,Perfectly Close & Personal,Neutral / Short / Long,Side / Short / Long,5.56,,savage_wolverine.png,w_ar_q_honey_badger_t1
+TAR-21,The Railsplitter,P,Named,Assault Rifle,44802,32,900,30,2390,55,Assault Rifle Damage,15,Health Damage,21,A,Perfectly Accurate,Micro / Neutral / Short,Side,5.56,5.56,tar_21.png,w_ar_tar21_t1
+NEGEV,Bullet King,P,Exotic,LMG,54604,40,850,100,4760,65,LMG Damage,15,Damage to TOC,12,Critical Hit Damage,Bullet Hell,,Bullet King,Bullet King,Bullet King,bullet-king.png,w_lmg_iwi_negev_exotic_t1
+M249,Pestilence,P,Exotic,LMG,48300,35,935,100,4540,65,LMG Damage,15,Damage to TOC,12,Critical Hit Chance,Plague of the Outcasts,,Pestilence,Pestilence,Pestilence,pestilence.png,w_lmg_exoticlmg_t1
+L86,Custom L86 A2,P,High End,LMG,61096.5,30,700,30,3180,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,custom_l86_a2.png,w_lmg_sa80_t1
+L86,Custom L86 A2 Replica,P,High End,LMG,61096.5,30,700,30,3180,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,custom_l86_a2.png,w_lmg_sa80_t1
+L86,Military L86 LSW,P,High End,LMG,61096.5,30,700,30,3180,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short,5.56,5.56,custom_l86_a2.png,w_lmg_sa80_t1
+M249,M249 B,P,High End,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M249,Military MK46,P,High End,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M249,Military MK46 Replica,P,High End,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M249,Tactical M249 Para,P,High End,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M60,Black Market M60 E6,P,High End,LMG,65233.5,40,600,100,3850,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,8.02,m60.png,w_lmg_m60_t1
+M60,Black Market M60 E6 Replica,P,High End,LMG,65233.5,40,600,100,3850,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,8.02,m60.png,w_lmg_m60_t1
+M60,Classic M60,P,High End,LMG,67711,40,600,100,3750,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,,m60.png,w_lmg_m60_t1
+M60,Classic M60 Replica,P,High End,LMG,67711,40,600,100,3750,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,,m60.png,w_lmg_m60_t1
+M60,Military M60 E4,P,High End,LMG,65233.5,40,600,100,3850,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,8.02,m60.png,w_lmg_m60_t1
+MG5,Infantry MG5,P,High End,LMG,52333.5,35,800,50,3010,85,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short,Ammunition Belt,8.02,infantry_mg5.png,w_lmg_hk121_t1
+MG5,Infantry MG5 Replica,P,High End,LMG,52333.5,35,800,50,3010,85,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short,Ammunition Belt,8.02,infantry_mg5.png,w_lmg_hk121_t1
+MG5,MG5,P,High End,LMG,54322,35,800,50,2960,85,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short,Ammunition Belt,,mg5.png,w_lmg_hk121_t1
+RPK-74,Black Market RPK-74 E,P,High End,LMG,71538,30,600,40,4000,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,rpk_74.png,w_lmg_rpk_t1
+RPK-74,Black Market RPK-74 E Replica,P,High End,LMG,71538,30,600,40,4000,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,rpk_74.png,w_lmg_rpk_t1
+RPK-74,Classic RPK-74,P,High End,LMG,71538,30,600,40,4000,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,rpk_74.png,w_lmg_rpk_t1
+RPK-74,Military RPK-74 M,P,High End,LMG,71538,30,600,40,4000,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,rpk_74.png,w_lmg_rpk_t1
+NEGEV,IWI NEGEV,P,High End,LMG,54604,40,750,100,4000,65,LMG Damage,15,Damage to TOC,12,A,A,Micro / Neutral / Short,Side / Short / Long,Ammunition Belt,8.02,negev.png,w_lmg_iwi_negev_t1
+KAC,Stoner LAMG,P,High End,LMG,62361,40,580,200,3000,65,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short,Ammunition Belt,QDC,kac.png,w_lmg_kac_lamg_t1
+L86,Tabula Rasa,P,Named,LMG,61096.5,30,700,30,3180,65,LMG Damage,15,Damage to TOC,12,A,Perfectly Steady Handed,Neutral / Short / Long,Side / Short,5.56,5.56,tabula_rasa.png,w_lmg_sa80_t2
+M249,Black Friday,P,Named,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,Perfectly Unhinged,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M249,The Stinger,P,Named,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,Swift,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M60,Good Times,P,Named,LMG,65234,40,600,100,3850,65,LMG Damage,15,Damage to TOC,12,A,Perfect Fast Hands,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,8.02,m60.png,w_lmg_m60_t1
+MG5,Sleipnir,P,Named,LMG,54322,35,800,50,2960,85,LMG Damage,15,Damage to TOC,12,A,Perfect Frenzy,Neutral / Short / Long,Side / Short,Ammunition Belt,,sleipnir.png,w_lmg_hk121_t1
+RPK-74,New Reliable,P,Named,LMG,71538,30,600,40,2860,65,LMG Damage,15,Damage to TOC,12,A,Perfectly Optimized,Neutral / Short / Long,Side / Short / Long,8.02,8.02,rpk_74.png,w_lmg_rpk_t1
+NEGEV,Carnage,P,Named,LMG,54604,40,750,100,4000,65,LMG Damage,15,Damage to TOC,12,A,Perfect Sadist,Micro / Neutral / Short,Side / Short / Long,Ammunition Belt,8.02,negev.png,w_lmg_iwi_negev_t1
+KAC,Quiet Roar,P,Named,LMG,62361,40,580,200,3000,65,LMG Damage,15,Damage to TOC,12,A,Perfect Overwhelm,Neutral / Short / Long,Side / Short,Ammunition Belt,QDC,kac.png,w_lmg_kac_lamg_t1
+AWM,Nemesis,P,Exotic,Marksman Rifle,940240,60,50,5,2780,0,Marksman Rifle Damage,15,Headshot Damage,111,Critical Hit Chance,Electromagnetic Accelerator,Nemesis,Nemesis,Nemesis,Nemesis,nemesis.png,w_mr_exotic_sniper_rifle_t1
+M44,Classic M44 Carbine,P,High End,Marksman Rifle,433563.5,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short,Integrated,,classic_m44.png,w_mr_mosinnagant_t1
+M44,Classic M44 Carbine Replica,P,High End,Marksman Rifle,433563.5,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short,Integrated,,classic_m44.png,w_mr_mosinnagant_t1
+M44,Custom M44,P,High End,Marksman Rifle,417692,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,classic_m44.png,w_mr_mosinnagant_t1
+M44,Custom M44 Replica,P,High End,Marksman Rifle,417692,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,classic_m44.png,w_mr_mosinnagant_t1
+M44,Hunting M44,P,High End,Marksman Rifle,428664,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,Integrated,8.02,classic_m44.png,w_mr_mosinnagant_t1
+Model 700,M700 Carbon,P,High End,Marksman Rifle,412516,50,55,7,3980,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,model_700.png,w_mr_m24_t1
+Model 700,M700 Carbon Replica,P,High End,Marksman Rifle,412516,50,55,7,3960,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,model_700.png,w_mr_m24_t1
+Model 700,M700 Tactical,P,High End,Marksman Rifle,412516,50,55,7,3980,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side,MM 7.62,8.02,model_700.png,w_mr_m24_t1
+Model 700,Model 700,P,High End,Marksman Rifle,441569.5,50,55,7,7050,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,,Integrated,8.02,model_700.png,w_mr_m24_t1
+Model 700,Model 700 Replica,P,High End,Marksman Rifle,441569.5,50,55,7,7050,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,,Integrated,8.02,model_700.png,w_mr_m24_t1
+SCAR,SOCOM Mk20 SSR,P,High End,Marksman Rifle,145850,55,275,20,4990,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,8.02,8.02,socom_mk20_ssr.png,w_mr_fnscar-h_t3
+SCAR,SOCOM Mk20 SSR Replica,P,High End,Marksman Rifle,145850,55,275,20,4990,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,8.02,8.02,socom_mk20_ssr.png,w_mr_fnscar-h_t3
+SR-1,Adrestia,P,High End,Marksman Rifle,409357,50,60,5,3150,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short,MM 7.62,8.02,sr_1.png,w_mr_dsr_1_t1
+SR-1,SR-1,P,High End,Marksman Rifle,409357,50,60,5,3150,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short,MM 7.62,8.02,sr_1.png,w_mr_dsr_1_t1
+SR-1,SR-1 Replica,P,High End,Marksman Rifle,409357,50,60,5,3150,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short,MM 7.62,8.02,sr_1.png,w_mr_dsr_1_t1
+G28,G28,P,High End,Marksman Rifle,206425,50,180,20,3600,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,g28.png,w_mr_hk_g28_t1
+SRS,Covert SRS,P,High End,Marksman Rifle,409357,60,60,7,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short,MM 7.62,8.02,srs_1.png,w_mr_srs_t1
+SRS,SRS A1,P,High End,Marksman Rifle,409357,60,60,7,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,MM 7.62,8.02,srs_1.png,w_mr_srs_t1
+SRS,SRS A1 Replica,P,High End,Marksman Rifle,409357,60,60,7,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,MM 7.62,8.02,srs_1.png,w_mr_srs_t1
+SVD,Paratrooper SVD,P,High End,Marksman Rifle,156662.5,50,260,10,2850,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short,MM 7.62,8.02,svd.png,w_mr_svd_t1
+SVD,Surplus SVD,P,High End,Marksman Rifle,156662.5,50,260,10,2850,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short,MM 7.62,8.02,svd.png,w_mr_svd_t1
+M44,The White Death,P,Named,Marksman Rifle,433563.5,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,137,A,A,Neutral / Short / Long,Side / Short,Integrated,,classic_m44.png,w_mr_mosinnagant_t1
+Model 700,Ekim's Long Stick,P,Named,Marksman Rifle,441569.5,50,55,7,7050,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfect Ranger,Neutral / Short / Long,,Integrated,8.02,model_700.png,w_mr_m24_t1
+SCAR,The Darkness,P,Named,Marksman Rifle,145850,55,275,20,4990,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfect Eyeless,Neutral / Short / Long / Ironsights,Side / Short / Long,8.02,8.02,the_darkness.png,w_mr_fnscar-h_t3
+SR-1,Designated Hitter,P,Named,Marksman Rifle,409357,50,60,5,3150,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfect Reformation,Neutral / Short / Long / Ironsights,Side / Short,MM 7.62,8.02,sr_1.png,w_mr_dsr_1_t1
+SRS,Pinprick,P,Named,Marksman Rifle,409357,60,60,7,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfect First Blood,Neutral / Short / Long / Ironsights,Side / Short,MM 7.62,8.02,srs_1.png,w_mr_srs_t1
+SVD,Commando,P,Named,Marksman Rifle,156662.5,50,260,10,2850,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfectly Naked,Neutral / Short / Long,Side / Short,MM 7.62,8.02,svd.png,w_mr_svd_t1
+Desert Eagle,Liberty,S,Exotic,Pistol,189171.5,18,230,8,1950,100,Pistol Damage,15,,,Damage to TOC,Liberty or Death,Liberty,Liberty,Liberty,Liberty,liberty.png,w_p_exoticpistol_t1
+Magnum,Regulus,S,Exotic,Pistol,282072,16,160,6,2310,100,Pistol Damage,15,,,Headshot Damage,Regicide,,,Regulus,Regulus,regulus.png,w_p_swrevolver_exotic_t1
+Magnum,586 Magnum,S,High End,Pistol,233278,16,160,6,2540,100,Pistol Damage,15,,,A,A,Micro / Neutral / Short,,Revolver Drum,,magnum.png,w_p_s&w586_t1
+Magnum,Police 686 Magnum,S,High End,Pistol,233278,16,160,6,2540,100,Pistol Damage,15,,,A,A,Micro / Neutral / Short,,Revolver Drum,,magnum.png,w_p_s&w586_t1
+Magnum,Police 686 Magnum Replica,S,High End,Pistol,233278,16,160,6,2540,100,Pistol Damage,15,,,A,A,Micro / Neutral / Short,,Revolver Drum,,magnum.png,w_p_s&w586_t1
+93R,93R,S,High End,Pistol,52977.5,12,700,20,1710,100,Pistol Damage,15,,,A,A,,,Pistol,9mm,93r.png,w_p_93r_t1
+Desert Eagle,D50,S,High End,Pistol,189171.5,18,200,8,2240,100,Pistol Damage,15,,,A,A,Micro / Neutral / Short,,,,desert_eagle.png,w_p_desert_eagle_t1
+M1911,M1911,S,High End,Pistol,129884.5,12,310,7,2240,100,Pistol Damage,15,,,A,A,,,Pistol,,m1911.png,w_p_m1911_t1
+M1911,M45A1,S,High End,Pistol,117435.5,12,310,7,2330,100,Pistol Damage,15,,,A,A,Micro / Neutral,Gadget,Pistol,.45 ACP,m1911.png,w_p_m1911_t1
+M1911,Tactical M1911,S,High End,Pistol,117435.5,12,310,7,2330,100,Pistol Damage,15,,,A,A,Micro / Neutral,Gadget,Pistol,.45 ACP,m1911.png,w_p_m1911_t1
+M1911,Tactical M1911 Replica,S,High End,Pistol,117435.5,12,310,7,2330,100,Pistol Damage,15,,,A,A,Micro / Neutral,Gadget,Pistol,.45 ACP,m1911.png,w_p_m1911_t1
+M9,Military M9,S,High End,Pistol,102584.5,16,350,15,1900,100,Pistol Damage,15,,,A,A,,,Pistol,9mm,m9.png,w_p_m9_t1
+M9,Military M9 Replica,S,High End,Pistol,102584.5,16,350,15,1900,100,Pistol Damage,15,,,A,A,,,Pistol,9mm,m9.png,w_p_m9_t1
+M9,Officer's M9 A1,S,High End,Pistol,95697.5,16,350,15,1960,100,Pistol Damage,15,,,A,A,Micro / Neutral,Gadget,Pistol,9mm,m9.png,w_p_m9_t1
+PF45,Custom PF45,S,High End,Pistol,93962.5,14,370,10,1770,100,Pistol Damage,15,,,A,A,Micro / Neutral,Gadget,Pistol,.45 ACP,p45.png,w_p_m&p45_t1
+PF45,First Wave PF45,S,High End,Pistol,100727.5,14,370,10,1740,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,,p45.png,w_p_m&p45_t1
+Px4,Px4 Storm Type F,S,High End,Pistol,91692,12,380,14,1630,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,9mm,px4.png,w_p_px4_t1
+Px4,Px4 Storm Type T,S,High End,Pistol,91692,12,380,14,1630,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,.45 ACP,px4.png,w_p_px4_t1
+Px4,Px4 Storm Type T Replica,S,High End,Pistol,91692,12,380,14,1630,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,.45 ACP,px4.png,w_p_px4_t1
+Rhino,Diceros,S,High End,Pistol,204803,18,180,6,2000,100,Pistol Damage,15,,,A,A,,Gadget,Revolver Drum,,rhino.png,w_p_rhino_t1
+Rhino,Diceros Replica,S,High End,Pistol,204803,18,180,6,2000,100,Pistol Damage,15,,,A,A,,Gadget,Revolver Drum,,rhino.png,w_p_rhino_t1
+Rhino,Snubnosed Diceros,S,High End,Pistol,211295,18,180,6,1980,100,Pistol Damage,15,,,A,A,,,Revolver Drum,,rhino.png,w_p_rhino_t1
+X-45,X-45,S,High End,Pistol,88321,16,400,15,1990,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,.45 ACP,x_45.png,w_p_fnx45_tactical_t1
+X-45,X-45 Tactical,S,High End,Pistol,88321,16,400,15,1990,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,.45 ACP,x_45.png,w_p_fnx45_tactical_t1
+X-45,X-45 Tactical Replica,S,High End,Pistol,88321,16,400,15,1990,100,Pistol Damage,15,,,A,A,,Gadget,Pistol,.45 ACP,x_45.png,w_p_fnx45_tactical_t1
+Magnum,Orbit,S,Named,Pistol,233278,16,160,6,2540,100,Pistol Damage,15,,,A,Perfect Finisher,Micro / Neutral / Short,,Revolver Drum,,orbit.png,w_p_s&w586_t1
+M1911,Mozambique Special,S,Named,Pistol,117435.5,12,310,7,2330,100,Pistol Damage,15,,,A,Perfect Breadbasket,Micro / Neutral,Gadget,Pistol,.45 ACP,m1911.png,w_p_m1911_t1
+PF45,Lightning Rod,S,Named,Pistol,93962.5,14,370,10,1770,100,Pistol Damage,15,,,A,Perfect Salvage,Micro / Neutral,Gadget,Pistol,.45 ACP,p45.png,w_p_m&p45_t1
+AK-M,Merciless,P,Exotic,Rifle,102269.5,35,400,30,1740,60,Rifle Damage,15,Critical Hit Damage,17,Critical Hit Chance,Binary Trigger,Merciless,Merciless,Merciless,Merciless,merciless.png,w_mr_exotic_preorder_ak_t1
+AK-M,Ruthless,P,Exotic,Rifle,102269.5,35,400,30,1740,60,Rifle Damage,15,Critical Hit Damage,17,Critical Hit Chance,Binary Trigger,Ruthless,Ruthless,Ruthless,Ruthless,ruthless.png,w_ar_exotic_assault_rifle_t1
+SIG 716,The Ravenous,P,Exotic,Rifle,134360,50,240,60,2180,60,Rifle Damage,15,Critical Hit Damage,17,Damage to TOC,Geri and Freki,The Ravenous,The Ravenous,The Ravenous,The Ravenous,the-ravenous.png,w_ar_p416double_exotic
+1886,Diamondback,P,Exotic,Rifle,386988.5,35,100,8,3150,60,Rifle Damage,15,Critical Hit Damage,17,Headshot Damage,Agonizing Bite,Diamondback,Diamondback,Diamondback,Diamondback,diamondback.png,w_mr_winchester_exotic_t1
+1886,1886,P,High End,Rifle,386988.5,35,100,8,3460,60,Rifle Damage,15,Critical Hit Damage,17,A,A,,,Tubular,,1886.png,w_mr_winchester_t1.png
+ACR,ACR SS,P,High End,Rifle,101828,45,420,30,2630,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,,
+UIC15,UIC15 MOD2,P,High End,Rifle,150316,60,240,30,1730,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,,
+M16A2,M16A2,P,High End,Rifle,106971,50,400,30,2440,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Micro / Neutral / Short,,5.56,5.56,m16a2.png,w_ar_m16a2_t1
+M16A2,M16A2 Replica,P,High End,Rifle,106971,50,400,30,2440,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Micro / Neutral / Short,,5.56,5.56,m16a2.png,w_ar_m16a2_t1
+M1A,Classic M1A,P,High End,Rifle,231346,60,180,10,2600,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,,classic_m1a.png,w_mr_m14_t1
+M1A,M1A CQB,P,High End,Rifle,129179.5,60,320,10,2320,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,m1a_cqb.png,w_mr_m14_t3
+M1A,M1A CQB Replica,P,High End,Rifle,129179.5,60,320,10,2320,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,m1a_cqb.png,w_mr_m14_t3
+M1A,SOCOM M1A,P,High End,Rifle,129179.5,60,320,10,2320,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,socom_m1a.png,w_mr_m14_t2
+M4,Lightweight M4,P,High End,Rifle,107257.5,55,360,30,2029.9999999999998,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,lightweight_m4.png,w_ar_m4_t2
+M4,LVOA-C,P,High End,Rifle,100615,55,380,30,2080,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,lvoa_c.png,w_ar_m4_t3
+M4,LVOA-C Replica,P,High End,Rifle,100615,55,380,30,2080,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,lvoa_c.png,w_ar_m4_t3
+MDR,Urban MDR,P,High End,Rifle,102970,60,380,20,2850,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,,
+MDR,Urban MDR Replica,P,High End,Rifle,102970,60,380,20,2850,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,,
+SCAR,Military Mk17,P,High End,Rifle,145850,55,275,10,2450,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,scar.png,w_mr_fnscar-h_t1
+SCAR,Police Mk17,P,High End,Rifle,145850,55,275,10,2450,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,scar.png,w_mr_fnscar-h_t1
+SCAR,Police Mk17 Replica,P,High End,Rifle,145850,55,275,10,2450,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,scar.png,w_mr_fnscar-h_t1
+SIG 716,SIG 716,P,High End,Rifle,121258,45,320,20,2680,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,sig_716.png,w_mr_716_t1
+SIG 716,SIG 716 CQB,P,High End,Rifle,125865,45,320,20,2630,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short,8.02,,sig_716.png,w_mr_716_t1
+SIG 716,SIG 716 Replica,P,High End,Rifle,121258,45,320,20,2680,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,sig_716.png,w_mr_716_t1
+UMP-45,USC .45 ACP,P,High End,Rifle,97742.5,55,420,20,2880,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,.45 ACP,,,
+UMP-45,USC .45 ACP Replica,P,High End,Rifle,97742.5,55,420,20,2880,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,.45 ACP,,,
+1886,The Virginian,P,Named,Rifle,386988.5,35,100,8,3460,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Boomerang,,,Tubular,,virginian.png,w_mr_winchester_t1_special_weapons_01.png
+M1A,Baker's Dozen,P,Named,Rifle,231346,60,180,13,2860,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Lucky Shot,Neutral / Short / Long,Side / Short / Long,MM 7.62,,bakers_dozen.png,w_mr_m14_t1
+M4,Surge,P,Named,Rifle,100615,55,380,30,2080,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Spike,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,surge.png,w_ar_m4_t3
+SCAR,Everlasting Gaze,P,Named,Rifle,145850,55,275,10,2450,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Perpetuation,Neutral / Short / Long,Side / Short / Long,8.02,8.02,scar.png,w_mr_fnscar-h_t1
+SIG 716,Artist's Tool,P,Named,Rifle,125865,45,320,20,2630,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Rifleman,Neutral / Short / Long,Side / Short,8.02,,sig_716.png,w_mr_716_t1
+SPAS-12,Lullaby,P,Exotic,Shotgun,716008,13,70,8,4780,45,Shotgun Damage,15,Damage to Armor,12,Damage to TOC,Sandman,Lullaby,Lullaby,Lullaby,,lullaby.png,w_stg_exotic_pre_order_spas_t1
+SPAS-12,Sweet Dreams,P,Exotic,Shotgun,716008,13,70,8,4780,45,Shotgun Damage,15,Damage to Armor,12,Damage to TOC,Sandman,Sweet Dreams,Sweet Dreams,Sweet Dreams,,sweet_dreams.png,w_stg_exotic_shotgun_t1
+AA-12,ACS-12,P,High End,Shotgun,180748,16,300,20,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,,,acs_12.png,w_stg_aa12_t1
+Double Barrel,Double Barrel Shotgun,P,High End,Shotgun,678136,11,200,2,3540,45,Shotgun Damage,15,Damage to Armor,12,A,A,,,,,double_barrel.png,w_stg_doublebarrel_t1
+Double Barrel,Double Barrel Shotgun Replica,P,High End,Shotgun,678136,11,200,2,3890,45,Shotgun Damage,15,Damage to Armor,12,A,A,,,,,double_barrel.png,w_stg_doublebarrel_t1
+Double Barrel,Double Barrel Sawed Off,S,High End,Shotgun,635712,7,200,2,2510,45,Shotgun Damage,15,Damage to Armor,12,A,A,,,,,double_barrel.png,w_stg_doublebarrel_t1
+Double Barrel,Firestarter,S,Named,Shotgun,635712,7,200,2,2510,45,Shotgun Damage,11,Damage to Health,7.5,A,Primer Rounds,,,,,firestarter.png,w_stg_doublebarrel_engraved_t2
+M870,Custom M870 MCS,P,High End,Shotgun,703672,11,75,5,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+M870,Custom M870 MCS Replica,P,High End,Shotgun,703672,11,75,5,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+M870,M870 Express,P,High End,Shotgun,703672,11,75,5,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+M870,M870 Express Replica,P,High End,Shotgun,703672,11,75,5,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+M870,Military M870,P,High End,Shotgun,703672,11,75,5,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+KSG,KSG Shotgun,P,High End,Shotgun,678928,16,70,12,7990,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,Tubular,,ksg.png,w_stg_kel-tec_ksg_t1
+SASG-12,Black Market SASG-12 S,P,High End,Shotgun,364812,14,180,7,3000,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,,,sasg_12.png,w_stg_saiga12_t2
+SASG-12,Black Market SASG-12 S Replica,P,High End,Shotgun,364812,14,180,7,3000,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,,,sasg_12.png,w_stg_saiga12_t2
+SASG-12,SASG-12,P,High End,Shotgun,364812,14,180,7,3000,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,,,sasg_12.png,w_stg_saiga12_t2
+SASG-12,Tactical SASG-12 K,P,High End,Shotgun,364812,14,180,7,3000,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,,,sasg_12.png,w_stg_saiga12_t2
+SPAS-12,SPAS-12,P,High End,Shotgun,646883,16,70,8,5450,45,Shotgun Damage,15,Damage to Armor,12,A,A,,,Tubular,,spas_12.png,w_stg_spas_12_t1
+SPAS-12,SPAS-12 Replica,P,High End,Shotgun,716008,16,70,8,5500,45,Shotgun Damage,15,Damage to Armor,12,A,A,,,Tubular,,spas_12.png,w_stg_spas_12_t1
+Super 90,Marine Super 90,P,High End,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,super_90.png,w_stg_benelli_m4_t1
+Super 90,Super 90,P,High End,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,super_90.png,w_stg_benelli_m4_t1
+Super 90,Super 90 Replica,P,High End,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,super_90.png,w_stg_benelli_m4_t1
+Super 90,Tactical Super 90 SBS,P,High End,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,super_90.png,w_stg_benelli_m4_t1
+Super 90,Tactical Super 90 SBS Replica,P,High End,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,12,A,A,Neutral / Short / Long,Side / Short / Long,Tubular,,super_90.png,w_stg_benelli_m4_t1
+ACS-12,Rock n' Roll,P,Named,Shotgun,180748,16,300,30,3350,45,Shotgun Damage,15,Damage to Armor,12,A,Perfectly Extra,Micro / Neutral / Short,Side / Short / Long,,,acs_12.png,w_stg_aa12_t1
+Double Barrel,Boomstick,P,Named,Shotgun,678136,11,200,2,3890,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Pumped Up,,,,,boomstick.png,w_stg_doublebarrel_t2
+Double Barrel,Backup Boomstick,S,Named,Shotgun,635712,7,200,2,2510,45,Shotgun Damage,17,Damage to Armor,12,A,A,,,,,double_barrel.png,w_stg_doublebarrel_t1
+M870,Cuélebre,P,Named,Shotgun,703672,11,75,5,2230,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Jazz Hands,Micro / Neutral / Short,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+KSG,The Send-Off,P,Named,Shotgun,678928,32,70,12,7990,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Distance,Micro / Neutral / Short,Side / Short / Long,Tubular,,ksg.png,w_stg_kel-tec_ksg_t1
+SASG-12,Tsunami,P,Named,Shotgun,364812,14,180,7,3000,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Pummel,Micro / Neutral / Short,Side / Short / Long,,,sasg_12.png,w_stg_saiga12_t2
+Super 90,Enforcer,P,Named,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Pummel,Micro / Neutral / Short,Side / Short / Long,Tubular,,super_90.png,w_stg_benelli_m4_t1
+CMGG,Lady Death,P,Exotic,SMG,35409,21,900,32,1750,50,SMG Damage,15,Critical Hit Chance,21,Damage to Armor,Breathe Free,Lady Death,Lady Death,Lady Death,Lady Death,lady-death.png,w_smg_cmmg_banshee_exotic_t1
+P90,The Chatterbox,P,Exotic,SMG,39457,21,850,50,1430,50,SMG Damage,15,Critical Hit Chance,21,Critical Hit Damage,Incessant Chatter,The Chatterbox,The Chatterbox,The Chatterbox,The Chatterbox,the-chatterbox.png,w_smg_exoticsmg_t1
+AUG,AUG A3 Para XS,P,High End,SMG,58661.5,22,725,25,2310,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,aug.png,w_smg_aug-a3p_t1
+AUG,Enhanced AUG A3P,P,High End,SMG,58661.5,22,725,25,2310,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,aug.png,w_smg_aug-a3p_t1
+AUG,Tactical AUG A3P,P,High End,SMG,58661.5,22,725,25,2310,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,aug.png,w_smg_aug-a3p_t1
+AUG,Tactical AUG A3P Replica,P,High End,SMG,58661.5,22,725,25,2310,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,aug.png,w_smg_aug-a3p_t1
+CMMG,CMMG Banshee,P,High End,SMG,47848.5,21,900,32,1920,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,Side / Short,9mm,9mm,cmmg.png,w_smg_cmmg_banshee_t1
+MP5,MP5 ST,P,High End,SMG,53903.5,21,800,30,1790,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,mp5.png,w_smg_mp5_t1
+MP5,MP5 ST Replica,P,High End,SMG,53903.5,21,800,30,1790,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,mp5.png,w_smg_mp5_t1
+MP5,MP5-N,P,High End,SMG,53903.5,21,800,30,1790,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,Side / Short / Long,9mm,9mm,mp5.png,w_smg_mp5_t1
+MP5,MP5A2,P,High End,SMG,53903.5,21,800,30,1790,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short,9mm,9mm,mp5.png,w_smg_mp5_t1
+MP7,MP7,P,High End,SMG,47952,19,950,40,2000,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short,,5.56,mp7.png,w_smg_mp7_t1
+MPX,SIG MPX,P,High End,SMG,50998.5,22,850,30,2090,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short,9mm,9mm,mpx.png,w_smg_mpx_t1
+P90,P90,P,High End,SMG,39457,21,1100,50,1570,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,,,5.56,p90.png,w_smg_p90_t1
+P90,P90 Replica,P,High End,SMG,39457,21,1100,50,1570,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,,,5.56,p90.png,w_smg_p90_t1
+PP-19,Enhanced PP-19,P,High End,SMG,63593,21,700,53,1460,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,,,9mm,pp_19.png,w_smg_pp19bizon_t1
+PP-19,PP-19,P,High End,SMG,63593,21,700,53,1460,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,,,9mm,pp_19.png,w_smg_pp19bizon_t1
+SMG-9,Converted SMG-9,P,High End,SMG,48511.5,15,1000,32,2260,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,,9mm,9mm,smg_9.png,w_smg_tec_9_t1
+SMG-9,Converted SMG-9 A2,P,High End,SMG,46734.5,15,1000,32,2300,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,Side / Short,9mm,9mm,smg_9.png,w_smg_tec_9_t1
+SMG-9,Converted SMG-9 Replica,P,High End,SMG,48511.5,15,1000,32,2260,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,,9mm,9mm,smg_9.png,w_smg_tec_9_t1
+T821,Black Market T821,P,High End,SMG,76916,20,550,32,1470,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,Side / Short,9mm,9mm,t821.png,w_smg_socimi821_t1
+T821,Black Market T821 Replica,P,High End,SMG,76916,20,550,32,1470,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,Side / Short,9mm,9mm,t821.png,w_smg_socimi821_t1
+T821,Police T821,P,High End,SMG,76916,20,550,32,1470,50,SMG Damage,15,Critical Hit Chance,21,A,A,Micro / Neutral / Short,Side / Short,9mm,9mm,t821.png,w_smg_socimi821_t1
+Thompson,M1928,P,High End,SMG,78416,19,600,30,1460,50,SMG Damage,15,Critical Hit Chance,21,A,A,,,.45 ACP,,thompson.png,w_smg_thompson_t1
+Thompson,Tommy Gun,P,High End,SMG,50627,19,900,50,1540,50,SMG Damage,15,Critical Hit Chance,21,A,A,,,,,thompson.png,w_smg_thompson_t1
+UMP-45,Police UMP-45,P,High End,SMG,63691.5,16,650,25,1670,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short / Long,.45 ACP,.45 ACP,ump_45.png,w_smg_ump45_t1
+UMP-45,Tactical UMP-45,P,High End,SMG,63691.5,16,650,25,1670,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short / Long,.45 ACP,.45 ACP,ump_45.png,w_smg_ump45_t1
+UMP-45,Tactical UMP-45 Replica,P,High End,SMG,63691.5,16,650,25,1670,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short / Long,.45 ACP,.45 ACP,ump_45.png,w_smg_ump45_t1
+Vector,Tactical Vector SBR 9mm,P,High End,SMG,40505.5,15,1200,19,1690,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short,9mm,9mm,vector.png,w_smg_krissvector_t1
+Vector,Vector SBR .45 ACP,P,High End,SMG,38300.5,15,1200,25,2060,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,.45 ACP,.45 ACP,vector.png,w_smg_krissvector_t1
+Vector,Vector SBR .45 ACP Replica,P,High End,SMG,38300.5,15,1200,25,2060,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short / Long,.45 ACP,.45 ACP,vector.png,w_smg_krissvector_t1
+Vector,Vector SBR 9mm,P,High End,SMG,39306.5,15,1200,33,2380,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long / Ironsights,Side / Short,9mm,9mm,vector.png,w_smg_krissvector_t1
+CMMG,The Grudge,P,Named,SMG,47848.5,21,900,32,1920,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Vindictive,Micro / Neutral / Short,Side / Short,9mm,9mm,cmmg.png,w_smg_cmmg_banshee_t1
+MP7,Swap Chain,P,Named,SMG,47952,19,950,40,2000,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Unwavering,Neutral / Short / Long,Side / Short,,,mp7.png,w_smg_mp7_t1
+MPX,Safety Distance,P,Named,SMG,50998.5,22,850,30,2090,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Outsider,Neutral / Short / Long,Side / Short,9mm,9mm,mpx.png,w_smg_mpx_t1
+MPX,The Apartment,P,Named,SMG,50998.5,22,850,30,2090,50,SMG Damage,15,Critical Hit Chance,21,A,Perfectly Measured,Neutral / Short / Long,Side / Short,9mm,9mm,mpx.png,w_smg_mpx_t1
+P90,Emeline's Guard,P,Named,SMG,39457,21,1100,50,1570,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Preservation,Micro / Neutral / Short,,,5.56,p90.png,w_smg_p90_t1
+PP-19,Cold Relations,P,Named,SMG,63593,21,700,53,1460,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Strained,Neutral / Short / Long,,,9mm,pp_19.png,w_smg_pp19bizon_t1
+Thompson,The Sleigher,P,Named,SMG,92989.5,16,250,50,2300,50,SMG Damage,15,Critical Hit Chance,21,A,Hidden Rock,,,,,the_sleigher.png,w_smg_thompson_t2_xmas
+Vector,Dark Winter,P,Named,SMG,38300.5,15,1200,25,2060,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Killer,Neutral / Short / Long / Ironsights,Side / Short / Long,.45 ACP,.45 ACP,vector.png,w_smg_krissvector_t1
+93R,Sharpshooters 93R,S,Named,Pistol,52977.5,12,700,20,1560,100,Pistol Damage,11,Reload Speed,9.3,,Perfect Unwavering,,,Pistol,9mm,93r.png,w_p_93r_t1
+Rhino,Diceros Special,S,Named,Pistol,198305.5,18,180,6,1930,100,Pistol Damage,11,Stability,9.3,,Perfect Optimist,Micro / Neutral / Short,Gadget,Revolver Drum,,rhino.png,w_p_rhino_t1
+Desert Eagle,Survivalist D50,S,Named,Pistol,189171.5,18,200,8,2240,100,Pistol Damage,11,Damage to TOC,8,A,Perfect Sadist,Micro / Neutral / Short,,,,desert_eagle.png,w_p_desert_eagle_t1
+P320,P320 XCompact,S,Named,Pistol,87522,12,380,17,1770,100,Pistol Damage,11,Damage to Armor,5,,Perfect Preservation,Micro / Neutral,Gadget,Pistol,9mm,p320.png,w_p_sig_p320_t1
+M1911,Maxim 9,S,Named,Pistol,125385,16,280,17,1390,100,Pistol Damage,11,,,Headshot Damage,Perfect Spike,,,Pistol,,m1911.png,w_p_m1911_t1
+SIX12,SIX12,P,High End,Shotgun,409568,14,130,7,3000,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,Tubular,,six_12.png,w_stg_crye_six12_t1
+SIX12,The Mop,P,Named,Shotgun,409568,14,130,7,3000,45,Shotgun Damage,15,Damage to Armor,12,Armor on Kill %,A,Micro / Neutral / Short,Side / Short / Long,Tubular,,six_12.png,w_stg_crye_six12_t1
+SIX12,Scorpio,P,Exotic,Shotgun,409568,14,130,7,2500,45,Shotgun Damage,15,Damage to Armor,12,Critical Hit Damage,Septic Shock,Scorpio,Scorpio,Scorpio,Scorpio,scorpio.png,w_stg_crye_six12_exotic_t1
+PDR,Capacitor,P,Exotic,Assault Rifle,57617.5,31,700,30,1850,55,Assault Rifle Damage,15,Damage to Armor,12,Health Damage,Capacitance,Capacitor,Capacitor,Capacitor,Capacitor,capacitor.png,
+PDR,PDR,P,High End,Assault Rifle,57617.5,31,700,30,2040,55,Assault Rifle Damage,15,Damage to Health,21,A,A,Micro / Neutral / Short,,5.56,5.56,pdr.png,w_ar_magpul_pdr_t1
+PDR,Test Subject,P,Named,Assault Rifle,57617.5,31,700,30,2040,55,Assault Rifle Damage,15,Damage to Health,21,A,Perfectly In Sync,Micro / Neutral / Short,,5.56,5.56,pdr.png,w_ar_magpul_pdr_t1
+KARD,KARD-45,S,High End,Pistol,114267,12,310,10,1710,100,Pistol Damage,15,,,A,A,Micro / Neutral,Gadget,Pistol,9mm,kard.png,w_p_kriss_kard_t1
+KARD,TDI ""Kard"" Custom,S,Named,Pistol,114267,12,310,10,1710,100,Pistol Damage,15,,,Skill Tier,A,Micro / Neutral,Gadget,Pistol,9mm,kard.png,w_p_kriss_kard_t1
+Tactical .308,Tactical .308,P,High End,Marksman Rifle,403809.5,50,70,7,3040,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,tactical_308.png,w_mr_brace_built_barrier_tactical_t1
+Tactical .308,Scalpel,P,Named,Marksman Rifle,403809.5,50,90,7,3040,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Future Perfection,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,tactical_308.png,w_mr_brace_built_barrier_tactical_t1
+Sig Sauer 556,SIG 556,P,High End,Assault Rifle,55934.5,28,700,30,2170,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short,5.56,5.56,sig_sauer_556.png,w_ar_sig556_t1
+Sig Sauer 556,Mechanical Animal,P,Named,Assault Rifle,55934.5,28,700,30,2170,55,Assault Rifle Damage,15,Health Damage,21,A,Future Perfection,Neutral / Short / Long,Side / Short,5.56,5.56,sig_sauer_556.png,w_ar_sig556_t1
+MPX,Backfire,P,Exotic,SMG,50998.5,22,850,30,2090,50,SMG Damage,15,Critical Hit Chance,21,Mag Size %,Payment in Kind,Backfire,Backfire,Backfire,Backfire,backfire.png,w_smg_mpx_exotic_t1
+SRS,Mantis,P,Exotic,Marksman Rifle,409357,60,60,7,3900,0,Marksman Rifle Damage,15,Headshot Damage,111,Damage to TOC,In Plain Sight,Mantis,Mantis,Mantis,Mantis,mantis.png,w_mr_srs_exotic_t1
+MK47,Resolute MK47,P,High End,Rifle,124901,55,300,30,1940,60,Rifle Damage,15,Critical Hit Damage,17,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,resolute_mk47.png,w_ar_cmmg_resolute_300_t1
+MK47,Harmony,P,Named,Rifle,124901,55,300,30,1940,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfectly In Sync,Neutral / Short / Long,Side / Short / Long,8.02,8.02,harmony.png,w_ar_cmmg_resolute_300_t1
+AUG,The Bighorn - Semi-Auto Mode,P,Exotic,Assault Rifle,230829,27,120,42,2100,55,Assault Rifle Damage,15,Health Damage,21,Critical Hit Damage,Big Game Hunter,The Bighorn,The Bighorn,The Bighorn,The Bighorn,the-bighorn.png,w_ar_steyr_aug_a3_ar_t1
+TKB-408,TKB-408,P,High End,Assault Rifle,63508.5,27,600,30,1870,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,8.02,8.02,tkb_408.png,rewards_season08_blueprint_w_assaultrifle_tkb408_t1_v1
+TKB-408,Kingbreaker,P,Named,Assault Rifle,63508.5,27,600,30,1870,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Flatline,Neutral / Short / Long,Side / Short / Long,8.02,8.02,kingbreaker.png,rewards_season08_blueprint_w_assaultrifle_tkb408_t1_v1
+HK GR9,GR9,P,High End,LMG,49480,35,750,200,3630,65,LMG Damage,15,Damage to TOC,12,A,A,GR9,Side / Short,Ammunition Belt,8.02,gr9.png,player_weapon_lightmachinegun_hkgr9_t1_v1_w_lmg_gr-9_t1
+HK GR9,Dare,P,Named,LMG,49480,35,750,200,3630,65,LMG Damage,15,Damage to TOC,12,A,Perfect Flatline,GR9,Side / Short,Ammunition Belt,QDC,dare.png,player_weapon_lightmachinegun_hkgr9_t1_v1_w_lmg_gr-9_t1
+KAC,Bluescreen,P,Exotic,LMG,62361,40,720,200,2220,65,LMG Damage,15,Damage to TOC,12,Damage to Armor,Disruptor Rounds,Bluescreen,Bluescreen,Bluescreen,Bluescreen,bluescreen.png,w_lmg_kac_lamg_t2
+SVD,Dread Edict,P,Exotic,Marksman Rifle,156662.5,50,260,10,2480,0,Marksman Rifle Damage,15,Headshot Damage,111,Damage to TOC,Full Stop,Dread Edict,Dread Edict,Dread Edict,Dread Edict,svd.png,w_mr_svd_t1
+ACS-12,Lefty,P,Named,Shotgun,169243,14,300,20,2300,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Sledgehammer,Micro / Neutral / Short,Side / Short / Long,Tubular,,lefty.png,w_player_weapon_rifle_named_lefty
+M1A,Stage Left,P,Named,Rifle,129179.5,60,320,10,2320,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Sledgehammer,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,stage_left.png,w_player_weapon_rifle_named_stageleft_v2
+PF-45,Busy Little Bee,S,Exotic,Pistol,93962.5,18,400,10,1610,100,Pistol Damage,15,,,A,Busy Little Bee,Busy Little Bee,Busy Little Bee,Busy Little Bee,Busy Little Bee,busy_little_bee.png,w_tu16_mp45_exotic_busy_little_bee
+M1A,Doctor Home,P,Exotic,Rifle,129269.5,60,320,10,1930,60,Rifle Damage,15,Critical Hit Damage,17,Damage to TOC,Doctor Home,Doctor Home,Doctor Home,Doctor Home,Doctor Home,doctor-home.png,player_weapon_rifle_doctor_home_exotic
+G28,Sacrum Imperium,P,Exotic,Marksman Rifle,206425,50,180,20,3600,0,Marksman Rifle Damage,15,Headshot Damage,111,A,The Trap,Sacrum Imperium,Sacrum Imperium,Sacrum Imperium,Sacrum Imperium,g28.png,w_mr_hk_g28_t1
+G28,Relic,P,Named,Marksman Rifle,206425,50,180,20,3600,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfectly Determined,Neutral / Short / Long,Side / Short / Long,8.02,8.02,g28.png,w_mr_hk_g28_t1
+Magnum,Prophet,S,Named,Pistol,233278,16,160,6,2540,100,Pistol Damage,15,,,A,Perfectly Determined,Micro / Neutral / Short,,Revolver Drum,,magnum.png,w_p_s&w586_t1
+M4,St Elmo's Engine,P,Exotic,Assault Rifle,46917.5,31,850,40,2040,55,Assault Rifle Damage,15,Health Damage,21,A,Actum Est,St Elmo's Engine,St Elmo's Engine,St Elmo's Engine,St Elmo's Engine,st_elmos.png,w_ar_m4_t1
+MG5,Big Show,P,Named,LMG,54322,35,800,50,2960,85,LMG Damage,15,Damage to TOC,12,A,Perfect Thunder Strike,Neutral / Short / Long,Side / Short,Ammunition Belt,,big_show.png,w_lmg_hk121_t1
+MP5,Cabaret,P,Named,SMG,53903.5,21,800,30,1790,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Thunder Strike,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,mp5.png,w_smg_mp5_t1
+MG5,Iron Lung,P,Exotic,LMG,54322,35,800,50,2960,85,LMG Damage,15,Damage to TOC,12,A,Ardent,Iron Lung,Iron Lung,Iron Lung,,iron_lung.png,player_weapon_lightmachinegun_hk121_t1_v1_exotic_icon
+Vector,Ouroboros,P,Exotic,SMG,38300.5,15,1403,50,1650,50,SMG Damage,15,Critical Hit Chance,21,A,Rule Them All,Ouroboros,Ouroboros,Ouroboros,Ouroboros,ouroboros.png,w_smg_krissvector_t1_exotic_inc
+G36,Born Great,P,Named,Assault Rifle,52564,35,750,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Stabilize,Short / Long,Side / Short,5.56,5.56,g36.png,w_ar_g36_t1
+Thompson,Grown Great,P,Named,SMG,50627,19,900,50,1540,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Stabilize,,,,,thompson.png,w_smg_thompson_t1
+Mosquito,Mosquito,S,Exotic,Pistol,102584.5,16,350,15,1650,100,Pistol Damage,15,,,A,Mosquito Song,,,Mosquito,Mosquito,mosquito.png,player_weapon_pistol_m9_t1_v1_exotic_icon.png
+MDR,Vindicator,P,Exotic,Rifle,102970,60,380,25,2970,0,Assault Rifle Damage,15,Health Damage,21,A,Ortiz Assault Interface,Vindicator,Vindicator,Vindicator,Vindicator,vindicator.png,w_ar_mdr_t1_exotic_icon
+M16A2,Whisper,P,Named,Rifle,106971,50,400,30,2440,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfectly Behind You,Micro / Neutral / Short,,5.56,5.56,whisper.png,w_ar_m16a2_t1
+Model 700,Brutus,P,Named,Marksman Rifle,412516,50,55,7,3980,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfectly Behind You,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,brutus.png,w_mr_m24_t3
+KSG,Overlord,P,Exotic,Shotgun,678928,16,70,12,6790,45,Shotgun Damage,15,Damage to Armor,21,A,Capitulate,Overlord,Overlord,Overlord,Overlord,overlord.png,player_weapon_shotgun_kel_tec_ksg_t1_v1_exotic_icon
+SPAS-12,Thorn,P,Named,Shotgun,716008,16,70,8,5500,45,Shotgun Damage,15,Damage to Armor,21,A,Perfect Brazen,,,Tubular,,thorn.png,w_stg_spas_12_t1
+Super 90,Like Glue,P,Named,Shotgun,389936,11,160,8,4650,45,Shotgun Damage,15,Damage to Armor,21,A,Perfect Brazen,Micro / Neutral / Short,Side / Short / Long,Tubular,,like_glue.png,w_stg_benelli_m4_t1
+FAL,Strega,P,Exotic,Assault Rifle,57646,35,700,20,1950,55,Assault Rifle Damage,15,Health Damage,21,A,Unnerve,Strega,Strega,Strega,Strega,strega.png,player_weapon_assaultrifle_fal_t1_v1_exotic_w_ar_fal_t1_exotic_icon.png
+Carbine 7,The Drill,P,Named,Assault Rifle,49790,28,790,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Precision Strike,Neutral / Short / Long,Side / Short / Long,5.56,5.56,the_drill.png,w_ar_carbine_7_t1
+HK GR9,Cricket,P,Named,LMG,49480,35,750,200,3630,65,LMG Damage,15,Damage to TOC,12,A,Perfect Precision Strike,GR9,Side / Short,Ammunition Belt,QDC,cricket.png,player_weapon_lightmachinegun_hkgr9_t1_v1_w_lmg_gr-9_t1.png
+M4,Lexington,P,Named,Assault Rifle,48699.5,31,850,30,2240,55,Assault Rifle Damage,15,Health Damage,21,A,A,Neutral / Short / Long,Side / Short / Long,5.56,5.56,lexington.png,w_ar_m4_t3
+MP7,Oxpecker,P,Exotic,SMG,47952,19,950,50,2000,50,SMG Damage,15,Critical Hit Chance,21,A,Symbiosis,Oxpecker,Oxpecker,,Oxpecker,oxpecker.png,player_weapon_submachinegun_mp7_t1_v1_exotic_icon
+RPK-74,Rusty,P,Named,LMG,55474,28,650,45,3000,65,LMG Damage,15,Damage to TOC,12,A,Perfect Pressure Point,Neutral / Short / Long,Side / Short / Long,8.02,8.02,rusty.png,w_lmg_rpk_t1
+FAL,Goalie,P,Named,Assault Rifle,57634,35,700,20,2130,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Pressure Point,Neutral / Short / Long,Side / Short / Long,8.02,8.02,goalie.png,w_ar_fal_t1
+Magnum,The Harvest,S,Named,Pistol,256610,16,149,6,2540,100,Pistol Damage,15,,,A,A,Micro / Short,,Revolver Drum,,magnum.png,w_p_s&w586_t1
+M1A,Cooler,P,Named,Rifle,0,60,320,100,3000,60,Rifle Damage,15,Critical Hit Damage,17,A,A,,,,,cooler.png,w_tu21_m1a_supersoaker
+AK-47,First Sight,P,Named,Assault Rifle,67175,27,600,30,2800,55,Assault Rifle Damage,15,Health Damage,21,A,A,Short / Long,Side / Short,7.62,,ak47.png,w_ar_ak47_t1
+M249,October Fifth - M249 B,P,Named,LMG,48300,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,Damage to Armor,A,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,m249.png,w_lmg_m249_t1
+M44,Oh Carol,P,Named,Marksman Rifle,433563.5,50,55,5,4770,0,Marksman Rifle Damage,15,Headshot Damage,137,A,A,Oh Carol,,,,oh_carol.png,w_mr_mosinnagant_t2_ohcarol
+RPK,Pakhan,P,Exotic,LMG,71538,30,600,40,4000,65,LMG Damage,15,Damage to TOC,12,A,Pakhan,Pakhan,Pakhan,Pakhan,Pakhan,pakhan.png,w_lmg_rpk_exotic.png
+SCAR,Lud,P,Named,Assault Rifle,59221,31,650,30,2020,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Streamline,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,lud.png,w_ar_fnscar-l_t2
+SMG-9,Purist,P,Named,SMG,46734.5,15,1000,32,2300,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Streamline,Micro / Neutral / Short,Side / Short,9mm,9mm,purist.png,player_weapon_submachinegun_tec9_t2_v1_named_w_smg_tec_9_t2_icon
+G36,Caretaker,P,Named,Assault Rifle,52564,35,750,30,2340,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Killer,Neutral / Short / Long,Side / Short / Long,5.56,5.56,caretaker.png,w_ar_g36_t3.png
+FAMAS,Huntsman,P,Named,Assault Rifle,45272.5,26,900,30,2490,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Frenzy,Neutral / Short / Long,Side / Short,5.56,5.56,famas.png,
+SVD,Handbasket,P,Named,Marksman Rifle,386988.5,50,60,10,3150,0,Marksman Rifle Damage,15,Headshot Damage,111,A,A,Short / Long,Side / Short,MM 7.62,8.02,svd.png,w_mr_svd_t1
+UMP,Slingshot,P,Named,SMG,63691.5,60,650,25,1670,50,SMG Damage,15,Critical Hit Chance,21,A,A,Neutral / Short / Long,Side / Short / Long,.45 ACP,.45 ACP,ump_45.png,w_smg_ump45_t1
+Model 700,Shroud,P,Exotic,Marksman Rifle,412516,50,55,7,3.06,0,Marksman Rifle Damage,15,Headshot Damage,111,A,High Priority Target,Shroud,Shroud,Shroud,Shroud,shroud.png,y7s2_rewards_player_weapon_marksmanrifle_m24_t3_v1_exotic_w_mr_m24_exotic_t1_icon
+93R,Tempest,S,Exotic,Pistol,62714,30,700,30,2000,100,Pistol Damage,15,,,A,Restrained,,,Tempest,Tempest,tempest.png,player_weapon_pistol_93r_t1_v1_exotic_icon
+UMP-45,Achilles,P,Named,Rifle,97742.5,55,420,20,2880,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Soft Spot,Neutral / Short / Long,Side / Short / Long,.45 ACP,,achilles.png,
+M44,Instigator,P,Named,Marksman Rifle,417692,50,55,5,4290,0,Marksman Rifle Damage,15,Headshot Damage,111,A,Perfect Soft Spot,Neutral / Short / Long,Side / Short / Long,MM 7.62,8.02,classic_m44.png,w_mr_mosinnagant_t1
+ACS 12,Stack Broker,P,Named,Shotgun,150623,16,360,20,3350,45,Shotgun Damage,15,Damage to Armor,12,A,A,Micro / Neutral / Short,Side / Short / Long,,,acs_12.png,
+Classic M1A,Bittersweet,P,Exotic,Rifle,231346,60,180,20,2360,60,Rifle Damage,15,Critical Hit Damage,17,A,Transfusion,Bittersweet,Bittersweet,Bittersweet,,bittersweet.png,
+Super 90,Sheriff,P,Exotic,Shotgun,526412,100,160,8,4230,45,Shotgun Damage,15,Damage to Armor,12,A,Autentico,,,,,sheriff.png,player_weapon_shotgun_m4_t1_v1_exotic_icon
+M870,Lockdown,P,Named,Shotgun,703672,11,75,5,3350,45,Shotgun Damage,15,Damage to Armor,12,A,Perfect Immobilize,Neutral / Short / Long,Side / Short / Long,Tubular,,m870.png,w_stg_870_t1
+Vector,Froth,P,Named,SMG,39306.5,15,1200,33,2380,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Immobilize,Neutral / Short / Long / Ironsights,Side / Short,9mm,9mm,vector.png,w_smg_krissvector_t1
+M1911,Quickstep,S,Named,Pistol,117435.5,12,310,7,2330,100,Pistol Damage,15,,,A,Sport Mode,Micro / Neutral,Gadget,Pistol,.45 ACP,quickstep.png,w_p_m1911_t2
+M249,Big Alejandro,P,Exotic,LMG,39278.5,35,1100,200,3.66,65,LMG Damage,15,Damage to TOC,12,Critical Hit Chance,Cover Shooter,,,,,big-alejandro.png,
+M249,Gear Shift,P,Named,LMG,39278,35,850,100,4540,65,LMG Damage,15,Damage to TOC,12,A,Perfectly Measured,Neutral / Short / Long,Side / Short / Long,Ammunition Belt,5.56,gear-shift.png,
+F2000,Agitator,P,Exotic,Assault Rifle,49104,31,850,30,2400,55,Assault Rifle Damage,15,Health Damage,21,A,Perturb,Agitator,,Agitator,Agitator,agitator.png,
+Rhino4,Whiplash,S,Exotic,Pistol,198306,18,180,6,0,100,Pistol Damage,15,,,A,Faster Than Reloading,Whiplash,Whiplash,Whiplash,,whiplash.png,w_p_rhino_t3_player
+ACR,Trader,P,Named,Rifle,92364.5,45,420,30,2630,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Back and Forth,Neutral / Short / Long,Side / Short / Long,8.02,8.02,trader.png,W_AR_ACR_T1
+AUG_A3P,Interchange,P,Named,SMG,58661.6,22,725,25,2310,50,SMG Damage,15,Critical Hit Chance,21,A,Perfect Back and Forth,Neutral / Short / Long / Ironsights,Side / Short / Long,9mm,9mm,interchange.png,W_SMG_AUG-A3P_T2
+ACR,The Archivist,P,Named,Assault Rifle,58896.6,31,650,30,1910,55,Assault Rifle Damage,15,Health Damage,21,A,Perfect Ranger,Neutral / Short / Long / Ironsights,Side / Short / Long,5.56,5.56,the-archivist.png,W_AR_ACR_T3
+PDR,First Bloom,P,Named,Assault Rifle,57617.5,31,700,30,2040,95,Assault Rifle Damage,15,Damage to Health,21,A,Blossom Harvest,Micro / Neutral / Short,,5.56,5.56,first_bloom.png,
+HK121,Bell Ringer,P,Named,LMG,52333.8,35,800,50,3010,85,LMG Damage,15,Damage to TOC,12,A,A,Neutral / Short / Long,Side / Short,Ammunition Belt,8.02,bell-ringer.png,W_LMG_HK121_Krampus
+MK16,Caduceus,P,Exotic,Assault Rifle,59221,31,650,30,2.02,75,Assault Rifle Damage,15,Damage to Health,21,Damage to TOC,Caduceus,Caduceus,Caduceus,Caduceus,Caduceus,caduceus.png,
+SA80,Insult To Injury,P,Named,LMG,61096.8,30,610,30,3180,65,LMG Damage,15,Damage to TOC,12,A,Perfect Head Scratcher,,,,,insult_to_injury.png,
+MDR,Brain Break,P,Named,Rifle,102970.4,60,360,20,2850,60,Rifle Damage,15,Critical Hit Damage,17,A,Perfect Head Scratcher,,,,,brain_break.png,
+Thompson,Underboss,P,Exotic,SMG,50627.2,16,900,50,1540,50,SMG Damage,15,Critical Hit Chance,21,A,Gangland Hit,Underboss,Underboss,Underboss,Underboss,underboss.png,
+SCAR,Prima Donna,P,Exotic,Marksman Rifle,145850,55,55,7,4990,0,Marksman Rifle Damage,15,Headshot Damage,111,A,You Can Look,Prima Donna,Prima Donna,Prima Donna,Prima Donna,prima_donna.png,
+Desert Eagle,Rabid D50,S,Named,Pistol,189171.6,18,200,8,2240,100,Pistol Damage,15,,,A,Foam at the Mouth,Micro / Neutral / Short,,,,rabid_d50.png,

@@ -1,0 +1,285 @@
+Quality,Name,Assault Rifle,Rifle,Marksman Rifle,SMG,LMG,Pistol,Shotgun,Desc,attr,val
+A,Boomerang,,x,,,,,,"Critical hits have a 50% chance to return the bullet to the magazine. If a bullet is returned to the magazine, the next shot has +40% increased damage.",,
+A,Breadbasket,x,x,x,x,x,x,x,Landing body shots adds a stack of bonus +55% (70%) headshot damage to the next headshot for 10s. Max stack is 3 (2).,,
+A,Close & Personal,x,x,x,x,x,x,x,Killing a target within 7m grants +30% weapon damage for 10s.,,
+A,Eyeless,x,x,x,x,x,x,x,"Amplifies Weapon Damage by 30% (35%) to blinded enemies. After 4 (3) kills, applies blind to the next enemy you hit.",,
+A,Fast Hands,x,x,x,x,x,x,x,Critical hits add a stack of 3% (5%) reload speed bonus. Max stack is 40.,,
+A,Finisher,,,,,,x,,Swapping from this weapon within 10s of killing an enemy grants 30% critical hit chance and 30% critical hit damage for 15s.,,
+A,First Blood,,,x,,,,,"If scoped, your first shot fired from out of combat or after fully reloading from empty deals headshot damage to any part of the body hit. REQUIRES a Scope with 8x magnification or higher.",,
+A,Frenzy,,,,,x,,,"For every 10 bullets in the magazine capacity, gain +3% rate of fire and +3% weapon damage for 9s when reloading from empty.",,
+A,Ignited,x,x,x,x,x,x,x,"Deal +20% weapon damage to burning enemies. After 4 kills, applies burning to the next enemy you hit.",,
+A,Killer,x,x,x,x,x,x,x,Killing an enemy with a critical hit grants +70% critical hit damage for 10s.,,
+A,Lucky Shot,,x,x,,,x,,Magazine capacity is increased by 20%. Missed shots from cover have a 100% chance to return to the magazine.,Mag Size %,20
+A,Measured,x,,,x,x,,,The top half of the magazine has 20% rate of fire and -30% weapon damage. The bottom half of the magazine has -20% rate of fire and 30% total weapon damage.,,
+A,Naked,,,x,,,,,Hitting an enemy with no armor grants +50% headshot damage for 5s.,,
+A,Near Sighted,x,,,,,,,Receive +80% stability at the cost of -35% optimal range.,,
+A,On Empty,x,,,,,,,Reloading from empty grants +30% weapon handling for 10s.,,
+A,Optimist,x,x,x,x,x,x,x,Weapon damage is increased by +3% for every 10% ammo missing from the magazine.,,
+A,Outsider,,,,x,,,,"After killing an enemy, gain 100% optimal range and +100% accuracy for 10s.",,
+A,Overflowing,x,,,,,,,Every 3 reloads from empty increases your base magazine capacity by 100%.,,
+A,Overwhelm,,,,,x,,,"Suppressing an enemy, that is not currently suppressed, grants +10% weapon damage for 12 seconds. Max stack is 4.",,
+A,Perpetuation,x,x,x,x,x,x,x,Headshots grant +50% status effect damage and duration to the next status effect you apply. Cooldown: 20s,,
+A,Preservation,x,x,x,x,x,x,x,"Killing an enemy repairs 10% armor over 5s. 
+Headshot kills improve the repair by an additional 10%.",,
+A,Pummel,,,,,,,x,3 consecutive kills refill the magazine and grant +40% weapon damage for 10s.,,
+A,Pumped Up,,,,,,,x,Reloading grants +1% weapon damage for 10s. Stacks up to 25 times.,,
+A,Ranger,x,x,x,x,x,x,x,Amplifies weapon damage by 2% for every 5m you are away from your target.,,
+A,Reformation,x,x,x,x,x,x,x,Headshots grant +30% skill repair for 15s.,,
+A,Rifleman,,x,,,,,,Landing headshots adds a stack of bonus +10% weapon damage for 5s. Max stack is 5. Additional headshots refresh the duration.,,
+A,Sadist,x,x,x,x,x,x,x,"Deal +30% weapon damage to bleeding enemies. After 4 kills, applies bleed to next enemy you hit.",,
+A,Salvage,,,,,,x,,Killing a target has a +70% chance to refill the magazine.,,
+A,Spike,x,x,x,x,x,x,x,Headshots grant +20% skill damage for 15s.,,
+A,Steady Handed,x,x,x,x,x,x,x,"Hits grant a stack of +1% Accuracy and Stability. At 100 stacks, consumes them to refill the magazine.",,
+A,Strained,x,x,x,x,x,x,x,Gain +10% critical hit damage for every 0.5s you are firing. Stacks up to 5 times.,,
+A,Unhinged,,,,,x,,,Grants +18% weapon damage at the cost of -25% Stability and -25% Accuracy.,Weapon Damage,18
+A,Unwavering,,,,x,,,,Swapping to this weapon grants +300% weapon handling for 5s. Kills refresh the buff. Swapping away disables this from all weapons for 5s.,,
+A,Vindictive,x,x,x,x,x,x,x,Killing an enemy with a status effect applied grants you and all allies within 15m 15% critical hit chance and 15% critical hit damage for 20s.,,
+E,Electromagnetic Accelerator,,,,,,,,Shots fired deal 0-100% weapon damage based on how long the trigger is held before releasing.,,
+E,Big Game Hunter,,,,,,,,"When Scoped, switches to semi-automatic fire mode, dealing 450% weapon damage with each shot. 
+
+Headshots grant +6% headshot damage.   Stacks up to 25 times, 
+
+Once at full stacks, 10 stacks decay every 4 seconds until all stacks have been removed. 
+
+Headshots delay decaying of stacks.",,
+E,Eagle's Strike,,,,,,,,"Accuracy increases as you continuously fire, up to +30%. 
+Headshot kills grant the Tenacity buff for 15s. 
+The strength of Tenacity is increased by 1% for body shots and 5% for headshots. 
+
+Tenacity: 40%-80% of damage taken is delayed until the buff expires. 
+All of the total delayed damage is reduced for each enemy killed while the buff is active, up to 100% with 3 kills.",,
+E,Tenacity,,,,,,,,"40%-80% of damage taken is delayed until the buff expires. 
+All of the total delayed damage is reduced for each enemy killed while the buff is active, up to 100% with 3 kills.",,
+E,Adaptive Instincts,,,,,,,,"Hitting 30 headshots grants +20% critical hit chance and +50% critical hit damage for 45s. 
+
+Hitting 65 body shots grants +90% weapon damage for 45s. 
+
+Hitting 20 leg shots grants +150% reload speed for 45s. 
+
+Buffs refresh when out of combat.",,
+E,Bullet Hell,,,,,,,,"This weapon never needs to be reloaded. 
+For every 100 bullets that hit an enemy, replenish some ammo to you and your allies' reserves.",,
+E,Plague of the Outcasts,,,,,,,,"Hits apply a debuff dealing 100% weapon damage over 10s. 
+
+This stacking up to 50 times. 
+
+Whenever an enemy dies with this debuff, all stacks are transferred to a nearby enemy within 25m.",,
+E,Regicide,,,,,,,,"Headshot kills create a 5m explosion, dealing 400% weapon damage and applying bleed to all enemies hit.",,
+E,Liberty or Death,,,,,,,,"Hits grant +2% weapon damage. Stacks up to 30 times. 
+Headshots consume all stacks, repairing your shield for 3% per stack.",,
+E,Geri and Freki,,,,,,,,"On trigger-pull, fire both barrels at once. When fired from the right shoulder, hits add offensive primers, and defensive primers when fired from the left shoulder. 
+
+Hits from one shoulder will detonate all of the opposite shoulder's primers when present. 
+
+When detonated, each offensive primer deals 100% weapon damage, while each defensive primer grants +4% bonus armor and +10% amplified damage to armor plates for 5s. Primer effectiveness is doubled at 10 stacks.",,
+E,Agonizing Bite,,,,,,,,"Diamondback randomly marks an enemy. 
+Hitting that enemy consumes the mark, guaranteeing a critical hit with damage amplified by 20%. 
+After hitting a mark, all shots fired are guaranteed critical hits for 5s. 
+A new random enemy is marked afterwards and whenever you reload.",,
+E,Binary Trigger,,,,,,,,"This weapon fires on trigger pull and release. 
+
+If both bullets hit the same enemy, gain a stack. 
+
+At 7 stacks, shooting an enemy deals +500% amplified damage and creates a 7m explosion dealing 500% weapon damage, consuming the stacks.",,
+E,Sandman,,,,,,,,Melee attacks instantly kill non-elite enemies. Cooldown: 15s,,
+E,Breathe Free,,,,,,,,"When moving, gain 4 stacks per second, or 8 stacks if sprinting, up to 32 stacks total. Each round fired consumes a stack, amplifying damage by 75%. Kills grant +20% movement speed for 10s.",,
+E,Incessant Chatter,,,,,,,,"When you reload, rate of fire is increased by 20% for each enemy within 15m for the duration of that magazine. 
+Max stacks: 5. 
+Kills refill 50% of your magazine.",,
+N,Hidden Rock,,,,,,,,Headshots apply confuse. Cooldown: 20s,,
+N,Perfect Allegro,,,,,,,,+22% rate of fire.,,
+N,Perfect Boomerang,,,,,,,,"Critical hits have a 75% chance to return the bullet to the magazine. If a bullet is returned to the magazine, the next shot has +50% increased damage.",,
+N,Perfect Breadbasket,,,,,,,,Landing body shots adds a stack of bonus +50% headshot damage to the next headshot for 10s. Max stack is 2.,,
+N,Perfect Distance,,,,,,,,+100% optimal range.,,
+N,Perfect Eyeless,,,,,,,,"Deal +25% weapon damage to blinded enemies. After 3 kills, applies blind to the next enemy you hit.",,
+N,Perfect Fast Hands,,,,,,,,Critical hits add a stack of 8% reload speed bonus. Max stack is 40.,,
+N,Perfect Finisher,,,,,,,,Swapping from this weapon within 10s of killing an enemy grants 35% critical hit chance and 40% critical hit damage for 15s.,,
+N,Perfect First Blood,,,,,,,,"If scoped, your first 2 shots fired from out of combat or after fully reloading from empty deals headshot damage to any part of the body hit. REQUIRES a Scope with 8x magnification or higher.",,
+N,Perfect Frenzy,,,,,,,,"For every 8 bullets in the magazine capacity, gain +3% rate of fire and +3% weapon damage for 9s when reloading from empty.",,
+N,Perfect Jazz Hands,,,,,,,,+30% reload speed.,,
+N,Perfect Killer,,,,,,,,Killing an enemy with a critical hit grants +90% critical hit damage for 10s.,,
+N,Perfect Lucky Shot,,,,,,,,Magazine capacity is increased by 30%. Missed shots from cover have a 100% chance to return to the magazine.,Mag Size %,30
+N,Perfect Near Sighted,,,,,,,,Receive +100% stability at the cost of -35% optimal range.,,
+N,Perfect Optimist,,,,,,,,Weapon damage is increased by +4% for every 10% ammo missing from the magazine.,,
+N,Perfect Outsider,,,,,,,,"After killing an enemy, gain 125% optimal range and +125% Accuracy for 10s.",,
+N,Perfect Overflowing,,,,,,,,Every 2 reloads from empty increases your base magazine capacity by 100%.,,
+N,Perfect Overwhelm,,,,,,,,Suppressing an enemy grants +12% weapon damage for 12 seconds. Max stack is 4.,,
+N,Perfect Perpetuation,,,,,,,,Headshots grant +50% status effect damage and duration to the next status effect you apply. Cooldown: 16s,,
+N,Perfect Preservation,,,,,,,,"Killing an enemy repairs 15% armor over 5s. 
+Headshot kills improve the repair by an additional 15%.",,
+N,Perfect Pummel,,,,,,,,2 consecutive kills refill the magazine and grant +40% weapon damage for 10s.,,
+N,Perfect Pumped Up,,,,,,,,Reloading grants +5% weapon damage for 10s. Stacks up to 5 times.,,
+N,Perfect Ranger,,,,,,,,Amplifies weapon damage by 2% for every 4m you are away from your target.,,
+N,Perfect Reformation,,,,,,,,Headshots grant +40% skill repair for 15s.,,
+N,Perfect Rifleman,,,,,,,,Landing headshots adds a stack of bonus +11% weapon damage for 5s. Max stack is 6. Additional headshots refresh the duration.,,
+N,Perfect Sadist,,,,,,,,"Deal +35% weapon damage to bleeding enemies. After 3 kills, applies bleed to next enemy you hit.",,
+N,Perfect Salvage,,,,,,,,Killing a target has a +85% chance to refill the magazine.,,
+N,Perfect Spike,,,,,,,,Headshots grant +25% skill damage for 15s.,,
+N,Perfect Strained,,,,,,,,Gain +10% critical hit damage for every 0.5s you are firing. Stacks up to 8 times.,,
+N,Perfect Unwavering,,,,,,,,Swapping to this weapon grants +400% weapon handling for 5s. Kills refresh the buff. Swapping away disables this from all weapons for 5s.,,
+N,Perfect Vindictive,,,,,,,,Killing an enemy with a status effect applied grants you and all allies within 20m 18% critical hit chance and 18% critical hit damage for 20s.,,
+N,Perfectly Accurate,,,,,,,,+80% accuracy.,,
+N,Perfectly Close & Personal,,,,,,,,Killing a target within 7m grants +38% weapon damage for 10s.,,
+N,Perfectly Extra,,,,,,,,+50% magazine capacity.,,
+N,Perfectly Ignited,,,,,,,,"Deal +25% weapon damage to burning enemies. After 3 kills, applies burning to the next enemy you hit.",,
+N,Perfectly Measured,,,,,,,,The top half of the magazine has 20% rate of fire and -27% weapon damage. The bottom half of the magazine has -20% rate of fire and 33% total weapon damage.,,
+N,Perfectly Naked,,,,,,,,Hitting an enemy with no armor grants +50% headshot damage for 8s.,,
+N,Perfectly On Empty,,,,,,,,Reloading from empty grants +40% weapon handling for 10s.,,
+N,Perfectly Optimized,,,,,,,,+30% weapon handling.,,
+N,Perfectly Steady Handed,,,,,,,,"Hits grant a stack of +1% Accuracy and Stability. At 75 stacks, consumes them to refill the magazine.",,
+N,Perfectly Unhinged,,,,,,,,Grants +22% weapon damage at the cost of -25% Stability and -25% Accuracy.,Weapon Damage,22
+N,Swift,,,,,,,,Performing a cover to cover grants +20% weapon damage for 15s.,,
+N,Primer Rounds,,,,,,,,Damaged enemies lose 50% burn resistance for 5 seconds.,,
+A,Future Perfect,x,x,x,x,x,x,x,Weapon kills grant +1 skill tier for 15s. Stacks up to 3 times. Weapon kills at skill tier 6 grant overcharge for 15s. Overcharge cooldown: 90s,,
+A,In Sync,x,x,x,x,x,x,x,"Hitting an enemy grants +15% skill damage for 5s.
+
+Using a non-shield skill or damaging an enemy with a skill grants +15% weapon damage for 5s.
+
+Damage increases are doubled while both buffs are active at the same time.",,
+N,Future Perfection,,,,,,,,Weapon kills grant +1 skill tier for 19s. Stacks up to 4 times. Weapon kills at skill tier 6 grant overcharge for 15s. Overcharge cooldown: 90s,,
+N,Perfectly In Sync,,,,,,,,"Hitting an enemy grants +20% skill damage for 5s.
+
+Using a non-shield skill or damaging an enemy with a skill grants +20% weapon damage for 5s.
+
+Damage increases are doubled while both buffs are active at the same time.",,
+E,Septic Shock,,,,,,,,"Shooting a target applies stacks of venom, which last for 10s. Increasing stacks adds more severe debuffs to the target.
+
+2 = Poison
+4 = Disorient
+7 = Shock
+8 = Target takes additional 20% damage (from all sources) Stacks no longer increase.
+9 = Reprocs the 20%
+Duration of Status Effects is based on percentage of pellets hit on applying shot.",,
+E,Capacitance,,,,,,,,"Shooting enemies builds stacks to a cap of 40. 
+
+Each stack grants 1.5% Skill Damage. 
+
+After 5 seconds, stacks decay 1 per second. 
+
+For each utility core, gain 7.5% weapon damage.",,
+E,Payment in Kind,,,,,,,,"Dealing damage to enemies adds a stack of +2% critical hit damage, up to 100 stacks, lasting 10s. On reload, apply a 10s bleed to yourself, which deals 0.5% armor damage per stack.",,
+E,In Plain Sight,,,,,,,,Your scoped view displays additional information about enemies not targeting you. Headshot and weakpoint damage against enemies not targeting you amplified by 50%. Headshot kills reset the cooldown of the Decoy skill. This bonus will wait until the Decoy goes on cooldown if currently active.,,
+A,Flatline,x,x,x,x,x,x,x,"Amplifies weapon damage by 15% to pulsed enemies. After 3 kills, applies pulse to the next enemy you hit.",,
+N,Perfect Flatline,,,,,,,,"Amplifies weapon damage by 20% to pulsed enemies. After 2 kills, applies pulse to the next enemy you hit.",,
+E,Disruptor Rounds,,,,,,,,"Shooting an enemy marks that enemy and adds a stack to the agent up to a count of 50. Shooting a marked enemy refreshes the mark and adds stacks to the agent.
+When you deploy a non-shield skill, remove all stacks on agent and all marked targets trigger an effect.
+
+1 - 10 Stacks - Pulse marked targets for 5 seconds.
+11 - 25 Stacks - Pulse and Disrupt marked targets for 5 seconds.
+26 - 49 Stacks - Pulse, Disrupt, and Disorient marked targets for 5 seconds.
+50 Stacks - Pulse, Disrupt, and Disorient marked targets and all hostiles within 10 meters of the marked targets for 5 seconds. This effect will trigger immediately if any marked enemy is killed.",,
+E,Full Stop,,,,,,,,"Shooting enemies builds stacks to a cap of 20.
+Headshots grant 2 stacks.
+Each stack grants 2% Weapon Damage and 5% Headshot Damage. On reload, clear all stacks and gain 5% of your max armor as temp armor for 10 seconds for each stack removed.
+
+Headshot kills with Dread Edict restore all bullets in the magazine. This does not count as a reload.",,
+E,Busy Little Bee,,,,,,,,"Each shot to a different target will give 1 stack, up to 10, each stack will give 20% weapon damage increase. 
+
+Stacks will activate once the agent switches weapon and will last for 10 seconds.",,
+E,Doctor Home,,,,,,,,"Shooting an enemy with Doctor Home applies a mark for 5s. 
+When killed, Marked targets drop a 10% Armor repair kit at the agent's feets which applies to the whole party when picked up. 
+This kit does not give bonus armor.",,
+N,Perfect Sledgehammer,,,,,,,,Dealing Damage with a grenade applies a mark on target. Targets with mark will take 20% more damage to armor and have -30% movement speed. Mark will disappear after 10 seconds.,,
+A,Sledgehammer,x,x,x,x,x,x,x,Dealing Damage with a grenade applies a mark on target. Targets with mark will take 15% more damage to armor and have -20% movement speed. Mark will disappear after 10 seconds.,,
+E,The Trap,,,,,,,,"Tags enemies when in scope (maximum 10). Killing any marked target with a headshot applies 10 second Burn Status Effect and gives a 50% (20% in PVP modes) Speed Movement decrease on all other targets.  
+
+Cooldown is 30 seconds. Killing another enemy with a headshot shortens the cooldown for 10 seconds. Targets are marked after 1 seconds in scope.",,
+N,Perfectly Determined,,,,,,,,"After killing an enemy with a headshot the next shot landed on any enemy will be a guaranteed critical headshot. While the talent is active, killing an enemy will not retrigger the talent.",,
+A,Determined,,x,x,,,x,,"After killing an enemy with a headshot the next shot landed on any enemy will be a guaranteed headshot. While the talent is active, killing an enemy will not retrigger the talent.",,
+E,Actum Est,,,,,,,,"Shooting an enemy gives 1 stack, at 100 stacks the next magazine is filled with shock ammo.",,
+A,Thunder Strike,x,x,x,x,x,x,x,Deal 30% extra damage to shocked targets,,
+N,Perfect Thunder Strike,,,,,,,,Deal 40% extra damage to shocked targets,,
+E,Ardent,,,,,,,,"Shooting heats the weapon up filling the ""heat meter"". The meter is equivalent to 50% of the weapon's standard Magazine Size.
+When the meter is full, rounds shot by the weapon will ignite enemies.
+When not shooting, the meter constantly depletes. Reloading or swapping to another weapon fully depletes the meter.",,
+E,Rule Them All,,,,,,,,"When the agent has a Status Effect applied to them, 50% of the ammo in their next magazine will apply the same Status Effect to their targets.
+This effect can only occur during combat.",,
+A,Stabilize,x,x,x,x,x,x,x,"1% Weapon Accuracy and +1% Weapon Stability per bullet shot, up to +60%.
+Stopping shooting will start a timer of 4 seconds, after which the bonuses reset.",,
+N,Perfect Stabilize,,,,,,,,"1% Weapon Accuracy and +1% Weapon Stability per bullet shot, up to +75%.
+Stopping shooting will start a timer of 6 seconds, after which the bonuses reset.",,
+E,Mosquito Song,,,,,,,,"Hitting an enemy applies a stack. Stacks are shared between players. 
+
+At 5 stacks, the enemy will forcefully target the last player to apply a stack for 5s and take 25% more damage to armor. 
+
+Stacks deplete every 5s. Activating the effect on an enemy will remove all stacks from other enemies.
+
+Editor's note: the ""damage to armor"" taken debuff works similarly to Sledgehammer, in that it is an amplifier that applies to both armor and armor plating.",,
+E,Ortiz Assault Interface,,,,,,,,"While scoped, the weapon will highlight a random body section of each enemy.
+The weapon deals +75% Weapon Damage to highlighted body sections.",,
+A,Behind You,,x,x,,,,,Amplifies weapon damage by +15% to enemies that are not targeting you.,,
+N,Perfectly Behind You,,x,x,,,,,Amplifies weapon damage by +20% to enemies that are not targeting you.,,
+E,Capitulate,,,,,,,,Hitting an enemy will apply a stack of –4% Movement Speed for each pellet hit for 5 seconds. Shooting again will reapply stacks.,,
+N,Perfect Brazen,,,,,,,,"Receive +3% Amplified Damage on the next shot with the weapon for each pellet that hits the target, if at least 4 pellets hit.",,
+A,Brazen,,,,,,,x,"Receive +3% Amplified Damage on the next shot with the weapon for each pellet that hits the target, if at least 6 pellets hit.",,
+E,Unnerve,,,,,,,,"Killing and enemy will apply a mark on every enemy within 20m of it. 
+
+Multiple marks can be applied to the same enemy. 
+
+Max number of marks that can be applied to an enemy is 5. 
+
+All marks on an enemy will disappear 10s after the last one has been applied. Deal +15% Amplified Damage per mark to marked enemies.",,
+A,Precision Strike,x,x,x,x,x,x,x,"Killing enemies beyond 20m builds up stacks. Max 3.
+Hitting an enemy within 20m will use all stack to give 20% Amplified Damage to all enemies within 20m for 5s.",,
+N,Perfect Precision Strike,,,,,,,,"Killing enemies beyond 20m builds up stacks. Max 2.
+Hitting an enemy within 20m will use all stack to give 35% Amplified Damage to all enemies within 20m for 5s.",,
+E,Symbiosis,,,,,,,,"While having a Shield deployed, lose Shield Health at a rate of 10% per second. Your Shield receives repairs of 25% of the damage dealt by this weapon.",,
+N,Perfect Pressure Point,,,,,,,,Amplifies Weapon Damage by 20% to enemies under Status Effect.,,
+A,Pressure Point,x,x,x,x,x,x,x,Amplifies Weapon Damage by 15% to enemies under Status Effect.,,
+E,Pakhan,,,,,,,,"Each kill with this weapon grants a stack of 75% Magazine Size to the next magazine, up to 4 stacks.",,
+N,Perfect Streamline,,,,,,,,Increase Weapon Damage by 47% when no Skills are Deployed or on Cooldown.,,
+A,Streamline,x,x,x,x,x,x,x,Increase Weapon Damage by 42% when no Skills are Deployed or on Cooldown.,,
+E,High Priority Target,,,,,,,,"Amplifies Weapon Damage by 125% to the highest ranking enemies within the Tier hierarchy:
+
+Tier 1: Hunter, Rogue, Leader, Tank, Shield, Heavy Weapons, RPG, Medic, Controller, Warhound, Marauder.
+Tier 2: Support, Engineer, Bodyguard, Immobilizer, Bomber, Mini Tank, Drone Operator.
+Tier 3: Any other enemy or skill proxy.",,
+E,Restrained,,,,,,,,The pistol is fully automatic and deals +25% Amplified Damage for 20s after your Shield gets broken,,
+A,Soft Spot,,x,x,,,,,Destroying a Weakpoint grants 27% Weapon Damage for 15s.,,
+N,Perfect Soft Spot,,,,,,,,Destroying a Weakpoint grants 32% Weapon Damage for 15s.,,
+E,Transfusion,,,,,,,,"Hitting headshots builds stacks, up to a max of 8. When shooting an Ally or Skill, repair them for 50% of the shot’s damage for each stack.
+Healed Allies will receive 200% of your Repair Skills bonus as Bonus Armor for each stack for 10s.
+All hits are guaranteed headshots for 8s after healing an Ally or Skill while at maximum stacks.",,
+E,Autentico,,,,,,,,"+35% Weapon Damage
++100% Accuracy
+No Damage Drop Off
+These bonuses are built into the weapon's base stats.",,
+N,Perfect Immobilize,,,,,,,,"Amplifies Weapon Damage by 25% to ensnared enemies. After 3 kills, applies Ensnare to the next enemy you hit.",,
+A,Immobilize,x,x,x,x,x,x,x,"Amplifies Weapon Damage by 20% to ensnared enemies. After 4 kills, applies Ensnare to the next enemy you hit.",,
+N,Sport Mode,,,,,,,,+20% Movement Speed. This bonus does not stack with other Movement Speed bonuses.,,
+E,Cover Shooter,,,,,,,,"Every bullet fired while in cover increases weapon damage by 1% up to 100%. The bonus lasts for 15 seconds.
+
+Getting a kill with this weapon while in cover resets the duration.
+
+The bonus damage is canceled by reloading, swapping weapons, or exiting combat.
+(The WD Stacks can only be made in combat)",,
+N,Perfect Measured - DO NOT USE REPORT ME!!,,,,,,,,The top half of the magazine has 25% rate of fire and -30% weapon damage. The bottom half of the magazine has -18% rate of fire and 38% total weapon damage.,,
+E,Perturb,,,,,,,,"While this weapon is holstered, generate 50% less Threat when shooting. Keeping this weapon holstered for 10s will prime it.
+
+While primed, swapping to this weapon grants +25% Rate of Fire, +30% Weapon Damage and you generate 100% more Threat when shooting for 20s.
+
+Swapping from this weapon before the timer ends removes the bonuses.",,
+E,Faster Than Reloading,,,,,,,,"Having this weapon holstered for 5s reloads and primes it. While primed, swapping to this weapon reloads you Primary and Secondary weapons and grants +20% Rate of Fire and +50% Weapon Damage until its magazine is emptied.
+Reloading or swapping from this weapon before its magazine is emptied will remove its stat bonuses.",,
+A,Back and Forth,x,x,x,x,x,,x,"Swapping to this weapon grants +10% Rate of Fire and +9% Weapon Damage for 10s.
+Swapping from this weapon grants +5% Rate of Fire and +4.5% Weapon Damage for 10s.
+Receiving one of the bonuses will remove the previous one if it's still active.Two instances of this Talent will not function at the same time.",,
+N,Perfect Back and Forth,,,,,,,,"Swapping to this weapon grants +13% Rate of Fire and +12% Weapon Damage for 10s.
+Swapping from this weapon grants +5% Rate of Fire and +4.5% Weapon Damage for 10s.
+Receiving one of the bonuses will remove the previous one if it's still active.
+Two instances of this Talent will not function at the same time.",,
+N,Blossom Harvest,,,,,,,,Amplifies Weapon Damage by 3.3% for each 10% combined Armor and Health the enemy has remaining.,,
+A,Head Scratcher,,,,,,,,"Deal 30% Amplified Damage to confused enemies. After 4 kills, applies Confuse to the enemy you hit.",,
+N,Perfect Head Scratcher,,,,,,,,"Deal 35% Amplified Damage to confused enemies. After 3 kills, applies Confuse to the enemy you hit.",,
+E,Caduceus,,,,,,,,Critical hits repair you and your allies for 3% of the hit's dealt damage.,,
+E,Gangland Hit,,,,,,,,"Shooting an enemy with this weapon applies a mark. You can only apply one mark at a time. Shooting another enemy will transfer the mark.
+
+More marks can be applied on the same enemy by other agents using this weapon. Maximum amount of marks that can be applied on an enemy is 4.
+
+This weapon deals +20% Amplified Damage to marked enemies. The bonus is increased by 5% for each extra mark on the enemy other than your own.",,
+E,You Can Look,,,,,,,,"When out of combat, receive 10 stacks (PvP: 5 stacks). This weapon deals +12.5% Amplified Damage (PvP: +12% Amplified Damage) per stack.
+
+...but you can't touch.
+
+1 stack is automatically consumed to fully repair one instance of damage you receive. 1 stack replenishes every 3s (PvP: 8s).",,
+N,Foam at the Mouth,,,,,,,,"After killing an enemy with a headshot, applies Ensnare to the next enemy you hit. Amplifies Weapon Damage by 25% against Ensnared enemies.",,

@@ -1,0 +1,77 @@
+Quality,Item Name,Type,Brand,Core,Attribute 1,Attribute 2,Mod,Mod 2,Talent,Icon,Icon Ref
+Exotic,Coyote's Mask,E,Exotic,Weapon Damage,Critical Hit Chance,Critical Hit Damage,O,,Pack Instincts,coyotes_mask.png,
+High End,5.11 Tactical,A,5.11 Tactical,Armor,A,A,D,,,511_tactical.png,player_gear_mask_511_01_ps_gm_511_b1
+Gearset,Aces & Eights,S,Aces & Eights,Weapon Damage,A,,O,,,aces_and_eights.png,player_gear_set_f_mask_01_ps_gm_set3_a1.png
+High End,Airaldi Holdings,A,Airaldi Holdings,Weapon Damage,A,A,O,,,airaldi_holdings.png,
+High End,Alps Summit Armaments,A,Alps Summit Armaments,Skill Tier,A,A,U,,,alps_summit_armaments.png,player_gear_mask_k_01_ps_gm_alp_a1
+High End,Badger Tuff,A,Badger Tuff,Armor,A,A,O,,,badger_tuff.png,player_gear_mask_a_01_ps_gm_bad_a1
+High End,Ceska Vyroba s.r.o.,A,Ceska Vyroba s.r.o.,Weapon Damage,A,A,D,,,ceska_vyroba_sro.png,player_gear_mask_l_01_ps_gm_ces_a1
+High End,China Light Industries Corporation,A,China Light Industries Corporation,Skill Tier,A,A,U,,,china_light_industries_corporation.png,
+High End,Douglas & Harding,A,Douglas & Harding,Weapon Damage,A,A,O,,,douglas_and_harding.png,
+Named,Punch Drunk,N,Douglas & Harding,Weapon Damage,Headshot Damage,A,O,,,punch_drunk.png,player_gear_mask_i_named_01_ps_gm_dou_c1
+High End,Fenris Group AB,A,Fenris Group AB,Weapon Damage,A,A,O,,,fenris_group_ab.png,player_gear_mask_j_01_ps_gm_fen_a1
+Gearset,Foundry Bulwark,S,Foundry Bulwark,Armor,A,,D,,,foundry_bulwark.png,player_gear_set_h_mask_01_ps_gm_set7_a1
+Gearset,Future Initiative,S,Future Initiative,Skill Tier,A,,U,,,future_initiative.png,player_gear_set_i_mask_01_ps_gm_set10_a1
+High End,Gila Guard,A,Gila Guard,Armor,A,A,D,,,gila_guard.png,
+Named,Nightwatcher,N,Gila Guard,Armor,Scanner Pulse Haste,A,D,,,nightwatcher.png,player_gear_mask_b_named_01_ps_gm_pal_a1
+High End,Golan Gear Ltd,A,Golan Gear Ltd,Armor,A,A,U,,,golan_gear_ltd.png,player_gear_mask_a_01_ps_gm_gol_a1
+High End,Grupo Sombra S.A.,A,Grupo Sombra S.A.,Weapon Damage,A,A,U,,,grupo_sombra_sa.png,player_gear_mask_n_01_ps_gm_gru_a1
+High End,Hana-U Corporation,A,Hana-U Corporation,Skill Tier,A,A,O,,,hana_u_corporation.png,player_gear_mask_q_01_ps_gm_han_a1
+Gearset,Hard Wired,S,Hard Wired,Skill Tier,A,,U,,,hard_wired.png,player_gear_set_c_mask_01_ps_gm_set5_a1
+High End,Murakami Industries,A,Murakami Industries,Skill Tier,A,A,U,,,murakami_industries.png,player_gear_mask_s_01_intro_ps_gm_mur_a1
+Gearset,Negotiator's Dilemma,S,Negotiator's Dilemma,Weapon Damage,A,,O,,,negotiators_dilemma.png,player_gear_set_d_mask_01_ps_gm_set1_a1
+Gearset,Ongoing Directive,S,Ongoing Directive,Weapon Damage,A,,U,,,ongoing_directive.png,
+High End,Overlord Armaments,A,Overlord Armaments,Weapon Damage,A,A,O,,,overlord_armaments.png,player_gear_mask_f_01_ps_gm_ove_a1
+High End,Petrov Defense Group,A,Petrov Defense Group,Weapon Damage,A,A,O,,,petrov_defense_group.png,
+High End,Providence Defense,A,Providence Defense,Weapon Damage,A,A,O,,,providence_defense.png,player_gear_mask_g_01_ps_gm_pro_b1
+High End,Richter & Kaiser GmbH,A,Richter & Kaiser GmbH,Skill Tier,A,A,D,,,richter_and_kaiser_gmbh.png,player_gear_mask_c_01_ps_gm_ric_b1
+High End,Sokolov Concern,A,Sokolov Concern,Weapon Damage,A,A,O,,,sokolov_concern.png,player_gear_mask_e32018_a_ps_gm_sok_b1
+Gearset,Striker's Battlegear,S,Striker's Battlegear,Weapon Damage,A,,O,,,strikers_battlegear.png,player_gear_set_j_mask_01_ps_gm_set11_a1
+Gearset,System Corruption,S,System Corruption,Weapon Damage,A,,O,,,system_corruption.png,player_gear_set_g_mask_01_ps_gm_set9_a1
+Gearset,Tip of the Spear,S,Tip of the Spear,Weapon Damage,A,,O,,,tip_of_the_spear.png,player_gear_set_e_mask_01_ps_gm_set2_a1
+Gearset,True Patriot,S,True Patriot,Armor,A,,D,,,true_patriot.png,
+High End,Wyvern Wear,A,Wyvern Wear,Skill Tier,A,A,U,,,wyvern_wear.png,player_gear_mask_m_01_ps_gm_wyv_a1
+High End,Yaahl Gear,A,Yaahl Gear,Armor,A,A,O,,,yaahl_gear.png,player_gear_mask_dz_01_ps_gm_yaa_a1
+Named,The Hollow Man,N,Yaahl Gear,Armor,Health Damage,A,O,,,the_hollow_man.png,player_gear_mask_dz_named_01_ps_gm_yaa_a1
+High End,Improvised Mask,A,Crafted,A,A,A,A,,,improvised_mask.png,
+Exotic,Vile,E,Exotic,Skill Tier,Status Effects,Hazard Protection,U,,Toxic Delivery,vile.png,player_gear_mask_exotic_03_ps_gm_ex2_a1
+High End,"Walker, Harris & Co.",A,"Walker, Harris & Co.",Weapon Damage,A,A,O,,,walker_harris_and_co.png,player_gear_mask_t_01_ps_gm_wal_a1
+Gearset,Eclipse Protocol,S,Eclipse Protocol,Skill Tier,A,,U,,,eclipse_protocol.png,player_gear_set_k_mask_01_ps_gm_set12_a1
+High End,Empress International,A,Empress International,Skill Tier,A,A,U,,,empress_international.png,
+Gearset,Hunter's Fury,S,Hunter's Fury,Weapon Damage,A,,O,,,hunters_fury.png,player_gear_set_l_mask_01_ps_gm_set13_a1
+Gearset,Rigger,S,Rigger,Skill Tier,A,,U,,,rigger.png,
+High End,Belstone Armory,A,Belstone Armory,Armor,A,A,D,,,belstone_armory.png,
+Named,Chill Out,N,Gila Guard,Armor,A,,A,A,,chill_out.png,player_gear_mask_b_named_02_xmas_ps_gm_frost_a1
+High End,Uzina Getica,A,Uzina Getica,Armor,A,A,A,,,uzina_getica.png,
+Exotic,Catharsis,E,Exotic,Armor,Incoming Repairs,Armor Regeneration,A,,Vicious Cycle,catharsis.png,player_gear_mask_exotic_03_pm_gm_ex3_a1
+Gearset,Heartbreaker,S,Heartbreaker,Armor,A,,A,,,heartbreaker.png,player_gear_set_n_mask_01_ps_gm_hea_a1
+Gearset,Umbra Initiative,S,Umbra Initiative,Weapon Damage,A,,A,,,umbra_initiative.png,
+High End,Brazos de Arcabuz,A,Brazos de Arcabuz,Armor,A,A,A,,,brazos_de_arcabuz.png,
+Gearset,Hotshot,S,Hotshot,Weapon Damage,A,,A,,,hotshot.png,player_gear_set_p_mask_01_icon
+High End,Habsburg Guard,A,Habsburg Guard,Armor,A,A,A,,,habsburg_guard.png,
+High End,Electrique,A,Electrique,Skill Tier,A,A,A,,,electrique.png,
+Gearset,Cavalier,S,Cavalier,Armor,A,,A,,,cavalier.png,player_gear_set_r_mask_01_icon
+High End,Lengmo,A,Lengmo,Armor,A,A,A,,,lengmo.png,
+Gearset,Ortiz: Exuro,S,Ortiz: Exuro,Skill Tier,A,,A,,,ortiz_exuro.png,player_gearset_q_mask_icon_y5s2
+Gearset,Aegis,E,Aegis,Armor,A,,A,,,aegis.png,player_gearset_s_mask_icon_y5s3z
+High End,Palisade Steelworks,A,Palisade Steelworks,Armor,A,A,A,,,,
+High End,Zwiadowka Sp. z o.o.,A,Zwiadowka Sp. z o.o.,Weapon Damage,A,A,A,,,,
+Gearset,Breaking Point,S,Breaking Point,Weapon Damage,A,,A,,,breaking_point.png,player_gear_set_t_mask_01_pm_gm_y6s1_a1_icon
+High End,Legatus S.P.A,A,Legatus S.P.A,Weapon Damage,A,A,A,,,,
+Gearset,Virtuoso,S,Virtuoso,Weapon Damage,A,,A,,,virtuoso.png,player_gear_set_u_mask_01_pm_gm_y6s2_virtuoso_a1_icon
+Named,Visionario,N,Legatus S.P.A,Weapon Damage,Optimal Range,A,A,,,,
+High End,Shiny Monkey Gear,A,Shiny Monkey Gear,Skill Tier,A,A,A,,,,
+Gearset,Refactor,S,Refactor,Skill Tier,A,,A,,,refactor.png,player_gear_set_v_mask_01_pm_gm_y7s1_a1_icon
+Exotic,Tinkerer,E,Exotic,Weapon Damage,Critical Hit Chance,Critical Hit Damage,A,,Abridged,tinkerer.png,player_gear_mask_exotic_05_pm_gm_ex5_a1_icon
+High End,Imminence Armaments,A,Imminence Armaments,Weapon Damage,A,A,A,,,,
+Gearset,Measured Assembly,S,Measured Assembly,Skill Tier,A,,A,,,,
+Exotic,The Catalyst,E,Exotic,Weapon Damage,Hazard Protection,Status Effects,A,,Chemical Agent,catalyst.png,player_gear_mask_exotic_04_pm_gm_ex4_a1_icon
+High End,Urban Lookout,A,Urban Lookout,Weapon Damage,A,A,O,,,urban_lookout.png,
+Gearset,Tipping Scales,S,Tipping Scales,Weapon Damage,A,,O,,,tippin_scales.png,
+High End,Unit Alloys,A,Unit Alloys,Weapon Damage,A,A,A,,,unit_alloys.png,
+Gearset,Concentrated Company,S,Concentrated Company,Weapon Damage,A,,A,,,concentrated_company.png,
+High End,Royal Works,A,Royal Works,Weapon Damage,A,A,O,,,royal_works.png,
+Gearset,Core Strength,S,Core Strength,Armor,A,,A,,,core_strength.png,
+Exotic,Investor,E,Exotic,Weapon Damage,A,A,,,Slotted,investor.png,player_gear_mask_exotic_06_pm_gm_y8s1_ex_a1
+High End,Edelweiss GPz,A,Edelweiss GPz,Skill Tier,A,A,A,,,edelweiss_gpz.png,
+Gearset,Ortiz: Reficere,S,Ortiz: Reficere,Skill Tier,A,,A,,,ortiz_reficere.png,

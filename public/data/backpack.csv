@@ -1,0 +1,92 @@
+Quality,Item Name,Type,Brand,Core,Core 2,Core 3,Attribute 1,Attribute 2,Mod,Talent,Icon,Icon Ref
+Exotic,Acosta's Go-Bag,E,Exotic,Skill Tier,,,Skill Haste,Skill Damage,U,One in Hand...,acostas_go_bag.png,player_gear_back_exotic_01_pm_b_ex1_a1
+High End,5.11 Tactical,A,5.11 Tactical,Armor,,,A,A,D,A,511_tactical.png,player_gear_back_511_02_pm_b_511_a.png
+Gearset,Aces & Eights,S,Aces & Eights,Weapon Damage,,,A,,O,Ace in the Sleeve,aces_and_eights.png,player_gear_set_f_backpack_01_pm_b_set3_a1.png
+High End,Airaldi Holdings,A,Airaldi Holdings,Weapon Damage,,,A,A,O,A,airaldi_holdings.png,
+High End,Alps Summit Armaments,A,Alps Summit Armaments,Skill Tier,,,A,A,U,A,alps_summit_armaments.png,player_gear_back_k_01_pm_b_alp_d1
+Named,Percussive Maintenance,N,Alps Summit Armaments,Skill Tier,,,A,A,U,Perfect Tech Support,percussive_maintenance.png,player_gear_back_k_named_01_pm_b_alp_g1
+High End,Badger Tuff,A,Badger Tuff,Armor,,,A,A,O,A,badger_tuff.png,player_gear_back_h_01_pm_b_bad_b1
+High End,Ceska Vyroba s.r.o.,A,Ceska Vyroba s.r.o.,Weapon Damage,,,A,A,D,A,ceska_vyroba_sro.png,player_gear_back_l_01_pm_b_ces_a1
+Named,Devil's Due,N,Ceska Vyroba s.r.o.,Weapon Damage,,,A,A,D,Perfect Clutch,devils_due.png,player_gear_back_l_01_named_pm_b_ces_a1
+High End,China Light Industries Corporation,A,China Light Industries Corporation,Skill Tier,,,A,A,U,A,china_light_industries_corporation.png,player_gear_back_e_01_pm_b_chi_a1
+Named,Strategic Alignment,N,China Light Industries Corporation,Skill Tier,,,A,A,U,Perfect Shock and Awe,strategic_alignment.png,player_gear_back_g_01_pm_b_pro_b1
+High End,Douglas & Harding,A,Douglas & Harding,Weapon Damage,,,A,A,O,A,douglas_and_harding.png,
+High End,Fenris Group AB,A,Fenris Group AB,Weapon Damage,,,A,A,O,A,fenris_group_ab.png,
+Gearset,Foundry Bulwark,S,Foundry Bulwark,Armor,,,A,,D,Process Refinery,foundry_bulwark.png,
+Gearset,Future Initiative,S,Future Initiative,Skill Tier,,,A,,U,Strategic Combat Support,future_initiative.png,player_gear_set_i_backpack_01_pm_b_set10_a1
+High End,Gila Guard,A,Gila Guard,Armor,,,A,A,D,A,gila_guard.png,player_gear_back_b_01_pm_b_pal_a1
+High End,Golan Gear Ltd,A,Golan Gear Ltd,Armor,,,A,A,U,A,golan_gear.png,
+Named,Anarchist's Cookbook,N,Golan Gear Ltd,Armor,,,A,A,U,Perfectly Wicked,anarchists_cookbook.png,player_gear_back_e1_01_named_pm_b_gol_a1
+High End,Grupo Sombra S.A.,A,Grupo Sombra S.A.,Weapon Damage,,,A,A,U,A,grupo_sombra_sa.png,
+High End,Hana-U Corporation,A,Hana-U Corporation,Skill Tier,,,A,A,O,A,hana_u_corporation.png,player_gear_back_q_01_pm_b_han_a1
+Named,Force Multiplier,N,Hana-U Corporation,Skill Tier,,,A,A,O,Perfect Combined Arms,force_multiplier.png,player_gear_back_q_01_named_pm_b_han_a1
+Gearset,Hard Wired,S,Hard Wired,Skill Tier,,,A,,U,Short Circuit,hard_wired.png,
+High End,Murakami Industries,A,Murakami Industries,Skill Tier,,,A,A,U,A,murakami_industries.png,player_gear_back_s_01_pm_b_mur_a1
+Gearset,Negotiator's Dilemma,S,Negotiator's Dilemma,Weapon Damage,,,A,,O,Critical Measures,negotiators_dilemma.png,player_gear_set_d_backpack_01_pm_b_set1_a1
+Gearset,Ongoing Directive,S,Ongoing Directive,Weapon Damage,,,A,,U,Trauma Specialist,ongoing_directive.png,
+High End,Overlord Armaments,A,Overlord Armaments,Weapon Damage,,,A,A,O,A,overlord_armaments.png,
+High End,Petrov Defense Group,A,Petrov Defense Group,Weapon Damage,,,A,A,O,A,petrov_defense.png,player_gear_back_d_crafted_01_pm_b_pet_b1
+High End,Providence Defense,A,Providence Defense,Weapon Damage,,,A,A,O,A,providence_defense.png,
+Named,The Gift,N,Providence Defense,Weapon Damage,,,A,A,O,Perfect Vigilance,the_gift.png,player_gear_back_g_named_02_pm_b_pro_f1
+High End,Richter & Kaiser GmbH,A,Richter & Kaiser GmbH,Skill Tier,,,A,A,D,A,richter_and_kaiser_gmbh.png,
+High End,Sokolov Concern,A,Sokolov Concern,Weapon Damage,,,A,A,O,A,sokolov_concern.png,
+Gearset,Striker's Battlegear,S,Striker's Battlegear,Weapon Damage,,,A,,O,Risk Management,strikers_battlegear.png,player_gear_set_j_backpack_01_pm_b_set11_a1
+Gearset,System Corruption,S,System Corruption,Armor,,,A,,D,Multithreaded Execution,system_corruption.png,
+Gearset,Tip of the Spear,S,Tip of the Spear,Weapon Damage,,,A,,O,Signature Moves,tip_of_the_spear.png,
+Gearset,True Patriot,S,True Patriot,Armor,,,A,,D,Patriotic Boost,true_patriot.png,
+High End,Wyvern Wear,A,Wyvern Wear,Skill Tier,,,A,A,U,A,wyvern_wear.png,
+High End,Yaahl Gear,A,Yaahl Gear,Armor,,,A,A,O,A,yaahl_gear.png,
+High End,Improvised Backpack,A,Crafted,A,,,A,A,U,A,improvised_backpack.png,
+High End,"Walker, Harris & Co.",A,"Walker, Harris & Co.",Weapon Damage,,,A,A,O,A,walker_harris_and_co.png,
+Named,Matador,N,"Walker, Harris & Co.",Weapon Damage,,,A,A,O,Perfect Adrenaline Rush,matador.png,
+Gearset,Eclipse Protocol,S,Eclipse Protocol,Skill Tier,,,A,,U,Symptom Aggravator,eclipse_protocol.png,
+High End,Empress International,A,Empress International,Skill Tier,,,A,A,U,A,empress_international.png,
+Gearset,Hunter's Fury,S,Hunter's Fury,Weapon Damage,,,A,,O,Overwhelming Force,hunters_fury.png,
+Gearset,Rigger,S,Rigger,Skill Tier,,,A,,U,Complete Uptime,rigger.png,
+Named,Battery Pack,N,Empress International,Skill Tier,,,A,A,U,Perfectly Calculated,battery_pack.png,player_gear_back_w_01_named_pm_b_mon_a1
+Exotic,Memento,E,Exotic,Weapon Damage,Armor,Skill Tier,,,U,Kill Confirmed,memento.png,
+High End,Belstone Armory,A,Belstone Armory,Armor,,,A,A,U,A,belstone_armory.png,
+Named,Liquid Engineer,N,Belstone Armory,Armor,,,A,A,U,Perfect Bloodsucker,liquid_engineer.png,
+High End,Uzina Getica,A,Uzina Getica,Armor,,,A,A,A,A,uzina_getica.png,
+Named,The Setup,N,Uzina Getica,Armor,,,A,A,A,Perfectly Opportunistic,the_setup.png,player_gear_back_w_01_named_pm_b_dra_a1
+Gearset,Heartbreaker,S,Heartbreaker,Armor,,,A,,A,Cold,heartbreaker.png,
+Named,Hermano,N,Brazos de Arcabuz,Armor,,,A,A,A,Perfect Overclock,hermano.png,
+Gearset,Umbra Initiative,S,Umbra Initiative,Weapon Damage,,,A,,A,Into The Light,umbra_initiative.png,
+High End,Brazos de Arcabuz,A,Brazos de Arcabuz,Armor,,,A,A,A,A,brazos_de_arcabuz.png,
+Exotic,NinjaBike Messenger Bag,E,Exotic,Weapon Damage,Armor,Skill Tier,,,A,Resourceful,ninjabike_messenger_bag.png,
+Gearset,Hotshot,S,Hotshot,Weapon Damage,,,A,,A,Blessed,hotshot.png,
+High End,Habsburg Guard,A,Habsburg Guard,Armor,,,A,A,A,A,habsburg_guard.png,
+Named,The Courier,N,Habsburg Guard,Armor,,,A,A,A,Perfect Creeping Death,the_courier.png,player_gear_back_y_01_icon
+High End,Electrique,A,Electrique,Skill Tier,,,A,A,A,A,electrique.png,player_gear_back_b_01_pm_b_pal_a1
+Named,Lavoisier,N,Electrique,Skill Tier,,,A,A,A,Perfect Galvanize,lavoisier.png,
+Gearset,Cavalier,S,Cavalier,Armor,,,A,,A,Safe Charging,cavalier.png,
+High End,Lengmo,A,Lengmo,Armor,,,A,A,A,A,lengmo.png,
+Named,Backbone,N,Lengmo,Armor,,,A,A,A,Perfectly Unstoppable Force,backbone.png,player_gear_back_d_01_pm_b_pet_a1
+Gearset,Ortiz: Exuro,S,Ortiz: Exuro,Skill Tier,,,A,,A,Heatstroke,ortiz_exuro.png,
+Gearset,Aegis,S,Aegis,Armor,,,A,,A,Polyethylene Plating,aegis.png,
+High End,Palisade Steelworks,A,Palisade Steelworks,Armor,,,A,A,A,A,palisade_steelworks.png,
+Named,Proxy,N,Palisade Steelworks,Armor,,,A,A,A,Perfectly Tamper Proof,proxy.png,
+High End,Zwiadowka Sp. z o.o.,A,Zwiadowka Sp. z o.o.,Weapon Damage,,,A,A,A,A,zwiadowka.png,player_gear_back_c1_01_icon
+Gearset,Breaking Point,S,Breaking Point,Weapon Damage,,,A,,A,Point of Honor,breaking_point.png,
+High End,Legatus S.P.A,A,Legatus S.P.A,Weapon Damage,,,A,A,,A,legatus_spa.png,
+Gearset,Virtuoso,S,Virtuoso,Weapon Damage,,,A,,A,Accelerando,virtuoso.png,
+Named,Vigil,N,Legatus S.P.A,Weapon Damage,,,A,A,A,Perfect Versatile,vigil.png,
+High End,Shiny Monkey Gear,A,Shiny Monkey Gear,Skill Tier,,,A,A,A,A,shiny_monkey_gear.png,player_gear_back_a_01_pm_b_gol_a1.png
+Gearset,Refactor,S,Refactor,Armor,,,A,,A,Over-engineered,refactor.png,
+Exotic,Birdie’s Quick Fix,E,Exotic,Skill Tier,,,Skill Haste,Repair Skills,A,Combat Medic,birdies_quick_fix.png,player_gear_back_exotic_04_pm_b_y6s3_a1_icon
+Named,Axel,N,Shiny Monkey Gear,Skill Tier,,,A,A,A,Perfect Energize,axel.png,player_gear_back_a_01_pm_b_gol_a1.png
+Named,Festive Delivery,N,Grupo Sombra S.A.,Weapon Damage,,,A,A,A,Fireworks Show,festive_delivery.png,player_gear_back_santa_backpack_icon
+High End,Imminence Armaments,A,Imminence Armaments,Weapon Damage,,,A,A,A,A,imminence_armaments.png,
+Named,Cap’n,N,Imminence Armaments,Weapon Damage,,,A,A,A,Perfect Leadership,capn.png,
+Gearset,Measured Assembly,S,Measured Assembly,Skill Tier,,,A,,A,Smart Cooperation,measured_assembly.png,player_gear_mtx_lt_gadwall_backpack_pm_b_y6s3_true_sons_boss_icon.png
+High End,Urban Lookout,A,Urban Lookout,Weapon Damage,,,A,A,O,A,urban_lookout.png,
+Gearset,Tipping Scales,S,Tipping Scales,Weapon Damage,,,A,,U,Snowball,tipping_scales.png,
+High End,Unit Alloys,A,Unit Alloys,Weapon Damage,,,A,A,O,A,unit_alloys.png,
+Gearset,Concentrated Company,S,Concentrated Company,Skill Tier,,,A,,U,One for All,concentrated_company.png,
+Exotic,Harrier Pride,E,Exotic,Weapon Damage,Armor,Skill Tier,,,A,Rebalance,harrier_pride.png,
+High End,Royal Works,A,Royal Works,Weapon Damage,,,A,A,A,A,royal_works.png,
+Gearset,Core Strength,S,Core Strength,Weapon Damage,Armor,Skill Tier,,,A,Outer Core,core_strength.png,
+Named,Bulldog,N,Royal Works,Weapon Damage,,,A,A,A,Perfect Composure,bulldog.png,
+Named,Momma Badger,N,Edelweiss GPz,Skill Tier,,,A,A,A,Perfect Safeguard,momma_badger.png,
+High End,Edelweiss GPz,A,Edelweiss GPz,Skill Tier,,,A,A,A,A,edelweiss_gpz.png,
+Gearset,Ortiz: Reficere,S,Ortiz: Reficere,Skill Tier,,,A,,A,Improved Dampeners,ortiz_reficere.png,

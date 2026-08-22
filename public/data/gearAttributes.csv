@@ -1,0 +1,47 @@
+Quality,Type,Stat,Max
+A,O,Weapon Handling,8
+A,O,Critical Hit Chance,6
+A,O,Critical Hit Damage,12
+A,O,Headshot Damage,10
+A,D,Armor Regeneration,4925
+A,D,Hazard Protection,10
+A,D,Health,18935
+A,D,Explosive Resistance,10
+A,U,Skill Damage,10
+A,U,Repair Skills,20
+A,U,Skill Haste,12
+A,U,Status Effects,10
+N,O,Damage to TOC,8
+N,O,Damage to Armor,8
+N,U,Scanner Pulse Haste,100
+N,O,Health Damage,14
+N,O,Headshot Damage,20
+N,O,Melee Damage,500
+N,D,Armor on Kill %,10
+N,U,Skill Health,25
+N,U,Status Effects,15
+N,U,Shield Health,50
+N,O,Ammo Capacity,10
+N,D,Armor Regeneration %,1
+E,O,Critical Hit Chance,6
+E,O,Critical Hit Damage,12
+E,U,Skill Haste,12
+E,U,Skill Damage,10
+E,D,Explosive Resistance,10
+E,D,Armor Regeneration,4925
+E,U,Repair Skills,20
+E,O,Weapon Handling,8
+E,O,Headshot Damage,10
+E,U,Status Effects,10
+E,D,Hazard Protection,10
+E,D,Health,18935
+N,O,Pistol Damage,11
+N,U,Skill Efficiency,10
+E,D,Incoming Repairs,20
+N,O,Weapon Damage,10
+N,O,Weapon Handling,15
+N,O,Optimal Range,50
+N,U,Status Effects,16
+N,U,Reduced Threat,50
+N,O,Accuracy,38
+N,O,Rate of Fire %,5
