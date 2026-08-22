@@ -714,32 +714,70 @@ Cherry-picks commit themselves. Verify with `git log --oneline -4`.
 ### Task 3.3: Reapply Phase 1 and 2 work onto the Vite branch
 
 **Files:**
-- Modify: `vite.config.ts`, `Dockerfile.dev`, `docker-compose.dev.yml`, `.env.local`, `public/index.html`
-- Create: `public/data/*.csv`, `scripts/import-snapshot.mjs`, `scripts/check-data-sources.mjs`, `docs/dev.md`
+- Modify: `vite.config.ts`, `index.html`, `package.json`
+- Create: `Dockerfile.dev`, `docker-compose.dev.yml`, `.dockerignore`, `docs/dev.md`, `scripts/dev.sh`, `scripts/import-snapshot.mjs`, `scripts/check-data-sources.mjs`, `public/data/*.csv`, `public/DB.Version`, `src/utils/dataImporter.js`
 
 The Vite branch predates all of Phase 1 and 2, so those files must be brought across.
 
-- [ ] **Step 1: Bring the container and data files over**
+> **REWRITTEN 2026-08-22 after the Phase 3 pre-flight scan.** The original
+> Steps 1–3 were written before Task 2.2's approved deviation (deleting the
+> twenty `VUE_APP_DATA_URL_*` vars). They renamed env vars that no longer
+> exist, in a `.env.local` no agent can write, and their file list omitted
+> four things — `scripts/dev.sh`, `src/utils/dataImporter.js`, `index.html`
+> and `public/DB.Version` — whose omission would have reintroduced the blank
+> app and the stale-cache bug (Phase 2 review finding C2) verbatim. Carry the
+> work across as three readable commits, not one blob.
+
+- [ ] **Step 1: Carry the container layer — commit 1 of 3**
+
+`scripts/dev.sh` is the one every later step invokes, and it does not exist on
+the Vite branch.
 
 ```bash
 git checkout chore/runnable-on-node-24 -- \
-  Dockerfile.dev docker-compose.dev.yml .dockerignore docs/dev.md \
-  scripts/import-snapshot.mjs scripts/check-data-sources.mjs public/data
+  Dockerfile.dev docker-compose.dev.yml .dockerignore docs/dev.md scripts/dev.sh
+test -x scripts/dev.sh || chmod +x scripts/dev.sh
+git add -A && git commit -m "feat: carry the containerised dev server onto the Vite base"
 ```
 
-- [ ] **Step 2: Rename the env vars — Vite uses a different prefix**
+- [ ] **Step 2: Carry the local-data layer — commit 2 of 3**
 
-The Vite branch reads `import.meta.env.VITE_APP_*`, not `process.env.VUE_APP_*`.
+`src/utils/dataImporter.js` is the critical one. The Vite branch's copy reads
+twenty `import.meta.env.VITE_APP_DATA_URL_*` vars that Phase 2 deleted; leave
+it in place and every table resolves to `undefined` and the app renders blank.
+Phase 2's version derives each path from the table name and needs no config.
 
 ```bash
-sed -i 's/^VUE_APP_/VITE_APP_/' .env.local
-grep -E "^VITE_APP_DATA_URL" .env.local | head -3
+git checkout chore/runnable-on-node-24 -- \
+  public/data public/DB.Version src/utils/dataImporter.js \
+  scripts/import-snapshot.mjs scripts/check-data-sources.mjs
+grep -c "import.meta.env" src/utils/dataImporter.js   # expect 0
+cat public/DB.Version                                  # expect 26.0-mdb
+git add -A && git commit -m "feat: serve the local data snapshot on the Vite base"
 ```
-Expected: `VITE_APP_DATA_URL_MASK=data/mask.csv`
 
-- [ ] **Step 3: Update the check script for the new prefix**
+Then delete the dead `process.env.VUE_APP_DB_VERSION` read at
+`src/utils/dataImporter.js:22` — it is a standing minor and `process.env` does
+not exist in a Vite browser bundle, so leaving it is now a runtime error, not
+just dead weight. `RemoteDBVersion` must come from the fetched
+`public/DB.Version`, matching what Phase 2's C2 fix established.
 
-In `scripts/check-data-sources.mjs`, change both occurrences of `VUE_APP_DATA_URL_` to `VITE_APP_DATA_URL_` (the `.filter()` and the `.replace()`).
+- [ ] **Step 3: Port the upstream-cleanup into the root `index.html` — commit 3 of 3**
+
+**Vite moves `index.html` to the repo root.** Do not copy `public/index.html`
+across — the Vite branch deletes that path. Instead apply Task 2.3's removals
+and the Phase 2 C1 fix to the Vite branch's root `index.html`:
+
+- remove the Google Tag Manager script block and its `<noscript>` iframe
+- remove the `google-site-verification` meta
+- replace `%VITE_APP_TITLE%` in the `og:site_name` / `og:title` tags with the
+  literal title, so a fresh clone with no env file still renders correct tags
+- point `og:*` at this fork, not `mxswat`
+
+```bash
+grep -Ec "googletagmanager|google-site-verification|%VITE_APP_TITLE%|mxswat" index.html   # expect 0
+git add -A && git commit -m "chore: strip upstream analytics and env-dependent tags from index.html"
+```
 
 - [ ] **Step 4: Point the dev server at the tailnet in `vite.config.ts`**
 
@@ -797,15 +835,21 @@ git commit -m "feat: run the Vite build in the container against local data"
 ### Task 3.4: Delete the webpack-era workarounds
 
 **Files:**
-- Delete: `vue.config.js`, `.npmrc`, `babel.config.js`, `.browserslistrc`
+- Delete: `.browserslistrc`, `yarn.lock` (`vue.config.js`, `.npmrc`, `babel.config.js` are absent on the Vite base by construction)
 
 - [ ] **Step 1: Remove them**
 
+Of the four, **only `.browserslistrc` exists on the Vite base** — `vue.config.js`,
+`.npmrc` and `babel.config.js` were never on that branch and Task 3.3
+deliberately does not carry them, so `git rm` on all four fails hard.
+
 ```bash
-git rm vue.config.js .npmrc babel.config.js .browserslistrc
+git rm .browserslistrc
+git rm -f yarn.lock          # Vite branch ships yarn.lock; yarn is installed nowhere
+ls vue.config.js .npmrc babel.config.js 2>&1   # expect: No such file (x3)
 ```
 
-`.npmrc` held `node-options=--openssl-legacy-provider`, needed only because webpack 4 hashes with md4. Vite uses esbuild/rollup and never calls it.
+`.npmrc` held `node-options=--openssl-legacy-provider`, needed only because webpack 4 hashes with md4. Vite uses esbuild/rollup and never calls it — which is why it never had to come across.
 
 - [ ] **Step 2: Verify a clean build from scratch**
 
