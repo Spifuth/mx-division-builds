@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from app.loader import TABLE_NAMES, Dataset
@@ -81,7 +84,11 @@ def weapons(
 def weapon(request: Request, name: str) -> dict:
     for row in dataset(request).tables["weapon"]:
         if row.get("Name", "").casefold() == name.casefold():
-            return row
+            # Copy. This was the one endpoint handing a caller the shared row
+            # object itself; Dataset is only shallow-frozen, so anything that
+            # later wrote into the response would corrupt it for every request
+            # that followed. Its siblings all build fresh dicts already.
+            return dict(row)
     raise HTTPException(status_code=404, detail=f"unknown weapon {name!r}")
 
 
@@ -105,12 +112,36 @@ def gear(
     return _window(rows, q, limit, offset)
 
 
+# brandsetBonuses keys on the brand name with the bonus TIER appended directly,
+# no separator: "5.11 Tactical0", "5.11 Tactical1", "5.11 Tactical2" against
+# brands.csv's plain "5.11 Tactical". Joining on the raw string matches 0 of 66
+# -- measured, this endpoint shipped that way and returned "bonuses": [] for
+# every brand with a 200 and a plausible total.
+#
+# The digit is the tier (0 = 1-piece, 1 = 2-piece, 2 = 3-piece), so it is data,
+# not noise: it is stripped for the join and kept as `tier` on each bonus.
+_BRAND_TIER = re.compile(r"^(?P<brand>.*?)(?P<tier>\d+)$")
+
+
+def _brand_key(raw: str) -> tuple[str, int | None]:
+    match = _BRAND_TIER.match(raw)
+    if not match:
+        return raw, None
+    return match.group("brand"), int(match.group("tier"))
+
+
 @router.get("/brands", response_model=RowList)
 def brands(request: Request, q: str | None = None) -> RowList:
     data = dataset(request)
-    bonuses: dict[str, list[dict[str, str]]] = {}
+    bonuses: dict[str, list[dict[str, Any]]] = {}
     for row in data.tables["brandsetBonuses"]:
-        bonuses.setdefault(row.get("Brand", ""), []).append(row)
+        brand, tier = _brand_key(row.get("Brand", ""))
+        bonuses.setdefault(brand, []).append({**row, "tier": tier})
+    for entries in bonuses.values():
+        entries.sort(key=lambda e: (e["tier"] is None, e["tier"]))
+
+    # "Exotic" and "Crafted" are pseudo-brands with no set bonuses at all, so an
+    # empty list is correct for exactly those two and wrong for any other.
     rows = [{**b, "bonuses": bonuses.get(b.get("Brand", ""), [])} for b in data.tables["brands"]]
     return _window(rows, q, 0, 0)
 
