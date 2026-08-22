@@ -886,6 +886,23 @@ git rm .browserslistrc
 ls vue.config.js .npmrc babel.config.js yarn.lock 2>&1   # expect: No such file (x4)
 ```
 
+- [ ] **Step 1b: Finish Task 2.3 — the deploy target never crossed over**
+
+Task 2.3 stripped upstream's analytics and deploy target on the webpack
+branch. Task 3.3 carried the analytics half (the GTM block left `index.html`)
+but the deploy half is still here, and the plan's own "Done when" list
+requires `no gh-pages-deploy.js`:
+
+```bash
+git rm scripts/gh-pages-deploy.js .github/workflows/get-vendors-GH-Pages-CI.yml
+```
+Then drop the now-dangling `"gh-pages-deploy"` entry from `package.json`
+scripts. Leave `.github/workflows/get-vendors-CI.yml` — it survives on the
+webpack branch too and its own defect (fetching vendor JSON over plain HTTP)
+is a separate, still-open question for the final review.
+
+Expected afterwards: `git grep -l "gh-pages"` returns only the plan document.
+
 `.npmrc` held `node-options=--openssl-legacy-provider`, needed only because webpack 4 hashes with md4. Vite uses esbuild/rollup and never calls it — which is why it never had to come across.
 
 - [ ] **Step 2: Verify a clean build from scratch**
