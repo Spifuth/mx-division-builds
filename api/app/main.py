@@ -14,13 +14,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.loader import load_dataset
+from app.routes import data as data_routes
 
 log = logging.getLogger("td2-api")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info("td2-api starting")
+    settings = app.state.settings
+    app.state.dataset = load_dataset(settings.data_dir)
+    log.info(
+        "dataset loaded: %d tables, %d rows, version %s",
+        len(app.state.dataset.tables),
+        sum(app.state.dataset.counts.values()),
+        app.state.dataset.version,
+    )
     yield
     log.info("td2-api stopping")
 
@@ -43,6 +52,8 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    app.include_router(data_routes.router)
 
     @app.get("/api/health")
     def health() -> dict:
