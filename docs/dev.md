@@ -24,7 +24,7 @@ alias mxrun='./scripts/dev.sh --profile tools run --rm tools'
 mxrun npm run check http://<TAILNET_IP>:8090/   # data sources: reachable + schema-valid
 mxrun npm run build-prod # production build into dist/
 mxrun npm run lint       # exits non-zero on pre-existing issues -- expected, not a regression
-mxrun npm test           # not wired up yet -- lands in a later phase
+mxrun npm test           # unit tests -- offline, no network
 mxrun npm install <pkg>
 ```
 
@@ -38,3 +38,16 @@ from `tailscale0`.
 
 `.env.local` is gitignored and entirely optional — compose declares it
 `required: false`, so a fresh clone builds and starts without one.
+
+## Verifying
+
+```sh
+mxrun npm test                                # unit tests -- the damage math, offline, no network
+mxrun npm run check http://<TAILNET_IP>:8090/ # data layer -- reachable, CORS-clear, schema-valid
+```
+
+They cover different failure modes and neither substitutes for the other.
+`npm run check` needs the dev server up; `npm test` does not.
+
+**Neither proves the app renders.** A green check on both held while the app
+showed nothing but an error screen — open it in a browser.
