@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.loader import load_dataset
-from app.refresh import run_refresh, validate_candidate
+from app.refresh import run_refresh, validate_candidate, version_rejection
 from app.snapshots import SnapshotStore
 
 SEED_VERSION = "26.0-mdb"  # what seed_dir's SNAPSHOT.txt carries
@@ -152,6 +152,34 @@ def test_the_row_count_floor_sits_exactly_at_half(seed_dir):
     assert any("row count" in r for r in below), "one row under the floor is rejected"
 
 
+@pytest.mark.parametrize(
+    "token",
+    [
+        "",
+        "   ",
+        "\n\n",
+        "26.0-mdb\nsource: https://not-buildstation.example/mx",
+        "26.0 mdb",
+        "<!DOCTYPE html>",
+        "x" * 65,
+    ],
+)
+def test_a_malformed_version_token_is_rejected(token):
+    """The token got no validation at all while the tables got five, even
+    though it is the value that decides whether a refresh happens and the one
+    interpolated into SNAPSHOT.txt. raise_for_status() does not cover a 200
+    with a wrong body -- the same threat model this whole module exists for."""
+    assert version_rejection(token.strip()) is not None
+
+
+def test_the_real_version_token_is_accepted():
+    """The contrast case: the shape check has to let the actual upstream value
+    through, or the refresh never runs again."""
+    assert version_rejection(SEED_VERSION) is None
+    assert version_rejection("27.1") is None
+    assert version_rejection("2026.08.23-rc1+build2") is None
+
+
 # --- run_refresh: proof the live dataset survives every failure path -------
 #
 # The tests above pin down validate_candidate as a pure function. The ones
@@ -178,6 +206,19 @@ class _FetchFails:
 
     async def fetch_tables(self) -> dict[str, str]:
         raise RuntimeError("connection reset")
+
+
+class _VersionOnly:
+    """Answers the cheap poll and asserts the expensive one never happens."""
+
+    def __init__(self, version: str) -> None:
+        self._version = version
+
+    async def fetch_version(self) -> str:
+        return self._version
+
+    async def fetch_tables(self) -> dict[str, str]:
+        raise AssertionError("a rejected version token must not trigger a 20-table fetch")
 
 
 class _FetchesTables:
@@ -250,6 +291,41 @@ async def test_a_validated_candidate_does_replace_the_live_dataset(tmp_path, see
     assert result.changed is True
     assert app.state.dataset.version == NEW_VERSION
     assert app.state.snapshots.live() is not None
+
+
+# --- the version token, which decides whether any of the above runs --------
+
+
+async def test_a_rejected_version_token_stops_before_the_expensive_fetch(tmp_path, seed_dir):
+    """A multi-line token is interpolated straight into SNAPSHOT.txt, and
+    _read_marker honours an injected "source:" line -- so the marker of a
+    promoted snapshot would name an upstream nobody chose."""
+    injected = "26.0-mdb\nsource: https://not-buildstation.example/mx"
+    app = _app(tmp_path, seed_dir, _VersionOnly(injected))
+    before = app.state.dataset
+
+    result = await run_refresh(app)
+
+    assert result.changed is False
+    assert result.version is None, "an untrusted token must not be echoed back either"
+    assert result.reasons
+    assert app.state.dataset is before
+    assert app.state.snapshots.list() == [], "nothing may be written for a rejected token"
+
+
+async def test_an_empty_version_token_does_not_promote_on_every_poll(tmp_path, seed_dir):
+    """The runaway. "" never equals the live version, so every poll would do a
+    full fetch and promote; _read_marker then discards the empty value, so the
+    promoted snapshot reads back as "unknown" and the next poll compares "" to
+    "unknown" -- forever, with write_candidate's collision suffix minting .2,
+    .3, .4 and nothing pruning them."""
+    app = _app(tmp_path, seed_dir, _VersionOnly("   "))
+
+    for _ in range(3):
+        result = await run_refresh(app)
+        assert result.changed is False
+
+    assert app.state.snapshots.list() == []
 
 
 async def test_a_programming_error_is_not_reported_as_upstream_being_down(tmp_path, seed_dir):

@@ -28,6 +28,13 @@ log = logging.getLogger("td2-api.refresh")
 # test_the_row_count_floor_sits_exactly_at_half.
 MIN_ROW_RATIO = 0.5
 
+# The upstream version token as it actually looks: "26.0-mdb". Nothing else is
+# a version, and this value is worth checking as hard as the tables are,
+# because it both decides whether a refresh runs at all and is interpolated
+# verbatim into a snapshot's SNAPSHOT.txt.
+VERSION_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
+MAX_VERSION_LENGTH = 64
+
 # Errors that mean this code is wrong, not that upstream is. `except Exception`
 # around the source calls reported a local TypeError as "upstream is down",
 # which sends whoever reads /api/meta to the wrong place entirely.
@@ -62,6 +69,37 @@ def describe_error(exc: BaseException) -> str:
     if len(text) > _MAX_REASON_LENGTH:
         text = text[: _MAX_REASON_LENGTH - 3] + "..."
     return f"{type(exc).__name__}: {text}" if text else type(exc).__name__
+
+
+def version_rejection(version: str) -> str | None:
+    """Why this version token cannot be acted on, or None if it is fine.
+
+    The token gets no free pass just because raise_for_status() liked the
+    response: a 200 with the wrong body is the same threat model the table
+    checks exist for. Two concrete failures this closes:
+
+    * An empty or whitespace token never equals the live version, so every
+      poll would run a full 20-table fetch and promote. _read_marker discards
+      an empty value, so the promoted snapshot reads back as "unknown", the
+      next poll compares "" to "unknown", and it loops forever -- with
+      write_candidate's collision suffix minting .2, .3, .4 and nothing
+      pruning them.
+    * A multi-line token is interpolated into SNAPSHOT.txt, so the extra lines
+      land in the marker -- and _read_marker will honour an injected
+      "source:" line.
+    """
+    if not version:
+        return "version token is empty"
+    if len(version) > MAX_VERSION_LENGTH:
+        return (
+            f"version token is {len(version)} characters, "
+            f"over the {MAX_VERSION_LENGTH} limit"
+        )
+    if not VERSION_PATTERN.match(version):
+        # The token itself is never echoed: it is third-party input and this
+        # reason is served to browser origins.
+        return "version token is not a single plain version string"
+    return None
 
 
 def validate_candidate(
@@ -125,7 +163,7 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
         return result
 
     try:
-        version = await source.fetch_version()
+        raw_version = await source.fetch_version()
     except PROGRAMMING_ERRORS:
         raise
     except Exception as exc:  # noqa: BLE001 - upstream is a third party
@@ -137,6 +175,14 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
                 reasons=[f"version poll failed: {describe_error(exc)}"],
             )
         )
+
+    version = str(raw_version).strip() if raw_version is not None else ""
+    rejection = version_rejection(version)
+    if rejection:
+        # Reported, not raised: a bad token is upstream misbehaving, exactly
+        # like a bad table, and skipping a refresh is always safe.
+        log.warning("version token rejected: %s", rejection)
+        return finish(RefreshResult(changed=False, version=None, reasons=[rejection]))
 
     if version == current.version and not force:
         return finish(RefreshResult(changed=False, version=version, reasons=[]))
