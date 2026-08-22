@@ -97,9 +97,14 @@ def version_rejection(version: str) -> str | None:
       next poll compares "" to "unknown", and it loops forever -- with
       write_candidate's collision suffix minting .2, .3, .4 and nothing
       pruning them.
-    * A multi-line token is interpolated into SNAPSHOT.txt, so the extra lines
-      land in the marker -- and _read_marker will honour an injected
-      "source:" line.
+    * A multi-line token is interpolated into SNAPSHOT.txt, so its extra lines
+      become marker lines. Measured, because the obvious version of this claim
+      is wrong: an injected "source:" line is written but then overridden by
+      the legitimate one below it, since _read_marker takes the last value for
+      a key and write_candidate emits source AFTER the version. "snapshot:" is
+      emitted BEFORE it and is therefore injectable -- a token of
+      "26.0-mdb\nsnapshot: 1999-01-01" made _read_marker report a snapshot
+      date of 1999-01-01, which /api/meta then serves as fact.
     """
     if not version:
         return "version token is empty"

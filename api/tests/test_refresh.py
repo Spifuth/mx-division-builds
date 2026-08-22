@@ -494,10 +494,17 @@ def test_force_is_wired_through_the_admin_route(tmp_path, seed_dir, monkeypatch)
 
 
 async def test_a_rejected_version_token_stops_before_the_expensive_fetch(tmp_path, seed_dir):
-    """A multi-line token is interpolated straight into SNAPSHOT.txt, and
-    _read_marker honours an injected "source:" line -- so the marker of a
-    promoted snapshot would name an upstream nobody chose."""
-    injected = "26.0-mdb\nsource: https://not-buildstation.example/mx"
+    """A multi-line token is interpolated straight into SNAPSHOT.txt, so its
+    extra lines become marker lines.
+
+    The payload is a "snapshot:" line rather than the more obvious "source:"
+    one, because that is what measurement showed actually sticks: _read_marker
+    takes the last value for a key, and write_candidate emits source after the
+    version and snapshot before it. Injecting source is harmless; injecting
+    snapshot made _read_marker report a snapshot date of 1999-01-01, which
+    /api/meta then serves as fact.
+    """
+    injected = "26.0-mdb\nsnapshot: 1999-01-01"
     app = _app(tmp_path, seed_dir, _VersionOnly(injected))
     before = app.state.dataset
 
