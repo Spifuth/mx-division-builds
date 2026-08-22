@@ -28,6 +28,7 @@ def meta(request: Request) -> Meta:
         counts=data.counts,
         tables=sorted(data.tables),
         last_refresh=getattr(request.app.state, "last_refresh", None),
+        degraded=getattr(request.app.state, "degraded", None),
     )
 
 

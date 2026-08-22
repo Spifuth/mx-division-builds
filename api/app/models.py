@@ -16,6 +16,12 @@ class Meta(BaseModel):
     counts: dict[str, int]
     tables: list[str]
     last_refresh: dict | None = None
+    # Non-null only when the promoted snapshot could not be loaded at boot and
+    # the API fell back to the seed dataset. Additive and defaulted, so it is
+    # not a breaking change for the frontend being written in parallel -- but
+    # it is the only place that situation is visible without shell access to
+    # the container's logs.
+    degraded: str | None = None
 
 
 class RawTable(BaseModel):

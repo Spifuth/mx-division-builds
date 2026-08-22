@@ -569,3 +569,51 @@ def test_meta_surfaces_the_last_refresh(tmp_path, seed_dir, monkeypatch):
         body = client.get("/api/meta").json()
 
     assert body["last_refresh"] == {"changed": True, "version": SEED_VERSION, "reasons": []}
+
+
+# --- a bad promoted snapshot must not take the service down ----------------
+
+
+def test_a_broken_promoted_snapshot_falls_back_to_the_seed(tmp_path, seed_dir, monkeypatch):
+    """load_dataset(live) ran unguarded inside lifespan, so a DatasetError
+    aborted the boot -- and aborted it again on every restart, because LIVE
+    still points at the same directory, while the known-good seed loaded one
+    line earlier was thrown away. write_candidate is not atomic (mkdir, then 20
+    writes), so the half-written directory below is reachable from a full disk
+    or a kill.
+
+    This is the inverse of the property the refresh exists for: it trades
+    serving last-known-good for having no service at all.
+    """
+    broken = tmp_path / "2026-08-23"
+    broken.mkdir()
+    (broken / "weapon.csv").write_text("Name,Quality\n", encoding="utf-8")
+    (tmp_path / "LIVE").write_text(broken.name, encoding="utf-8")
+    monkeypatch.setenv("TD2_SNAPSHOT_DIR", str(tmp_path))
+
+    with TestClient(create_app()) as client:
+        meta = client.get("/api/meta").json()
+        assert client.get("/api/health").json() == {"ok": True}
+        assert client.get("/api/weapons").json()["total"] > 100
+
+    assert meta["version"] == SEED_VERSION, "the seed must still be served"
+    assert meta["table_count"] == 20
+    assert meta["degraded"], "a silent fallback is a stale dashboard: /api/meta must say so"
+    assert broken.name in meta["degraded"]
+
+
+def test_a_healthy_promoted_snapshot_is_not_reported_as_degraded(tmp_path, seed_dir, monkeypatch):
+    """The contrast case: `degraded` set unconditionally, or never cleared,
+    would make the test above pass while crying wolf on every normal boot."""
+    monkeypatch.setenv("TD2_SNAPSHOT_DIR", str(tmp_path))
+    app = create_app()
+    with TestClient(app) as client:
+        app.state.source = _FetchesTables(_good(seed_dir), version=SEED_VERSION)
+        assert client.post("/api/admin/refresh?force=true").json()["changed"] is True
+
+    with TestClient(create_app()) as client:
+        meta = client.get("/api/meta").json()
+
+    assert meta["degraded"] is None
+    assert meta["version"] == SEED_VERSION
+    assert meta["table_count"] == 20
