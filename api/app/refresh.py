@@ -154,13 +154,37 @@ def validate_candidate(
         if previous_header:
             # Skipped when the live dataset has no header recorded for this
             # table, which only happens before anything has been served.
-            kept = previous_header & set(rows[0])
+            candidate_header = {c for c in rows[0] if c is not None}
+            kept = previous_header & candidate_header
             if len(kept) / len(previous_header) < MIN_HEADER_OVERLAP:
                 reasons.append(
                     f"{name}: header is not this table's "
                     f"({len(kept)} of {len(previous_header)} columns kept)"
                 )
                 continue
+
+            # Overlap alone cannot separate tables that share a schema family:
+            # the six gear slots all carry GEAR_COLUMNS, and statsMapping's two
+            # columns are a subset of four other tables'. Measured over the
+            # seed, 68 of the 380 possible table-for-table swaps still cleared
+            # the floor above. But if a candidate's header is *exactly* another
+            # live table's and not this one's, it is that table -- which decides
+            # 61 of those 68. The 7 left over are pairs whose live schemas are
+            # genuinely identical (chest/gloves/kneepads, gearAttributes/
+            # gearMods); no check on header shape can tell those apart, and
+            # separating them would need a content discriminator.
+            if candidate_header != previous_header:
+                twin = next(
+                    (
+                        other
+                        for other, cols in previous_headers.items()
+                        if other != name and set(cols) == candidate_header
+                    ),
+                    None,
+                )
+                if twin is not None:
+                    reasons.append(f"{name}: header is exactly {twin}'s, not its own")
+                    continue
 
         if previous_counts and name in previous_counts:
             floor = previous_counts[name] * MIN_ROW_RATIO

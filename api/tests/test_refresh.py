@@ -213,6 +213,32 @@ def test_a_json_error_document_is_rejected(seed_dir):
     assert "gearMods" in reasons[0]
 
 
+def test_a_body_that_is_exactly_another_tables_is_rejected(seed_dir):
+    """The overlap floor is not enough on its own. mask fed chest's body keeps
+    11 of mask's 12 columns and brings 92 rows against a floor of 38, and every
+    column REQUIRED_COLUMNS asks of mask is a column chest has too -- so it
+    clears every other check in this function.
+
+    Measured over the seed dataset: 68 of the 380 possible table-for-table
+    swaps cleared the overlap floor. Rejecting a header that is exactly some
+    other live table's decides 61 of them. The 7 that remain are pairs whose
+    live schemas are identical (chest/gloves/kneepads, gearAttributes/
+    gearMods), which no check on header shape can separate.
+    """
+    live = load_dataset(seed_dir)
+    tables = _good(seed_dir)
+    tables["mask"] = tables["chest"]
+
+    reasons = validate_candidate(
+        tables, previous_counts=live.counts, previous_headers=live.headers
+    )
+
+    assert len(reasons) == 1
+    assert reasons[0].startswith("mask: ")
+    # chest, gloves and kneepads share one schema, so any of the three names it.
+    assert any(twin in reasons[0] for twin in ("chest", "gloves", "kneepads"))
+
+
 def test_a_dropped_column_still_validates_when_most_of_the_header_survives(seed_dir):
     """The header check must not be a stricter REQUIRED_COLUMNS. A game update
     that drops one column of statsMapping's two is the tightest legitimate case
