@@ -15,6 +15,7 @@ class Meta(BaseModel):
     table_count: int
     counts: dict[str, int]
     tables: list[str]
+    last_refresh: dict | None = None
 
 
 class RawTable(BaseModel):

@@ -15,7 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.loader import load_dataset
+from app.routes import admin as admin_routes
 from app.routes import data as data_routes
+from app.snapshots import SnapshotStore
+from app.sources.buildstation import BuildstationSource
 
 log = logging.getLogger("td2-api")
 
@@ -30,6 +33,15 @@ async def lifespan(app: FastAPI):
         sum(app.state.dataset.counts.values()),
         app.state.dataset.version,
     )
+
+    app.state.snapshots = SnapshotStore(settings.snapshot_dir)
+    app.state.source = BuildstationSource()
+
+    live = app.state.snapshots.live()
+    if live is not None:
+        app.state.dataset = load_dataset(live)
+        log.info("serving promoted snapshot %s", live.name)
+
     yield
     log.info("td2-api stopping")
 
@@ -54,6 +66,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(data_routes.router)
+    app.include_router(admin_routes.router)
 
     @app.get("/api/health")
     def health() -> dict:
