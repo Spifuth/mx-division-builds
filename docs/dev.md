@@ -21,12 +21,12 @@ and the browser updates.
 ```sh
 alias mxrun='./scripts/dev.sh --profile tools run --rm tools'
 
-mxrun npm run check http://<TAILNET_IP>:8090/   # data sources: reachable + schema-valid
-mxrun npm run build-prod # production build into dist/
 mxrun npm run lint       # exits non-zero on pre-existing issues -- expected, not a regression
-mxrun npm test           # unit tests -- offline, no network
 mxrun npm install <pkg>
+mxrun npm audit
 ```
+
+The commands that actually verify something are in **Verifying** below.
 
 ## Config
 
@@ -43,11 +43,19 @@ from `tailscale0`.
 
 ```sh
 mxrun npm test                                # unit tests -- the damage math, offline, no network
-mxrun npm run check http://<TAILNET_IP>:8090/ # data layer -- reachable, same-origin, schema-valid
+mxrun npm run check http://<TAILNET_IP>:8090/ # data layer -- reachable, CSV-shaped, schema-valid, and every icon it names ships
+mxrun npm run build-prod                      # types + production build into dist/
 ```
 
-They cover different failure modes and neither substitutes for the other.
-`npm run check` needs the dev server up; `npm test` does not.
+All three cover different failure modes and none of them substitutes for
+another. `npm run check` needs the dev server up; the other two do not.
 
-**Neither proves the app renders.** A green check on both held while the app
-showed nothing but an error screen — open it in a browser.
+`build-prod` belongs here rather than under "run anything else": it runs
+`vue-tsc` first, and that is the **only** type-check gate in the repo — neither
+`npm test` nor `npm run check` type-checks a thing. Skip it before merging and
+nothing has.
+
+**None of them proves the app renders.** A green run on all three held while
+the app showed nothing but an error screen — and a missing image is quieter
+still, because Vite answers a missing asset with its SPA fallback (200
+`text/html`) so the browser simply fails to decode it. Open it in a browser.
