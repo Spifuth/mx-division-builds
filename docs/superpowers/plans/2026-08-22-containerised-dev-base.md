@@ -858,7 +858,7 @@ git commit -m "feat: run the Vite build in the container against local data"
 ### Task 3.4: Delete the webpack-era workarounds
 
 **Files:**
-- Delete: `.browserslistrc`, `yarn.lock` (`vue.config.js`, `.npmrc`, `babel.config.js` are absent on the Vite base by construction)
+- Delete: `.browserslistrc` (`vue.config.js`, `.npmrc`, `babel.config.js` are absent on the Vite base by construction; `yarn.lock` went in the Task 3.2 review fix)
 
 - [ ] **Step 1: Remove them**
 
@@ -868,8 +868,7 @@ deliberately does not carry them, so `git rm` on all four fails hard.
 
 ```bash
 git rm .browserslistrc
-git rm -f yarn.lock          # Vite branch ships yarn.lock; yarn is installed nowhere
-ls vue.config.js .npmrc babel.config.js 2>&1   # expect: No such file (x3)
+ls vue.config.js .npmrc babel.config.js yarn.lock 2>&1   # expect: No such file (x4)
 ```
 
 `.npmrc` held `node-options=--openssl-legacy-provider`, needed only because webpack 4 hashes with md4. Vite uses esbuild/rollup and never calls it — which is why it never had to come across.
