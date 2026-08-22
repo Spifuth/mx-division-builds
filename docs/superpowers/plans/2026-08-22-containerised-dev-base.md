@@ -673,16 +673,51 @@ Expected: exactly the 5 commits listed in the finding above.
 ### Task 3.2: Carry the three behavioural commits
 
 **Files:**
-- Modify: `src/components/GearSlot.vue`, `src/components/WeaponSlot.vue`, `src/components/SkillSlot.vue`, `src/components/Modals/GearSelectionModal.vue`, `src/components/Modals/VersionModal.vue`, `src/utils/classes.js`
+- Create: `Dockerfile.dev`, `docker-compose.dev.yml`, `.dockerignore`, `docs/dev.md`, `scripts/dev.sh`
+- Modify: `.gitignore`, `src/components/GearSlot.vue`, `src/components/WeaponSlot.vue`, `src/components/SkillSlot.vue`, `src/components/Modals/GearSelectionModal.vue`, `src/components/Modals/VersionModal.vue`, `src/utils/classes.js`
 
-- [ ] **Step 1: Cherry-pick the trivial one first**
+> **REORDERED 2026-08-22 after the Phase 3 pre-flight scan.** Step 4 verifies
+> the cherry-picks by building, via `./scripts/dev.sh` — which does not exist
+> on the Vite base until Task 3.3 carried it. Resolving three-way conflicts
+> with no way to build them is backwards, so the container layer (Task 3.3's
+> first commit) moves here, ahead of the picks.
+
+- [ ] **Step 1: Carry the container layer across first — you cannot verify a conflict resolution without it**
+
+```bash
+git checkout chore/runnable-on-node-24 -- \
+  Dockerfile.dev docker-compose.dev.yml .dockerignore docs/dev.md scripts/dev.sh
+test -x scripts/dev.sh || chmod +x scripts/dev.sh
+git add -A && git commit -m "feat: carry the containerised dev server onto the Vite base"
+```
+
+`.gitignore` is deliberately NOT in that list. It diverged both ways and needs
+a **merge, not a copy**: the `chore` branch adds `.superpowers/` and `.env`,
+while the Vite branch has `dist-ssr`, `*.local`, `pnpm-debug.log*`,
+`lerna-debug.log*` and `.vscode/*` + `!.vscode/extensions.json` that `chore`
+dropped. Union them by hand and fold it into this commit.
+
+- [ ] **Step 2: Destroy the node_modules volume before installing anything**
+
+It currently holds the webpack-era install (818 packages, `vue-cli-service`).
+`npm install` on top of that leaves both toolchains resident, and stale
+`vue-cli` packages can satisfy an import that the Vite build should have
+failed on.
+
+```bash
+./scripts/dev.sh down
+docker volume rm mx-division-builds_node_modules
+./scripts/dev.sh build app
+```
+
+- [ ] **Step 3: Cherry-pick the trivial one first**
 
 ```bash
 git cherry-pick 68b1864   # Y7S1 patchnotes, VersionModal only
 ```
 Expected: clean.
 
-- [ ] **Step 2: Cherry-pick the named-attribute commit**
+- [ ] **Step 4: Cherry-pick the named-attribute commit**
 
 ```bash
 git cherry-pick d9b0218
@@ -692,14 +727,14 @@ If it conflicts in `GearSlot.vue` / `GearSelectionModal.vue`, resolve by keeping
 git add -A && git cherry-pick --continue
 ```
 
-- [ ] **Step 3: Cherry-pick the expertise commit — the sharp one**
+- [ ] **Step 5: Cherry-pick the expertise commit — the sharp one**
 
 ```bash
 git cherry-pick f157214
 ```
 `WeaponSlot.vue` will conflict (master +276 / Vite +446 lines). Resolve by keeping the Vite branch's template and PrimeVue components, and porting master's change: expertise `max` becomes 30 while the input's arrows are allowed past it. `classes.js` sets `this["expertise"].max = 30` for both `WeaponBase` and `SkillBase`.
 
-- [ ] **Step 4: Verify it builds**
+- [ ] **Step 6: Verify it builds**
 
 ```bash
 ./scripts/dev.sh --profile tools run --rm tools npm install
@@ -707,7 +742,7 @@ git cherry-pick f157214
 ```
 Expected: build succeeds.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 Cherry-picks commit themselves. Verify with `git log --oneline -4`.
 
@@ -715,7 +750,7 @@ Cherry-picks commit themselves. Verify with `git log --oneline -4`.
 
 **Files:**
 - Modify: `vite.config.ts`, `index.html`, `package.json`
-- Create: `Dockerfile.dev`, `docker-compose.dev.yml`, `.dockerignore`, `docs/dev.md`, `scripts/dev.sh`, `scripts/import-snapshot.mjs`, `scripts/check-data-sources.mjs`, `public/data/*.csv`, `public/DB.Version`, `src/utils/dataImporter.js`
+- Create: `scripts/import-snapshot.mjs`, `scripts/check-data-sources.mjs`, `public/data/*.csv`, `public/DB.Version`, `src/utils/dataImporter.js`
 
 The Vite branch predates all of Phase 1 and 2, so those files must be brought across.
 
@@ -728,19 +763,7 @@ The Vite branch predates all of Phase 1 and 2, so those files must be brought ac
 > app and the stale-cache bug (Phase 2 review finding C2) verbatim. Carry the
 > work across as three readable commits, not one blob.
 
-- [ ] **Step 1: Carry the container layer — commit 1 of 3**
-
-`scripts/dev.sh` is the one every later step invokes, and it does not exist on
-the Vite branch.
-
-```bash
-git checkout chore/runnable-on-node-24 -- \
-  Dockerfile.dev docker-compose.dev.yml .dockerignore docs/dev.md scripts/dev.sh
-test -x scripts/dev.sh || chmod +x scripts/dev.sh
-git add -A && git commit -m "feat: carry the containerised dev server onto the Vite base"
-```
-
-- [ ] **Step 2: Carry the local-data layer — commit 2 of 3**
+- [ ] **Step 1: Carry the local-data layer — commit 2 of 3**
 
 `src/utils/dataImporter.js` is the critical one. The Vite branch's copy reads
 twenty `import.meta.env.VITE_APP_DATA_URL_*` vars that Phase 2 deleted; leave
@@ -762,7 +785,7 @@ not exist in a Vite browser bundle, so leaving it is now a runtime error, not
 just dead weight. `RemoteDBVersion` must come from the fetched
 `public/DB.Version`, matching what Phase 2's C2 fix established.
 
-- [ ] **Step 3: Port the upstream-cleanup into the root `index.html` — commit 3 of 3**
+- [ ] **Step 2: Port the upstream-cleanup into the root `index.html` — commit 3 of 3**
 
 **Vite moves `index.html` to the repo root.** Do not copy `public/index.html`
 across — the Vite branch deletes that path. Instead apply Task 2.3's removals
@@ -779,7 +802,7 @@ grep -Ec "googletagmanager|google-site-verification|%VITE_APP_TITLE%|mxswat" ind
 git add -A && git commit -m "chore: strip upstream analytics and env-dependent tags from index.html"
 ```
 
-- [ ] **Step 4: Point the dev server at the tailnet in `vite.config.ts`**
+- [ ] **Step 3: Point the dev server at the tailnet in `vite.config.ts`**
 
 ```typescript
 import { defineConfig, loadEnv } from 'vite'
@@ -802,7 +825,7 @@ export default ({ mode }) => {
 }
 ```
 
-- [ ] **Step 5: Point the container at Vite's dev script**
+- [ ] **Step 4: Point the container at Vite's dev script**
 
 In `docker-compose.dev.yml` the `app` service command becomes `npm run dev`; add to `package.json` scripts:
 ```json
@@ -810,7 +833,7 @@ In `docker-compose.dev.yml` the `app` service command becomes `npm run dev`; add
 "check": "node scripts/check-data-sources.mjs"
 ```
 
-- [ ] **Step 6: Rebuild and verify end to end**
+- [ ] **Step 5: Rebuild and verify end to end**
 
 ```bash
 ./scripts/dev.sh build app
@@ -821,11 +844,11 @@ curl -s -o /dev/null -w "%{http_code}\n" http://<TAILNET_IP>:8090/
 ```
 Expected: `npm run check` 20/20 OK; curl `200`.
 
-- [ ] **Step 7: Open the app in a browser and confirm gear renders**
+- [ ] **Step 6: Open the app in a browser and confirm gear renders**
 
 The owner must confirm from their own workstation. **A 200 and a green check do not prove the app works** — that exact combination held while the app showed nothing but an error screen. Ask for confirmation that the inventory populates.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A
