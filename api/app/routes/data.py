@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from app.loader import TABLE_NAMES, Dataset
-from app.models import Meta, RawTable
+from app.models import Meta, RawTable, RowList
 
 router = APIRouter(prefix="/api")
 
@@ -39,3 +39,129 @@ def raw_table(
     rows = dataset(request).tables[name]
     window = rows[offset : offset + limit] if limit else rows[offset:]
     return RawTable(name=name, count=len(window), rows=window)
+
+
+GEAR_SLOTS = ["mask", "chest", "backpack", "gloves", "holster", "kneepads"]
+
+TALENT_TABLES = {"gear": "gearTalents", "weapon": "weaponTalents"}
+ATTRIBUTE_TABLES = {"gear": "gearAttributes", "weapon": "weaponAttributes"}
+MOD_TABLES = {"gear": "gearMods", "weapon": "weaponMods", "skill": "skillMods"}
+
+
+def _window(rows: list[dict], q: str | None, limit: int, offset: int) -> RowList:
+    """Search, then page. `total` is the number of matches, not the page size --
+    a frontend needs it to render pagination, and reporting the page length
+    there would silently make every result set look like one page."""
+    if q:
+        needle = q.casefold()
+        rows = [r for r in rows if any(needle in str(v).casefold() for v in r.values())]
+    total = len(rows)
+    window = rows[offset : offset + limit] if limit else rows[offset:]
+    return RowList(count=len(window), total=total, rows=window)
+
+
+@router.get("/weapons", response_model=RowList)
+def weapons(
+    request: Request,
+    type: str | None = None,
+    quality: str | None = None,
+    q: str | None = None,
+    limit: int = Query(default=0, ge=0, le=5000),
+    offset: int = Query(default=0, ge=0),
+) -> RowList:
+    rows = dataset(request).tables["weapon"]
+    if type:
+        rows = [r for r in rows if r.get("Weapon Type", "").casefold() == type.casefold()]
+    if quality:
+        rows = [r for r in rows if r.get("Quality", "").casefold() == quality.casefold()]
+    return _window(rows, q, limit, offset)
+
+
+@router.get("/weapons/{name}")
+def weapon(request: Request, name: str) -> dict:
+    for row in dataset(request).tables["weapon"]:
+        if row.get("Name", "").casefold() == name.casefold():
+            return row
+    raise HTTPException(status_code=404, detail=f"unknown weapon {name!r}")
+
+
+@router.get("/gear/{slot}", response_model=RowList)
+def gear(
+    request: Request,
+    slot: str,
+    quality: str | None = None,
+    brand: str | None = None,
+    q: str | None = None,
+    limit: int = Query(default=0, ge=0, le=5000),
+    offset: int = Query(default=0, ge=0),
+) -> RowList:
+    if slot not in GEAR_SLOTS:
+        raise HTTPException(status_code=404, detail=f"unknown gear slot {slot!r}")
+    rows = dataset(request).tables[slot]
+    if quality:
+        rows = [r for r in rows if r.get("Quality", "").casefold() == quality.casefold()]
+    if brand:
+        rows = [r for r in rows if r.get("Brand", "").casefold() == brand.casefold()]
+    return _window(rows, q, limit, offset)
+
+
+@router.get("/brands", response_model=RowList)
+def brands(request: Request, q: str | None = None) -> RowList:
+    data = dataset(request)
+    bonuses: dict[str, list[dict[str, str]]] = {}
+    for row in data.tables["brandsetBonuses"]:
+        bonuses.setdefault(row.get("Brand", ""), []).append(row)
+    rows = [{**b, "bonuses": bonuses.get(b.get("Brand", ""), [])} for b in data.tables["brands"]]
+    return _window(rows, q, 0, 0)
+
+
+@router.get("/skills", response_model=RowList)
+def skills(request: Request, q: str | None = None) -> RowList:
+    return _window(dataset(request).tables["skill"], q, 0, 0)
+
+
+@router.get("/skills/{skill_id}")
+def skill(request: Request, skill_id: str) -> dict:
+    data = dataset(request)
+    for row in data.tables["skill"]:
+        if row.get("Skill ID", "").casefold() == skill_id.casefold():
+            # skillStats keys on a display name, not on Skill ID or Variant.
+            # "Sticky Bomb" + "Burn" -> "Burn Sticky Bomb". Verified: this form
+            # matches 43/43 rows, joining on Variant alone matches 0, and
+            # joining Skill ID to "Skill Stat ID" appears to match 43/43 but is
+            # a coincidence -- Skill Stat ID is a row counter, so it would pair
+            # Sticky Bomb with Achilles Pulse. statsService.js:624 builds the
+            # same key: `${skill.variant} ${skill.itemName}`.
+            key = f"{row.get('Variant', '')} {row.get('Item Name', '')}".casefold()
+            stats = [
+                s for s in data.tables["skillStats"]
+                if s.get("Skill Variant Name", "").casefold() == key
+            ]
+            return {**row, "stats": stats}
+    raise HTTPException(status_code=404, detail=f"unknown skill {skill_id!r}")
+
+
+@router.get("/specializations", response_model=RowList)
+def specializations(request: Request) -> RowList:
+    return _window(dataset(request).tables["specialization"], None, 0, 0)
+
+
+@router.get("/talents/{kind}", response_model=RowList)
+def talents(request: Request, kind: str, q: str | None = None) -> RowList:
+    if kind not in TALENT_TABLES:
+        raise HTTPException(status_code=404, detail=f"unknown talent kind {kind!r}")
+    return _window(dataset(request).tables[TALENT_TABLES[kind]], q, 0, 0)
+
+
+@router.get("/attributes/{kind}", response_model=RowList)
+def attributes(request: Request, kind: str) -> RowList:
+    if kind not in ATTRIBUTE_TABLES:
+        raise HTTPException(status_code=404, detail=f"unknown attribute kind {kind!r}")
+    return _window(dataset(request).tables[ATTRIBUTE_TABLES[kind]], None, 0, 0)
+
+
+@router.get("/mods/{kind}", response_model=RowList)
+def mods(request: Request, kind: str, q: str | None = None) -> RowList:
+    if kind not in MOD_TABLES:
+        raise HTTPException(status_code=404, detail=f"unknown mod kind {kind!r}")
+    return _window(dataset(request).tables[MOD_TABLES[kind]], q, 0, 0)

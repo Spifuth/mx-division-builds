@@ -3,6 +3,8 @@ being written in parallel -- changing one is a breaking change, not a tidy-up.""
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -24,4 +26,9 @@ class RawTable(BaseModel):
 class RowList(BaseModel):
     count: int
     total: int
-    rows: list[dict[str, str]]
+    # Values are `Any`, not `str`: every table-backed endpoint only ever puts
+    # plain CSV strings here, but /brands joins in a nested `bonuses` list per
+    # row, and `dict[str, str]` rejects that -- 66/66 brand rows failed
+    # response_model validation before this widened. Existing endpoints are
+    # unaffected: they still only ever emit strings.
+    rows: list[dict[str, Any]]
