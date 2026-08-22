@@ -8,7 +8,6 @@
 		"build-stage": "vue-cli-service build --mode staging --dest dist-staging",
 		"build-prod": "vue-cli-service build",
 		"lint": "vue-cli-service lint",
-		"gh-pages-deploy": "node scripts/gh-pages-deploy.js",
 		"check": "node scripts/check-data-sources.mjs"
 	},
 	"dependencies": {
