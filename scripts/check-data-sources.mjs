@@ -14,11 +14,17 @@
  * Each referenced table is then checked in three layers:
  *
  *   1. REACHABLE -- does the URL answer 200?
- *   2. BROWSER-FETCHABLE -- would a browser be allowed to read the response?
- *      Data is same-origin now that it ships in public/data/, so this normally
- *      passes trivially; the layer stays as a guard for non-same-origin setups
- *      (a CDN or separate data host), where a 200 to curl can still be a hard
- *      block in every browser.
+ *   2. SAME-ORIGIN BY CONSTRUCTION -- does dataUrl() in dataImporter.js still
+ *      build every path relative to getAppRootPath(), with no third-party
+ *      host hardcoded in? This used to be a live CORS probe, but after
+ *      Phase 2 there is no remote data host left to probe: every URL this
+ *      script fetches below is resolved as new URL(relative, originArg),
+ *      which is same-origin by definition, so a request-time check of it
+ *      can never fail -- it would only ever be testing this script's own
+ *      URL math, not the app. What CAN fail is the source itself
+ *      regressing: someone hardcoding an absolute URL back into dataUrl(),
+ *      reintroducing the third-party dependency Phase 2 removed. This layer
+ *      reads dataImporter.js's own source and fails loudly if that happens.
  *   3. USABLE -- do the columns classes.js reads still exist? A 200 with
  *      drifted headers builds an inventory of undefined.
  *
@@ -86,6 +92,24 @@ if (referenced.length === 0) {
   process.exit(1);
 }
 
+// --- layer 2: same-origin by construction ------------------------------------
+// There is no remote data host left to probe for CORS, so this is a static
+// read of dataUrl()'s own source rather than a request. It fails loudly if
+// dataUrl() ever grows an absolute scheme (http://, https://, or a bare
+// leading //) -- that is what reintroducing a third-party data host, the
+// thing Phase 2 removed, would look like.
+const dataUrlDefMatch = importerSrc.match(/const\s+dataUrl\s*=[^\n]*=>\s*`([^`]*)`/);
+let sameOriginOk = false, sameOriginDetail;
+
+if (!dataUrlDefMatch) {
+  sameOriginDetail = `could not find dataUrl()'s definition in ${importerPath} -- this layer is blind until fixed`;
+} else if (/:\/\/|^\s*\/\//.test(dataUrlDefMatch[1])) {
+  sameOriginDetail = `dataUrl() now contains an absolute URL (\`${dataUrlDefMatch[1]}\`) -- a remote data host has been reintroduced`;
+} else {
+  sameOriginOk = true;
+  sameOriginDetail = `dataUrl() builds every path relative to getAppRootPath(); no host is hardcoded in`;
+}
+
 // --- reconcile against what actually ships -----------------------------------
 const dataDir = join(root, "public", "data");
 const shipped = new Set(
@@ -101,6 +125,9 @@ console.log(`checking them as a browser would\n`);
 
 let failed = 0;
 
+if (!sameOriginOk) failed++;
+console.log(`${(sameOriginOk ? "OK" : "FAIL").padEnd(5)} ${"[dataUrl()]".padEnd(22)} ${sameOriginDetail}`);
+
 for (const t of missing) {
   failed++;
   console.log(`${"FAIL".padEnd(5)} ${t.padEnd(22)} referenced by dataImporter.js but public/data/${t}.csv does not exist`);
@@ -115,20 +142,15 @@ for (const name of referenced) {
   if (missing.includes(name)) continue; // already reported; nothing to fetch
 
   const url = new URL(`data/${name}.csv`, originArg);
-  const crossOrigin = url.origin !== appOrigin;
 
   let verdict = "OK", detail;
   try {
-    const res = await fetch(url, { headers: { Origin: appOrigin } });
+    const res = await fetch(url);
     const body = await res.text();
-    const acao = res.headers.get("access-control-allow-origin");
 
     if (!res.ok) {
       verdict = "FAIL";
       detail = `HTTP ${res.status}`;
-    } else if (crossOrigin && acao !== appOrigin && acao !== "*") {
-      verdict = "FAIL";
-      detail = `cross-origin and CORS-blocked (allow-origin: ${acao ?? "absent"})`;
     } else {
       const rows = Papa.parse(body.trim()).data;
       const headers = rows.shift() ?? [];
@@ -141,9 +163,8 @@ for (const name of referenced) {
         verdict = "FAIL";
         detail = `schema drift -- missing: ${missingCols.join(", ")}`;
       } else {
-        const where = crossOrigin ? "cross-origin, CORS ok" : "same-origin";
         const checked = CONTRACTS[name] ? `contract ok` : "no class contract";
-        detail = `${where}, ${rows.length} rows, ${headers.length} cols, ${checked}`;
+        detail = `${rows.length} rows, ${headers.length} cols, ${checked}`;
       }
     }
   } catch (e) {
@@ -158,6 +179,6 @@ for (const name of referenced) {
 console.log(
   failed
     ? `\n${failed} problem(s) across ${referenced.length} referenced data sources.`
-    : `\nAll ${referenced.length} data sources reachable, CORS-clear and schema-valid from ${appOrigin}.`
+    : `\nAll ${referenced.length} data sources reachable, same-origin by construction and schema-valid from ${appOrigin}.`
 );
 process.exit(failed ? 1 : 0);
