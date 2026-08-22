@@ -11,7 +11,17 @@ WORKDIR /app
 # in every task report. Build-time image setting, not app config.
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 
-# git: the version modal and some tooling shell out to it.
+# git: nothing in this repo shells out to git. Checked -- src/, scripts/, the
+# config files and package.json contain no child_process/execSync/spawn/
+# simple-git, the lockfile resolves zero git+ dependencies, and
+# VersionModal.vue is a static changelog with no git in it at all. The
+# previous comment here ("the version modal and some tooling shell out to it")
+# was simply wrong.
+#
+# Kept, not removed, because it is the working git for anyone who
+# `docker exec`s into the container against the bind-mounted repo -- but be
+# clear that nothing in the build, the tests or the app needs it, so it can go
+# if that is not wanted.
 RUN apk add --no-cache git
 
 # Non-root, matching the host uid so bind-mounted files stay writable.
