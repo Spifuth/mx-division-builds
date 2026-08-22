@@ -28,6 +28,19 @@ log = logging.getLogger("td2-api.refresh")
 # test_the_row_count_floor_sits_exactly_at_half.
 MIN_ROW_RATIO = 0.5
 
+# Below this fraction of the live table's columns still present in the
+# candidate's header, the body is a different table rather than an updated one.
+# Same reasoning as MIN_ROW_RATIO, applied to shape instead of size: a game
+# update adds or drops a column, it does not replace the header row.
+#
+# This is the only check that a body is *this table* at all for the 13 tables
+# with no REQUIRED_COLUMNS entry. 0.5 is deliberately loose rather than strict:
+# statsMapping has just 2 columns, so anything above half would reject a
+# legitimate single-column drop there, while every realistic wrong-body case
+# (another collection's CSV after an upstream path rename, a JSON error
+# document) scores 0. Same `<` semantics as MIN_ROW_RATIO: exactly half passes.
+MIN_HEADER_OVERLAP = 0.5
+
 # The upstream version token as it actually looks: "26.0-mdb". Nothing else is
 # a version, and this value is worth checking as hard as the tables are,
 # because it both decides whether a refresh runs at all and is interpolated
@@ -103,7 +116,9 @@ def version_rejection(version: str) -> str | None:
 
 
 def validate_candidate(
-    tables: dict[str, str], previous_counts: dict[str, int] | None
+    tables: dict[str, str],
+    previous_counts: dict[str, int] | None,
+    previous_headers: dict[str, list[str]] | None = None,
 ) -> list[str]:
     """Return the reasons a candidate is unacceptable. Empty means acceptable."""
     reasons: list[str] = []
@@ -134,6 +149,18 @@ def validate_candidate(
         if missing:
             reasons.append(f"{name}: lost columns {', '.join(missing)}")
             continue
+
+        previous_header = set(previous_headers.get(name, [])) if previous_headers else set()
+        if previous_header:
+            # Skipped when the live dataset has no header recorded for this
+            # table, which only happens before anything has been served.
+            kept = previous_header & set(rows[0])
+            if len(kept) / len(previous_header) < MIN_HEADER_OVERLAP:
+                reasons.append(
+                    f"{name}: header is not this table's "
+                    f"({len(kept)} of {len(previous_header)} columns kept)"
+                )
+                continue
 
         if previous_counts and name in previous_counts:
             floor = previous_counts[name] * MIN_ROW_RATIO
@@ -201,7 +228,11 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
             )
         )
 
-    reasons = validate_candidate(tables, previous_counts=current.counts)
+    reasons = validate_candidate(
+        tables,
+        previous_counts=current.counts,
+        previous_headers=current.headers,
+    )
     if reasons:
         log.warning("candidate rejected: %s", "; ".join(reasons))
         return finish(RefreshResult(changed=False, version=version, reasons=reasons))

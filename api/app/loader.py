@@ -48,6 +48,13 @@ class Dataset:
     snapshot_date: str
     source: str
     counts: dict[str, int] = field(default_factory=dict)
+    # The header of each live table, taken from the first row. Carried
+    # alongside `counts` and for the same reason: refresh.py validates a
+    # candidate against what is currently being served, and shape is as much a
+    # part of "currently being served" as size. REQUIRED_COLUMNS covers only 7
+    # of the 20 tables, so for the other 13 this is the only record of what
+    # their columns are supposed to be.
+    headers: dict[str, list[str]] = field(default_factory=dict)
 
 
 def _read_table(path: Path, name: str) -> list[dict[str, str]]:
@@ -92,4 +99,5 @@ def load_dataset(data_dir: Path) -> Dataset:
         snapshot_date=snapshot_date,
         source=source,
         counts={name: len(rows) for name, rows in tables.items()},
+        headers={name: list(rows[0]) for name, rows in tables.items() if rows},
     )

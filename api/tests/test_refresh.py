@@ -31,6 +31,17 @@ def _rows(text: str) -> int:
     return len(list(csv.DictReader(io.StringIO(text))))
 
 
+def _without_column(text: str, column: str) -> str:
+    """The table minus one column, the way a game update would drop one."""
+    reader = csv.DictReader(io.StringIO(text))
+    fields = [f for f in reader.fieldnames if f != column]
+    out = io.StringIO()
+    writer = csv.DictWriter(out, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(reader)
+    return out.getvalue()
+
+
 def test_a_good_fetch_validates(seed_dir):
     assert validate_candidate(_good(seed_dir), previous_counts=None) == []
 
@@ -114,6 +125,17 @@ def test_a_realistic_spa_fallback_is_rejected_as_markup_not_by_accident(seed_dir
     assert any("weaponAttributes" in r for r in reasons)
 
 
+def test_a_good_fetch_validates_against_the_live_dataset(seed_dir):
+    """The contrast case for the two checks that compare against what is
+    already being served. Without it, a header or row-count rule strict enough
+    to reject the real upstream's own data would still look correct here."""
+    live = load_dataset(seed_dir)
+    reasons = validate_candidate(
+        _good(seed_dir), previous_counts=live.counts, previous_headers=live.headers
+    )
+    assert reasons == []
+
+
 def test_a_header_only_table_is_rejected(seed_dir):
     """The "parsed to zero rows" branch, which shipped with nothing reaching
     it -- the markup tests stop at the markup branch, the missing-table test at
@@ -133,6 +155,77 @@ def test_a_header_only_table_is_rejected(seed_dir):
     reasons = validate_candidate(tables, previous_counts=None)
 
     assert reasons == ["weapon: parsed to zero rows"]
+
+
+def test_another_tables_body_is_rejected_where_there_are_no_required_columns(seed_dir):
+    """13 of the 20 tables have no REQUIRED_COLUMNS entry, so for them the
+    validator reduced to "present, not markup, non-empty, not collapsed" --
+    nothing that says the body is *this table*.
+
+    gearMods is the measured case: 16 rows, so a MIN_ROW_RATIO floor of 8.
+    Upstream answering it with a different collection's CSV -- one path rename
+    away -- is not markup, parses fine, and 9 rows clears the floor. Only the
+    header tells the two apart, and skillMods shares exactly one column name
+    with gearMods out of four.
+    """
+    live = load_dataset(seed_dir)
+    tables = _good(seed_dir)
+    tables["gearMods"] = _truncate(tables["skillMods"], 9)
+    assert _rows(tables["gearMods"]) == 9 > live.counts["gearMods"] * 0.5
+
+    reasons = validate_candidate(
+        tables, previous_counts=live.counts, previous_headers=live.headers
+    )
+
+    assert len(reasons) == 1
+    assert "gearMods" in reasons[0] and "header" in reasons[0]
+
+
+def test_a_json_error_document_is_rejected(seed_dir):
+    """sources/buildstation.py documents this very upstream answering
+    {"message":"Unknown collection"} for a path it does not know. JSON is not
+    markup, so the "<" guard does not apply to it, and a pretty-printed error
+    long enough to clear the row floor passes everything except the header."""
+    live = load_dataset(seed_dir)
+    tables = _good(seed_dir)
+    tables["gearMods"] = (
+        "{\n"
+        '  "statusCode": 404,\n'
+        '  "error": "Not Found",\n'
+        '  "message": "Unknown collection",\n'
+        '  "collection": "gearMods",\n'
+        '  "requestId": "9f3c1a",\n'
+        '  "timestamp": "2026-08-23T00:00:00Z",\n'
+        '  "path": "/api/td2/v2/data/mx/gearMods",\n'
+        '  "docs": "https://buildstation.app",\n'
+        '  "hint": "check the collection name",\n'
+        "}\n"
+    )
+    assert _rows(tables["gearMods"]) >= live.counts["gearMods"] * 0.5
+
+    reasons = validate_candidate(
+        tables, previous_counts=live.counts, previous_headers=live.headers
+    )
+
+    assert len(reasons) == 1
+    assert "gearMods" in reasons[0]
+
+
+def test_a_dropped_column_still_validates_when_most_of_the_header_survives(seed_dir):
+    """The header check must not be a stricter REQUIRED_COLUMNS. A game update
+    that drops one column of statsMapping's two is the tightest legitimate case
+    in the dataset, and it has to pass -- a validator that rejects real updates
+    stops the data ever moving, which is its own failure."""
+    live = load_dataset(seed_dir)
+    tables = _good(seed_dir)
+    assert set(live.headers["statsMapping"]) == {"Type", "Stat"}
+    tables["statsMapping"] = _without_column(tables["statsMapping"], "Stat")
+
+    reasons = validate_candidate(
+        tables, previous_counts=live.counts, previous_headers=live.headers
+    )
+
+    assert reasons == []
 
 
 def test_the_row_count_floor_sits_exactly_at_half(seed_dir):
