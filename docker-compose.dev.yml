@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.dev
       args:
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
     container_name: mxdiv-dev
     init: true
     security_opt:
@@ -36,8 +36,8 @@ services:
       context: .
       dockerfile: Dockerfile.dev
       args:
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
     profiles: ["tools"]
     volumes:
       - .:/app

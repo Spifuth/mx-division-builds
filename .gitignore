@@ -26,5 +26,5 @@ test/*
 # subagent-driven-development scratch
 .superpowers/
 
-# compose interpolation source; contains an internal address
+# ignored as a precaution
 .env

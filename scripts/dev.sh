@@ -11,7 +11,7 @@
 #        ./scripts/dev.sh --profile tools run --rm tools npm test
 set -eu
 
-DEV_BIND_IP="$(ip -4 -o addr show tailscale0 2>/dev/null | awk '{print $4}' | cut -d/ -f1)"
+DEV_BIND_IP="$(ip -4 -o addr show tailscale0 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)"
 
 if [ -z "${DEV_BIND_IP}" ]; then
   echo "error: no IPv4 address on tailscale0 - is Tailscale up?" >&2
@@ -19,11 +19,8 @@ if [ -z "${DEV_BIND_IP}" ]; then
   exit 1
 fi
 
-UID_="$(id -u)"
-GID_="$(id -g)"
-
 export DEV_BIND_IP
-export UID="${UID_}"
-export GID="${GID_}"
+export HOST_UID="$(id -u)"
+export HOST_GID="$(id -g)"
 
 exec docker compose -f "$(dirname "$0")/../docker-compose.dev.yml" "$@"

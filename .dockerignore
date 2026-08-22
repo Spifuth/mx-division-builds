@@ -5,3 +5,6 @@ dist-staging
 .git
 .env.local
 docs
+
+# SDD scratch (briefs, reports, diffs) -- keep out of the build context
+.superpowers
