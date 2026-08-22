@@ -146,6 +146,15 @@ services:
       - ./public/data:/srv/public/data:ro
     environment:
       TD2_DATA_DIR: /srv/public/data
+      # As of Task 5, create_app()'s lifespan constructs a SnapshotStore at
+      # settings.snapshot_dir on every boot, including under TestClient in the
+      # suite. Unlike the `api` service, nothing is mounted at the default
+      # /srv/snapshots here, and /srv itself is root-owned -- SnapshotStore's
+      # mkdir(parents=True) has no writable fallback, so every test that calls
+      # create_app() would fail at startup with PermissionError. Measured:
+      # `mkdir /srv/snapshots` inside this image exits 1, "Permission denied".
+      # /tmp is world-writable regardless of image ownership.
+      TD2_SNAPSHOT_DIR: /tmp/snapshots
     entrypoint: []
     command: ["pytest", "-q"]
 
