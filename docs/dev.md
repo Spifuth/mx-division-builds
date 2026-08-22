@@ -43,7 +43,7 @@ from `tailscale0`.
 
 ```sh
 mxrun npm test                                # unit tests -- the damage math, offline, no network
-mxrun npm run check http://<TAILNET_IP>:8090/ # data layer -- reachable, CORS-clear, schema-valid
+mxrun npm run check http://<TAILNET_IP>:8090/ # data layer -- reachable, same-origin, schema-valid
 ```
 
 They cover different failure modes and neither substitutes for the other.
