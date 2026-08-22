@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Checks the data sources configured in .env.local in three layers, because
+ * Checks the data sources shipped in public/data/ in three layers, because
  * each one fails differently and only the last two are visible from the server:
  *
  *   1. REACHABLE  -- does the URL answer 200?
@@ -20,47 +20,35 @@
  * Usage:  node scripts/check-data-sources.mjs [appOrigin]
  *         appOrigin defaults to http://$DEV_HOST:$DEV_PORT
  */
-import { readFileSync } from "fs";
+import { readdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import Papa from "papaparse";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const env = Object.fromEntries(
-  readFileSync(join(root, ".env.local"), "utf8")
-    .split("\n")
-    .filter((l) => l.trim() && !l.trim().startsWith("#"))
-    .map((l) => {
-      const i = l.indexOf("=");
-      return [l.slice(0, i).trim(), l.slice(i + 1).trim()];
-    })
-);
-
-const origin =
-  process.argv[2] || `http://${env.DEV_HOST || "localhost"}:${env.DEV_PORT || 8080}`;
-
 // Columns each constructor in src/utils/classes.js reads off the raw CSV row.
 // Only the universal intersection is required -- gear slots legitimately differ
 // (mask alone has "Mod 2", backpack has "Core 2"/"Core 3", holster "Attribute 3").
 const GEAR = ["Quality", "Item Name", "Brand", "Core", "Attribute 1", "Attribute 2", "Mod", "Talent"];
 const CONTRACTS = {
-  MASK: GEAR, CHEST: GEAR, GLOVES: GEAR, HOLSTER: GEAR, KNEEPADS: GEAR, BACKPACK: GEAR,
-  WEAPONS: ["Name", "Quality", "RPM", "Base Damage", "Mag Size", "Optimal Range",
-            "Reload Speed (ms)", "HSD", "Core 1", "Core 1 Max", "Core 2", "Core 2 Max",
-            "Weapon Type", "Variant", "Talent", "Optics", "Under Barrel", "Magazine", "Muzzle"],
-  SKILLS: ["Skill ID", "Item Name", "Icon", "Variant", "Quality", "Expertise Bonus",
-           "Slot One", "Slot Two", "Slot Three", "Mod 1", "Mod 2", "Mod 3", "Desc"],
+  mask: GEAR, chest: GEAR, gloves: GEAR, holster: GEAR, kneepads: GEAR, backpack: GEAR,
+  weapon: ["Name", "Quality", "RPM", "Base Damage", "Mag Size", "Optimal Range",
+           "Reload Speed (ms)", "HSD", "Core 1", "Core 1 Max", "Core 2", "Core 2 Max",
+           "Weapon Type", "Variant", "Talent", "Optics", "Under Barrel", "Magazine", "Muzzle"],
+  skill: ["Skill ID", "Item Name", "Icon", "Variant", "Quality", "Expertise Bonus",
+          "Slot One", "Slot Two", "Slot Three", "Mod 1", "Mod 2", "Mod 3", "Desc"],
 };
 
-const dataUrls = Object.entries(env)
-  .filter(([k]) => k.startsWith("VUE_APP_DATA_URL_"))
-  .sort();
+// Derive the table list from what actually ships, not from config. This
+// checks the real artifact and cannot drift from it.
+const dataDir = join(root, "public", "data");
+const dataUrls = readdirSync(dataDir)
+  .filter((f) => f.endsWith(".csv"))
+  .sort()
+  .map((f) => [f.replace(/\.csv$/, ""), `data/${f}`]);
 
-if (!dataUrls.length) {
-  console.error("No VUE_APP_DATA_URL_* entries found in .env.local");
-  process.exit(1);
-}
+const origin = process.argv[2] || "http://localhost:8090";
 
 console.log(`app origin: ${origin}`);
 console.log(`checking ${dataUrls.length} data sources as a browser would\n`);
@@ -70,7 +58,7 @@ let failed = 0;
 for (const [key, raw] of dataUrls) {
   const url = new URL(raw, origin);
   const crossOrigin = url.origin !== origin;
-  const name = key.replace("VUE_APP_DATA_URL_", "");
+  const name = key;
 
   let verdict = "OK", detail;
   try {

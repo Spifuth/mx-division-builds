@@ -4,6 +4,13 @@ import {
 	getAppRootPath,
 	groupArrayOfObjectsByKey,
 } from "./utils";
+
+// Data ships with the app as static CSV under public/data/. It used to come
+// from a third-party API behind twenty VUE_APP_DATA_URL_* env vars; that
+// indirection is why a fresh clone rendered a blank app, since upstream never
+// committed the .env those vars lived in. A path built from the table name
+// needs no configuration and cannot be misconfigured.
+const dataUrl = (name) => `${getAppRootPath()}data/${name}.csv`;
 let IsEverythingLoadedPromiseResolve, IsEverythingLoadedPromiseReject;
 
 const IsEverythingLoadedPromise = new Promise(function(resolve, reject) {
@@ -128,15 +135,15 @@ const skillsData = {
 const skillsDataSource = [
 	{
 		key: "Skills",
-		url: process.env.VUE_APP_DATA_URL_SKILLS,
+		url: dataUrl("skill"),
 	},
 	{
 		key: "SkillStats",
-		url: process.env.VUE_APP_DATA_URL_SKILL_STATS,
+		url: dataUrl("skillStats"),
 	},
 	{
 		key: "SkillMods",
-		url: process.env.VUE_APP_DATA_URL_SKILL_MODS,
+		url: dataUrl("skillMods"),
 	},
 ];
 
@@ -150,19 +157,19 @@ const weaponsData = {
 const weaponsDataSource = [
 	{
 		key: "Weapons",
-		url: process.env.VUE_APP_DATA_URL_WEAPONS,
+		url: dataUrl("weapon"),
 	},
 	{
 		key: "WeaponAttributes",
-		url: process.env.VUE_APP_DATA_URL_WEAPON_ATTRIBUTES,
+		url: dataUrl("weaponAttributes"),
 	},
 	{
 		key: "WeaponMods",
-		url: process.env.VUE_APP_DATA_URL_WEAPON_MODS,
+		url: dataUrl("weaponMods"),
 	},
 	{
 		key: "WeaponTalents",
-		url: process.env.VUE_APP_DATA_URL_WEAPON_TALENTS,
+		url: dataUrl("weaponTalents"),
 	},
 ];
 
@@ -173,7 +180,7 @@ const specializationList = {
 const specializationListSource = [
 	{
 		key: "Specialization",
-		url: process.env.VUE_APP_DATA_URL_SPECIALIZATION,
+		url: dataUrl("specialization"),
 	},
 ];
 
@@ -195,51 +202,51 @@ const gearData = {
 const wearableSource = [
 	{
 		key: "Chest",
-		url: process.env.VUE_APP_DATA_URL_CHEST,
+		url: dataUrl("chest"),
 	},
 	{
 		key: "Gloves",
-		url: process.env.VUE_APP_DATA_URL_GLOVES,
+		url: dataUrl("gloves"),
 	},
 	{
 		key: "Holster",
-		url: process.env.VUE_APP_DATA_URL_HOLSTER,
+		url: dataUrl("holster"),
 	},
 	{
 		key: "Kneepads",
-		url: process.env.VUE_APP_DATA_URL_KNEEPADS,
+		url: dataUrl("kneepads"),
 	},
 	{
 		key: "Backpack",
-		url: process.env.VUE_APP_DATA_URL_BACKPACK,
+		url: dataUrl("backpack"),
 	},
 	{
 		key: "Mask",
-		url: process.env.VUE_APP_DATA_URL_MASK,
+		url: dataUrl("mask"),
 	},
 	{
 		key: "Attributes",
-		url: process.env.VUE_APP_DATA_URL_GEAR_ATTRIBUTES,
+		url: dataUrl("gearAttributes"),
 	},
 	{
 		key: "GearMods",
-		url: process.env.VUE_APP_DATA_URL_GEAR_MODS,
+		url: dataUrl("gearMods"),
 	},
 	{
 		key: "GearTalents",
-		url: process.env.VUE_APP_DATA_URL_GEAR_TALENTS,
+		url: dataUrl("gearTalents"),
 	},
 	{
 		key: "BrandSetBonuses",
-		url: process.env.VUE_APP_DATA_URL_BRAND_SET_BONUSES,
+		url: dataUrl("brandsetBonuses"),
 	},
 	{
 		key: "StatsMapping",
-		url: process.env.VUE_APP_DATA_URL_STATS_MAPPING,
+		url: dataUrl("statsMapping"),
 	},
 	{
 		key: "BrandsData",
-		url: process.env.VUE_APP_DATA_URL_BRANDS_DATA,
+		url: dataUrl("brands"),
 	},
 ];
 
