@@ -27,6 +27,11 @@
  *      reads dataImporter.js's own source and fails loudly if that happens.
  *   3. USABLE -- do the columns classes.js reads still exist? A 200 with
  *      drifted headers builds an inventory of undefined.
+ *   4. ILLUSTRATED -- does every icon filename the shipped data names actually
+ *      exist under public/icons/? The CSVs carry filenames, not images, and a
+ *      name with no file behind it is silent: the SPA fallback answers the
+ *      <img> with 200 text/html and the image simply fails to decode. This
+ *      branch shipped 26 such names before the layer existed.
  *
  * Parses with PapaParse deliberately: it is the parser the app itself uses, and
  * several tables quote description fields containing newlines, so naive line
@@ -53,6 +58,56 @@ const CONTRACTS = {
            "Weapon Type", "Variant", "Talent", "Optics", "Under Barrel", "Magazine", "Muzzle"],
   skill: ["Skill ID", "Item Name", "Icon", "Variant", "Quality", "Expertise Bonus",
           "Slot One", "Slot Two", "Slot Three", "Mod 1", "Mod 2", "Mod 3", "Desc"],
+};
+
+// Icon filenames live in the data, images live on disk, and only these two
+// tables' `Icon` columns are ever read back out and interpolated into an
+// <img src>. Scope is deliberately narrow:
+//
+//   * The gear and weapon CSVs also carry `Icon`/`Icon Ref` columns, but
+//     nothing in src/ reads them -- the only two `Icon` reads in the app are
+//     classes.js's `skillRaw.Icon` and GearSelectionModal's
+//     `BrandsData[name].Icon` -- and the files they name (the-bighorn.png,
+//     tardigrade_armor_system.png, ...) are not in this repo at all. They are
+//     columns of the upstream snapshot, not app inputs.
+//   * The flat public/icons/ root is out of scope: it is named by hardcoded
+//     literals in components, not by data, and at least one of its files
+//     (handling1.png) is reached through a bare filename in a component data
+//     array, so a reconciliation there would produce false failures.
+//
+// `consumers` is not decoration. If a component stops interpolating
+// ./icons/<dir>/ this mapping has gone stale and the layer is testing nothing,
+// so a missing marker is a hard failure rather than a silent pass -- the same
+// rule layer 2 applies to dataUrl().
+const ICON_SETS = [
+  {
+    table: "brands",
+    dir: "brands",
+    consumers: ["src/components/Modals/GearSelectionModal.vue"],
+  },
+  {
+    table: "skill",
+    dir: "skills",
+    consumers: [
+      "src/components/SkillSlot.vue",
+      "src/components/Modals/SkillsSelectionModal.vue",
+    ],
+  },
+];
+
+// Icons the shipped data names that upstream never drew. Every ref in this
+// repository was searched -- master, every origin/* branch and the built
+// gh-pages branch -- and these four files exist in none of them; the CSV
+// snapshot (buildstation.app, DB.Version 26.0-mdb) is simply ahead of
+// upstream's art. They render as broken images today.
+//
+// This list cannot quietly absorb the next regression: anything missing that
+// is NOT named here is still a hard failure, and an entry that IS present on
+// disk is also a hard failure, so the list cannot rot into a permanent excuse.
+// Delete an entry the moment the file lands.
+const KNOWN_GAPS = {
+  brands: ["edelweiss_gpz.png", "ortiz_reficere.png"],
+  skills: ["smartcover_fortified.png", "smartcover_precision.png"],
 };
 
 // --- origin -----------------------------------------------------------------
@@ -124,6 +179,7 @@ console.log(`${referenced.length} tables referenced by src/utils/dataImporter.js
 console.log(`checking them as a browser would\n`);
 
 let failed = 0;
+let warned = 0;
 
 if (!sameOriginOk) failed++;
 console.log(`${(sameOriginOk ? "OK" : "FAIL").padEnd(5)} ${"[dataUrl()]".padEnd(22)} ${sameOriginDetail}`);
@@ -176,9 +232,101 @@ for (const name of referenced) {
   console.log(`${verdict.padEnd(5)} ${name.padEnd(22)} ${detail}`);
 }
 
+// --- layer 4: icons the shipped data names -----------------------------------
+// Filesystem, not HTTP, on purpose. Over HTTP a missing icon is indistinguish-
+// able from a present one without decoding the body, because the SPA fallback
+// answers it 200 -- the very failure mode being guarded against. What ships is
+// a filesystem fact, so it is checked as one, in both directions, exactly as
+// the CSV reconciliation above.
+function walk(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]
+  );
+}
+const srcText = walk(join(root, "src"))
+  .filter((f) => /\.(vue|js|ts)$/.test(f))
+  .map((f) => readFileSync(f, "utf8"))
+  .join("\n");
+
+console.log(`\nicons named by the data`);
+
+// Staleness guard: every ./icons/<dir>/ prefix the components actually use has
+// to be one this layer knows about. A new icon directory appearing in src/
+// without an ICON_SETS entry means the layer is silently not covering it.
+const dirsUsedInSrc = new Set(
+  [...srcText.matchAll(/\.\/icons\/([A-Za-z0-9_-]+)\//g)].map((m) => m[1])
+);
+const unmapped = [...dirsUsedInSrc].filter((d) => !ICON_SETS.some((s) => s.dir === d)).sort();
+for (const d of unmapped) {
+  failed++;
+  console.log(`${"FAIL".padEnd(5)} ${d.padEnd(22)} src/ interpolates ./icons/${d}/ but no ICON_SETS entry covers it -- this layer is blind to that directory`);
+}
+
+for (const set of ICON_SETS) {
+  const label = `[icons/${set.dir}]`;
+
+  // Same rule layer 2 applies to dataUrl(): if the consumer stopped building
+  // the path, the mapping is stale and a pass would mean nothing.
+  const blind = set.consumers.filter((c) => !readFileSync(join(root, c), "utf8").includes(`./icons/${set.dir}/`));
+  if (blind.length) {
+    failed++;
+    console.log(`${"FAIL".padEnd(5)} ${label.padEnd(22)} ${blind.join(", ")} no longer interpolates ./icons/${set.dir}/ -- mapping is stale and this layer is blind until fixed`);
+    continue;
+  }
+
+  const csv = readFileSync(join(dataDir, `${set.table}.csv`), "utf8").trim();
+  const fromData = new Set(
+    Papa.parse(csv, { header: true }).data
+      .map((r) => (r.Icon ?? "").trim())
+      .filter(Boolean)
+  );
+  // Some icons in these directories are named by the components directly
+  // rather than by the data (skills/skills.png is the empty-slot background).
+  // They are legitimate residents, so count them as referenced.
+  const fromSrc = new Set(
+    [...srcText.matchAll(new RegExp(`\\./icons/${set.dir}/([A-Za-z0-9_.-]+\\.png)`, "g"))].map((m) => m[1])
+  );
+  const expected = new Set([...fromData, ...fromSrc]);
+
+  const onDisk = new Set(
+    readdirSync(join(root, "public", "icons", set.dir), { withFileTypes: true })
+      .filter((e) => e.isFile())
+      .map((e) => e.name)
+  );
+  const gaps = new Set(KNOWN_GAPS[set.dir] ?? []);
+
+  const stale = [...gaps].filter((f) => onDisk.has(f)).sort();
+  const absent = [...expected].filter((f) => !onDisk.has(f) && !gaps.has(f)).sort();
+  const known = [...expected].filter((f) => !onDisk.has(f) && gaps.has(f)).sort();
+  const orphans = [...onDisk].filter((f) => !expected.has(f)).sort();
+
+  for (const f of stale) {
+    failed++;
+    console.log(`${"FAIL".padEnd(5)} ${label.padEnd(22)} ${f} is listed in KNOWN_GAPS but exists on disk -- delete the KNOWN_GAPS entry`);
+  }
+  for (const f of absent) {
+    failed++;
+    console.log(`${"FAIL".padEnd(5)} ${label.padEnd(22)} ${set.table}.csv names ${f} but public/icons/${set.dir}/${f} does not exist -- it renders as a broken image`);
+  }
+  for (const f of orphans) {
+    failed++;
+    console.log(`${"FAIL".padEnd(5)} ${label.padEnd(22)} orphan: public/icons/${set.dir}/${f} ships but neither ${set.table}.csv nor src/ names it`);
+  }
+  for (const f of known) {
+    warned++;
+    console.log(`${"WARN".padEnd(5)} ${label.padEnd(22)} ${f}: known gap -- upstream has never drawn this icon (see KNOWN_GAPS)`);
+  }
+  if (!stale.length && !absent.length && !orphans.length) {
+    console.log(`${"OK".padEnd(5)} ${label.padEnd(22)} ${onDisk.size} files, ${expected.size} names, reconciled${known.length ? ` (${known.length} known gap(s))` : ""}`);
+  }
+}
+
 console.log(
   failed
     ? `\n${failed} problem(s) across ${referenced.length} referenced data sources.`
-    : `\nAll ${referenced.length} data sources reachable, same-origin by construction and schema-valid from ${appOrigin}.`
+    : `\nAll ${referenced.length} data sources reachable, same-origin by construction and schema-valid from ${appOrigin}.` +
+      (warned
+        ? `\nEvery icon they name ships except ${warned} known gap(s) above -- upstream has never drawn those.`
+        : `\nEvery icon they name ships.`)
 );
 process.exit(failed ? 1 : 0);
