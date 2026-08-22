@@ -25,3 +25,6 @@ yarn-error.log*
 test/*
 # subagent-driven-development scratch
 .superpowers/
+
+# compose interpolation source; contains an internal address
+.env

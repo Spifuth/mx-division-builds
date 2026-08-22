@@ -1,0 +1,7 @@
+node_modules
+dist
+dist-dev
+dist-staging
+.git
+.env.local
+docs

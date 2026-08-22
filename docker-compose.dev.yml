@@ -1,0 +1,51 @@
+# Dev/test only. Not part of the /srv/nebula stack -- this fork has not been
+# adopted as a service, so it stays self-contained in its own repo.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: mxdiv-dev
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    env_file:
+      - .env.local
+    environment:
+      # Bind inside the container; the tailnet restriction is done by the
+      # published-port address below, not by the app.
+      DEV_HOST: 0.0.0.0
+      DEV_PORT: 8090
+    ports:
+      # Tailnet-only, same pattern as immich-ml. NEVER 0.0.0.0.
+      # `:?` on purpose: if DEV_BIND_IP were unset, compose substitutes an
+      # empty string and ":8090:8090" binds EVERY interface -- publishing the
+      # dev server publicly. Hard-fail instead.
+      - "${DEV_BIND_IP:?set DEV_BIND_IP in .env - refusing to bind all interfaces}:8090:8090"
+
+  # One-shot runner: npm/vitest/lint without touching the host.
+  tools:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    profiles: ["tools"]
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    env_file:
+      - .env.local
+    entrypoint: []
+    command: ["node", "--version"]
+
+volumes:
+  node_modules:
