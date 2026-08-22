@@ -11,8 +11,9 @@
 ## Global Constraints
 
 - **Nothing new on the host OS.** Every `npm`/`node`/`vitest` invocation runs via `docker compose`. The host already has Docker; it must not gain Node tooling. The existing host-installed `node_modules/` is removed in Task 1.4.
-- **Tailnet-only exposure.** The dev server publishes to `100.120.243.105` (the host's `tailscale0`) and never `0.0.0.0`. This copies the `immich-ml` precedent in `/srv/nebula/docker/services/immichml/immichml.yml`.
+- **Tailnet-only exposure.** The dev server publishes to the host's `tailscale0` address (shown as `<TAILNET_IP>`) and never `0.0.0.0`. This copies the `immich-ml` precedent in `/srv/nebula/docker/services/immichml/immichml.yml`.
 - **Branch workflow.** All work continues on `chore/runnable-on-node-24` or a successor branch. Never commit to `master`. Do not push to the public GitHub fork without the owner's explicit go-ahead.
+- **No internal addresses in tracked files.** This fork is **public** on GitHub. `<TAILNET_IP>` and `<PUBLIC_IP>` are placeholders throughout this document — the real values are never written to the repo. `scripts/dev.sh` derives the tailnet address from the `tailscale0` interface at runtime; the values are recorded in the private Obsidian vault under `MX Division Builds`.
 - **No secrets in the repo.** `.env.local` stays gitignored. Nothing in this plan introduces a credential.
 - **Data snapshot is the source of truth** for game data: `/srv/project/data/td2-reference/2026-08-22/`. Do not re-fetch from `buildstation.app` at runtime after Phase 2.
 - **Node 22** in the container. Vite 5 requires ≥18; 22 is current LTS and avoids the md4/OpenSSL-3 problem entirely.
@@ -72,6 +73,8 @@ Conflict surface: 6 of those 7 files were also rewritten on the Vite branch. `We
 - Create: `Dockerfile.dev`
 - Create: `docker-compose.dev.yml`
 - Create: `.dockerignore`
+- Create: `scripts/dev.sh` (executable)
+- Modify: `.gitignore`
 
 **Interfaces:**
 - Produces: service names `app` (long-running dev server) and `tools` (one-shot runner). Later tasks invoke `./scripts/dev.sh run --rm tools <cmd>`.
@@ -221,7 +224,7 @@ Make it executable: `chmod +x scripts/dev.sh`
 - [ ] **Step 4b: Prove the interpolation resolves before building**
 
 Run: `./scripts/dev.sh config | grep -A3 published`
-Expected: `host_ip: 100.120.243.105` and `published: "8090"`.
+Expected: `host_ip: <TAILNET_IP>` and `published: "8090"`.
 If it errors with "refusing to bind all interfaces", the wrapper is not exporting — fix that rather than removing the guard.
 
 - [ ] **Step 5: Build the image**
@@ -280,11 +283,11 @@ Then: `./scripts/dev.sh logs -f app` until `Compiled successfully`.
 - [ ] **Step 3: Verify tailnet-only binding**
 
 ```bash
-curl -s -o /dev/null -w "tailnet %{http_code}\n" http://100.120.243.105:8090/
-curl -s -m 4 -o /dev/null -w "public  %{http_code}\n" http://37.27.60.170:8090/ || echo "public refused (correct)"
+curl -s -o /dev/null -w "tailnet %{http_code}\n" http://<TAILNET_IP>:8090/
+curl -s -m 4 -o /dev/null -w "public  %{http_code}\n" http://<PUBLIC_IP>:8090/ || echo "public refused (correct)"
 docker port mxdiv-dev
 ```
-Expected: tailnet `200`; public refused; `docker port` shows `8090/tcp -> 100.120.243.105:8090`.
+Expected: tailnet `200`; public refused; `docker port` shows `8090/tcp -> <TAILNET_IP>:8090`.
 
 - [ ] **Step 4: Verify data still loads**
 
@@ -292,7 +295,7 @@ Run: `./scripts/dev.sh --profile tools run --rm tools npm run check`
 Expected: `All 20 data sources reachable, CORS-clear and schema-valid`.
 
 > The check resolves relative URLs against the app origin. Pass the origin explicitly if it defaults wrong:
-> `... npm run check http://100.120.243.105:8090`
+> `... npm run check http://<TAILNET_IP>:8090`
 
 - [ ] **Step 5: Commit**
 
@@ -331,7 +334,7 @@ no npm, no yarn.
 ./scripts/dev.sh logs -f app
 ```
 
-Serves on `http://100.120.243.105:8090/` — tailnet-only. Hot reload is on;
+Serves on `http://<TAILNET_IP>:8090/` — tailnet-only. Hot reload is on;
 edit a file and the browser updates.
 
 ## Run anything else
@@ -347,7 +350,8 @@ mxrun npm install <pkg>
 
 ## Config
 
-`.env.local` is gitignored and holds the data URLs plus `DEV_BIND_IP`. It does
+`.env.local` is gitignored and holds the data URLs. The dev-server bind address
+is not stored anywhere -- `scripts/dev.sh` derives it from `tailscale0`. `.env.local` does
 not survive a fresh clone — the values are documented in the Obsidian vault
 under `MX Division Builds`.
 ````
@@ -668,7 +672,7 @@ In `docker-compose.dev.yml` the `app` service command becomes `npm run dev`; add
 ./scripts/dev.sh --profile tools run --rm tools npm install
 ./scripts/dev.sh up -d app
 ./scripts/dev.sh --profile tools run --rm tools npm run check
-curl -s -o /dev/null -w "%{http_code}\n" http://100.120.243.105:8090/
+curl -s -o /dev/null -w "%{http_code}\n" http://<TAILNET_IP>:8090/
 ```
 Expected: `npm run check` 20/20 OK; curl `200`.
 
@@ -1003,7 +1007,7 @@ git commit -m "docs: what each check proves, and what neither proves"
 
 ## Done when
 
-- `./scripts/dev.sh up -d app` serves on `100.120.243.105:8090`, tailnet-only, with hot reload.
+- `./scripts/dev.sh up -d app` serves on `<TAILNET_IP>:8090`, tailnet-only, with hot reload.
 - The host has no Node, no npm, no `node_modules`.
 - No runtime request leaves the machine — data is served from `public/data/`.
 - `npm run build-prod` produces a working artifact (it could not before).
