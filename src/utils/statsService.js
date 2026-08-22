@@ -511,10 +511,12 @@ class StatsService {
 		weaponSpecificDamage,
 		genericWeaponDamage
 	) {
-		return (
-			weaponBaseDamage *
-			(1 + (AWD + weaponSpecificDamage + genericWeaponDamage) / 100)
-		).toFixed(0);
+		return Number(
+			(
+				weaponBaseDamage *
+				(1 + (AWD + weaponSpecificDamage + genericWeaponDamage) / 100)
+			).toFixed(0)
+		);
 	}
 	calcDmgToArmored(flatDamage, DTA) {
 		return Number((flatDamage * (1 + DTA / 100)).toFixed(0));
