@@ -439,25 +439,77 @@ git commit -m "feat: serve the data snapshot locally instead of buildstation.app
 
 ### Task 2.2: Repoint the app and delete the proxy
 
+> **Plan change — why this no longer uses env vars.**
+> A global deny rule on `**/.env*` makes `.env.local` unwritable by any agent,
+> including the controller. But the better answer was hiding behind it: those
+> twenty `VUE_APP_DATA_URL_*` vars existed because upstream fetched from a
+> remote API whose URL could change. The data is now a **static asset shipped
+> in the repo at a known path**, so the indirection buys nothing — and it is
+> the exact indirection that made this repo unrunnable as cloned (upstream
+> never committed a `.env`, so a fresh clone rendered a blank app).
+> Removing them means **the app works from a fresh clone with no config at
+> all**, which is the whole point of Phase 2.
+
 **Files:**
-- Modify: `.env.local` (20 URL values)
+- Modify: `src/utils/dataImporter.js` (the four `*Source` arrays + one helper)
 - Modify: `vue.config.js` (remove `devServer.proxy`)
+- Modify: `scripts/check-data-sources.mjs` (derive the table list from disk)
 
-- [ ] **Step 1: Repoint the URLs**
+**Interfaces:**
+- Produces: `dataUrl(name)` in `dataImporter.js`, returning `` `${getAppRootPath()}data/${name}.csv` ``. Phase 3 keeps this helper; only `getAppRootPath()`'s internals change under Vite.
 
-```bash
-sed -i 's|^\(VUE_APP_DATA_URL_[A-Z_]*\)=/td2data/\(.*\)$|\1=data/\2.csv|' .env.local
-grep -E "^VUE_APP_DATA_URL" .env.local
+- [ ] **Step 1: Add the helper to `src/utils/dataImporter.js`**
+
+Immediately after the existing imports:
+
+```javascript
+// Data ships with the app as static CSV under public/data/. It used to come
+// from a third-party API behind twenty VUE_APP_DATA_URL_* env vars; that
+// indirection is why a fresh clone rendered a blank app, since upstream never
+// committed the .env those vars lived in. A path built from the table name
+// needs no configuration and cannot be misconfigured.
+const dataUrl = (name) => `${getAppRootPath()}data/${name}.csv`;
 ```
-Expected: every line reads e.g. `VUE_APP_DATA_URL_MASK=data/mask.csv`.
 
-> Relative without a leading slash: `dataImporter` passes these straight to
-> PapaParse, and `getAppRootPath()` already handles the base path. A leading
-> slash breaks a non-root `publicPath`.
+- [ ] **Step 2: Replace every `process.env.VUE_APP_DATA_URL_*` with a `dataUrl()` call**
 
-- [ ] **Step 2: Remove the proxy block from `vue.config.js`**
+Exact mapping — the left side is the existing `url:` value, the right side replaces it:
 
-Delete the whole `proxy: { "/td2data": {...} }` key and its comment. The file's `devServer` becomes:
+| Replace | With |
+|---|---|
+| `process.env.VUE_APP_DATA_URL_MASK` | `dataUrl("mask")` |
+| `process.env.VUE_APP_DATA_URL_CHEST` | `dataUrl("chest")` |
+| `process.env.VUE_APP_DATA_URL_GLOVES` | `dataUrl("gloves")` |
+| `process.env.VUE_APP_DATA_URL_HOLSTER` | `dataUrl("holster")` |
+| `process.env.VUE_APP_DATA_URL_KNEEPADS` | `dataUrl("kneepads")` |
+| `process.env.VUE_APP_DATA_URL_BACKPACK` | `dataUrl("backpack")` |
+| `process.env.VUE_APP_DATA_URL_GEAR_ATTRIBUTES` | `dataUrl("gearAttributes")` |
+| `process.env.VUE_APP_DATA_URL_GEAR_MODS` | `dataUrl("gearMods")` |
+| `process.env.VUE_APP_DATA_URL_GEAR_TALENTS` | `dataUrl("gearTalents")` |
+| `process.env.VUE_APP_DATA_URL_BRAND_SET_BONUSES` | `dataUrl("brandsetBonuses")` |
+| `process.env.VUE_APP_DATA_URL_BRANDS_DATA` | `dataUrl("brands")` |
+| `process.env.VUE_APP_DATA_URL_STATS_MAPPING` | `dataUrl("statsMapping")` |
+| `process.env.VUE_APP_DATA_URL_WEAPONS` | `dataUrl("weapon")` |
+| `process.env.VUE_APP_DATA_URL_WEAPON_ATTRIBUTES` | `dataUrl("weaponAttributes")` |
+| `process.env.VUE_APP_DATA_URL_WEAPON_MODS` | `dataUrl("weaponMods")` |
+| `process.env.VUE_APP_DATA_URL_WEAPON_TALENTS` | `dataUrl("weaponTalents")` |
+| `process.env.VUE_APP_DATA_URL_SKILLS` | `dataUrl("skill")` |
+| `process.env.VUE_APP_DATA_URL_SKILL_STATS` | `dataUrl("skillStats")` |
+| `process.env.VUE_APP_DATA_URL_SKILL_MODS` | `dataUrl("skillMods")` |
+| `process.env.VUE_APP_DATA_URL_SPECIALIZATION` | `dataUrl("specialization")` |
+
+Note the three that are NOT a straight lowercase of the var name: `WEAPONS`→`weapon`, `SKILLS`→`skill`, `BRANDS_DATA`→`brands`. Get these wrong and those tables 404 while the rest load.
+
+Leave `process.env.VUE_APP_DB_VERSION` alone — `public/DB.Version` is fetched at runtime and is a separate mechanism.
+
+- [ ] **Step 3: Verify no data URL env var survives**
+
+Run: `grep -rn "VUE_APP_DATA_URL" src/ || echo "clean"`
+Expected: `clean`
+
+- [ ] **Step 4: Remove the proxy block from `vue.config.js`**
+
+Delete the whole `proxy: { "/td2data": {...} }` key and its comment, leaving:
 
 ```javascript
 	devServer: {
@@ -467,32 +519,87 @@ Delete the whole `proxy: { "/td2data": {...} }` key and its comment. The file's 
 	},
 ```
 
-- [ ] **Step 3: Restart and verify**
+- [ ] **Step 5: Point the checker at the shipped files instead of env vars**
+
+In `scripts/check-data-sources.mjs`, replace the `.env.local` parsing and the
+`dataUrls` derivation with a listing of what actually ships. Replace the block
+that reads `.env.local` and builds `env`/`dataUrls` with:
+
+```javascript
+import { readdirSync } from "fs";
+
+// Derive the table list from what actually ships, not from config. This
+// checks the real artifact and cannot drift from it.
+const dataDir = join(root, "public", "data");
+const dataUrls = readdirSync(dataDir)
+  .filter((f) => f.endsWith(".csv"))
+  .sort()
+  .map((f) => [f.replace(/\.csv$/, ""), `data/${f}`]);
+
+const origin = process.argv[2] || "http://localhost:8090";
+```
+
+Keep the three checking layers and the `CONTRACTS` map unchanged, but key
+`CONTRACTS` by the **file** name rather than the env-var suffix:
+
+```javascript
+const GEAR = ["Quality", "Item Name", "Brand", "Core", "Attribute 1", "Attribute 2", "Mod", "Talent"];
+const CONTRACTS = {
+  mask: GEAR, chest: GEAR, gloves: GEAR, holster: GEAR, kneepads: GEAR, backpack: GEAR,
+  weapon: ["Name", "Quality", "RPM", "Base Damage", "Mag Size", "Optimal Range",
+           "Reload Speed (ms)", "HSD", "Core 1", "Core 1 Max", "Core 2", "Core 2 Max",
+           "Weapon Type", "Variant", "Talent", "Optics", "Under Barrel", "Magazine", "Muzzle"],
+  skill: ["Skill ID", "Item Name", "Icon", "Variant", "Quality", "Expertise Bonus",
+          "Slot One", "Slot Two", "Slot Three", "Mod 1", "Mod 2", "Mod 3", "Desc"],
+};
+```
+
+and in the loop use the file name directly as `name` (drop the
+`key.replace("VUE_APP_DATA_URL_", "")`).
+
+- [ ] **Step 6: Restart and verify**
 
 ```bash
 ./scripts/dev.sh restart app
-./scripts/dev.sh --profile tools run --rm tools npm run check
+./scripts/dev.sh --profile tools run --rm tools npm run check http://<the tailnet ip>:8090
 ```
-Expected: 20/20 OK, each reported `same-origin`.
+Expected: 20/20 OK, every row `same-origin`, the 8 with contracts reporting `contract ok`.
 
-- [ ] **Step 4: Verify a production build works — the thing that was impossible before**
+- [ ] **Step 7: Verify a production build works — the thing that was impossible before**
 
 ```bash
 ./scripts/dev.sh --profile tools run --rm tools npm run build-prod
-./scripts/dev.sh --profile tools run --rm tools sh -c 'ls dist/data | wc -l'
+./scripts/dev.sh --profile tools run --rm tools sh -c 'ls dist/data/*.csv | wc -l'
 ```
-Expected: build succeeds; `20` (or 21 with `SNAPSHOT.txt`) files under `dist/data`.
+Expected: build succeeds; `20`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 8: Prove a fresh clone needs no config**
+
+This is the real acceptance test for Phase 2. Build from a pristine copy of
+the tracked tree, with no `.env.local` present:
 
 ```bash
-git add vue.config.js
-git commit -m "feat: drop the dev-only CORS proxy; data is now local
+./scripts/dev.sh --profile tools run --rm tools sh -c '
+  rm -rf /tmp/fresh && git clone -q --no-hardlinks /app /tmp/fresh &&
+  cd /tmp/fresh && ls -a | grep -c "^\.env" || echo "no env files: correct"'
+```
+Expected: `no env files: correct` — confirming the tracked tree carries no
+env file, and (with Step 6 passing) that none is needed.
 
-The proxy existed solely to tunnel past buildstation.app's origin
-allowlist. With the tables in public/data/ the requests are same-origin
-by construction, and production builds work for the first time -- the
-proxy was dev-server-only, so a built artifact could never load data."
+- [ ] **Step 9: Commit**
+
+```bash
+git add src/utils/dataImporter.js vue.config.js scripts/check-data-sources.mjs
+git commit -m "feat: serve data from public/data and drop the URL env vars
+
+The twenty VUE_APP_DATA_URL_* vars pointed at a third-party API. With the
+tables shipped in public/data/ the indirection buys nothing, and it was
+actively harmful: upstream never committed the .env those vars lived in, so
+a fresh clone built fine and rendered a blank app.
+
+Paths are now derived from the table name. The dev-only CORS proxy goes with
+them -- it existed solely to tunnel past the provider's origin allowlist, and
+being dev-server-only it meant no production build could ever load data."
 ```
 
 ### Task 2.3: Strip upstream's analytics and deploy target
