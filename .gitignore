@@ -23,3 +23,5 @@ yarn-error.log*
 
 # Local Test Files
 test/*
+# subagent-driven-development scratch
+.superpowers/

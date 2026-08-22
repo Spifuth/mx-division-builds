@@ -145,7 +145,10 @@ services:
       DEV_PORT: 8090
     ports:
       # Tailnet-only, same pattern as immich-ml. NEVER 0.0.0.0.
-      - "${DEV_BIND_IP:-127.0.0.1}:8090:8090"
+      # `:?` on purpose: if DEV_BIND_IP were unset, compose substitutes an
+      # empty string and ":8090:8090" binds EVERY interface -- publishing the
+      # dev server publicly. Hard-fail instead.
+      - "${DEV_BIND_IP:?set DEV_BIND_IP in .env - refusing to bind all interfaces}:8090:8090"
 
   # One-shot runner: npm/vitest/lint without touching the host.
   tools:
@@ -168,19 +171,35 @@ volumes:
   node_modules:
 ```
 
-- [ ] **Step 4: Add the bind IP to `.env.local`**
+- [ ] **Step 4: Create `.env` for compose interpolation — NOT `.env.local`**
+
+> **This trips people up and fails silently.** `env_file:` sets variables
+> *inside the container*; it does **not** feed `${...}` interpolation in the
+> compose file itself. Compose interpolates from the shell or from a file
+> named exactly `.env`. Verified: with `MYVAR` defined only in `.env.local`,
+> `docker compose config` rendered `${MYVAR:-default}` as the default.
+> Putting `DEV_BIND_IP` in `.env.local` would leave the port binding unset.
 
 ```bash
-cat >> .env.local <<'EOF'
-
-# --- container ---
+# .env is the compose interpolation source. Gitignored - it names an
+# internal address and must not reach the public fork.
+cat > .env <<'EOF'
+# Compose interpolation only (NOT the app's env - that's .env.local).
 # Tailnet IP of the host. The dev server binds 0.0.0.0 *inside* the container;
 # this is what restricts it to the tailnet on the host side.
 DEV_BIND_IP=100.120.243.105
 UID=1000
 GID=1000
 EOF
+
+printf '\n# compose interpolation source; contains an internal address\n.env\n' >> .gitignore
 ```
+
+- [ ] **Step 4b: Prove the interpolation resolves before building**
+
+Run: `docker compose -f docker-compose.dev.yml config | grep -A2 'published'`
+Expected: shows `published: "8090"` with `host_ip: 100.120.243.105`.
+If it errors with "refusing to bind all interfaces", `.env` is missing or misnamed — fix it rather than removing the guard.
 
 - [ ] **Step 5: Build the image**
 
@@ -262,9 +281,10 @@ git commit --allow-empty -m "chore: verify containerised dev server is tailnet-o
 
 **Files:**
 - Create: `docs/dev.md`
-- Delete: `node_modules/` (host copy), `.npmrc`
+- Delete: `node_modules/` (host copy only)
+- **Do NOT delete `.npmrc`** — see below
 
-`.npmrc` existed only to re-enable OpenSSL's legacy provider for webpack 4's md4 hashing on Node 24. The container runs Node 22 and Phase 3 removes webpack entirely — but until Phase 3 lands, webpack 4 is still in use, so **`.npmrc` must stay until Task 3.4**. Delete only the host `node_modules`.
+`.npmrc` existed only to re-enable OpenSSL's legacy provider for webpack 4's md4 hashing. The container runs Node 22 and Phase 3 removes webpack entirely — but until Phase 3 lands, webpack 4 is still in use, so **`.npmrc` must stay until Task 3.4**. Delete only the host `node_modules`.
 
 - [ ] **Step 1: Remove the host-installed dependencies**
 
