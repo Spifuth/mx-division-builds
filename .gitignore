@@ -26,3 +26,9 @@ dist-ssr
 
 # Local Test Files
 test/*
+
+# subagent-driven-development scratch
+.superpowers/
+
+# ignored as a precaution
+.env

@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-dev
+dist-staging
+.git
+.env.local
+docs
+
+# SDD scratch (briefs, reports, diffs) -- keep out of the build context
+.superpowers
