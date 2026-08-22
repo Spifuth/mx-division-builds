@@ -93,3 +93,37 @@ def test_a_date_that_would_escape_or_shadow_the_store_is_refused(tmp_path):
     for bad in ("LIVE", "/etc", "../escape", "", "."):
         with pytest.raises(ValueError):
             store.write_candidate({"brands": "Brand\na\n"}, "26.0-mdb", bad)
+
+
+def test_prune_keeps_the_newest_and_never_the_live_one(tmp_path):
+    """Snapshots are kept for rollback, but "kept" cannot mean "forever".
+
+    Every promoted refresh writes a directory; on a timer that is unbounded.
+    The live snapshot is exempt regardless of age -- pruning what LIVE points at
+    leaves a dangling pointer, and live() answers that with None, which would
+    silently drop the service back to the seed dataset.
+    """
+    store = SnapshotStore(tmp_path)
+    made = [
+        store.write_candidate({"brands": "Brand\n%d\n" % i}, "26.0-mdb", "2026-08-%02d" % (i + 1))
+        for i in range(6)
+    ]
+    store.promote(made[0])  # the OLDEST is live, so age alone must not remove it
+
+    dropped = store.prune(keep=3)
+
+    survivors = set(store.list())
+    assert made[0] in survivors, "the live snapshot was pruned"
+    assert store.live() == made[0]
+    assert (store.live() / "brands.csv").read_text() == "Brand\n0\n"
+    assert made[-1] in survivors, "the newest snapshot was pruned"
+    assert len(survivors) == 3
+    assert set(dropped).isdisjoint(survivors)
+
+
+def test_prune_refuses_to_keep_nothing(tmp_path):
+    import pytest
+
+    store = SnapshotStore(tmp_path)
+    with pytest.raises(ValueError):
+        store.prune(keep=0)

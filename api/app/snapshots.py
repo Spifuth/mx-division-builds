@@ -7,6 +7,7 @@ is needed.
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 
@@ -62,6 +63,32 @@ class SnapshotStore:
             return None
         candidate = self.root / self._pointer.read_text(encoding="utf-8").strip()
         return candidate if candidate.is_dir() else None
+
+    def prune(self, keep: int = 10) -> list[Path]:
+        """Drop the oldest snapshots, never the live one.
+
+        Snapshots are kept so a rollback does not need the upstream that just
+        broke -- but "kept" cannot mean "kept forever". Every promoted refresh
+        writes a new directory, so on a timer this grows without bound; four
+        manual refreshes during development already produced 2026-08-22 through
+        .4 at ~300 KB each.
+
+        The live snapshot is exempt regardless of age. Pruning the directory
+        that LIVE points at would leave a dangling pointer, which live() handles
+        by returning None -- meaning a tidy-up would silently drop the service
+        back to the seed dataset.
+        """
+        if keep < 1:
+            raise ValueError("keep must be at least 1")
+
+        live = self.live()
+        candidates = [p for p in self.list() if p != live]
+        # Oldest first: the newest `keep` survive, minus the live slot if the
+        # live snapshot is not already among them.
+        surplus = candidates[: max(0, len(candidates) - keep + (1 if live else 0))]
+        for path in surplus:
+            shutil.rmtree(path)
+        return surplus
 
     def list(self) -> list[Path]:
         return sorted(p for p in self.root.iterdir() if p.is_dir())
