@@ -28,7 +28,7 @@ services:
       # `:?` on purpose: if DEV_BIND_IP were unset, compose substitutes an
       # empty string and ":8090:8090" binds EVERY interface -- publishing the
       # dev server publicly. Hard-fail instead.
-      - "${DEV_BIND_IP:?set DEV_BIND_IP in .env - refusing to bind all interfaces}:8090:8090"
+      - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8090:8090"
 
   # One-shot runner: npm/vitest/lint without touching the host.
   tools:
