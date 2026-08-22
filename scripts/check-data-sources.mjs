@@ -69,8 +69,11 @@ for (const [key, raw] of dataUrls) {
       detail = `200 but not usable CSV (${body.length} bytes)`;
     } else {
       verdict = "OK";
-      const rows = body.trim().split("\n").length - 1;
-      detail = `${crossOrigin ? "cross-origin, CORS ok" : "same-origin"}, ${rows} rows`;
+      // Deliberately bytes, not a row count: several tables quote description
+      // fields containing newlines, so splitting on "\n" overcounts badly
+      // (gearTalents reads as 414 lines but is 206 rows). This check is about
+      // reachability -- use snapshot.mjs or PapaParse if you need real counts.
+      detail = `${crossOrigin ? "cross-origin, CORS ok" : "same-origin"}, ${body.length} bytes`;
     }
   } catch (e) {
     verdict = "FAIL";
