@@ -1,12 +1,34 @@
+import csv
+import io
 from types import SimpleNamespace
+
+import pytest
 
 from app.loader import load_dataset
 from app.refresh import run_refresh, validate_candidate
 from app.snapshots import SnapshotStore
 
+SEED_VERSION = "26.0-mdb"  # what seed_dir's SNAPSHOT.txt carries
+
 
 def _good(seed_dir) -> dict[str, str]:
     return {p.stem: p.read_text(encoding="utf-8") for p in seed_dir.glob("*.csv")}
+
+
+def _truncate(text: str, rows: int) -> str:
+    """The header plus the first `rows` data rows, re-serialised through csv so
+    a quoted field containing a newline cannot make the row count wrong."""
+    reader = csv.reader(io.StringIO(text))
+    out = io.StringIO()
+    writer = csv.writer(out, lineterminator="\n")
+    writer.writerow(next(reader))
+    for row in list(reader)[:rows]:
+        writer.writerow(row)
+    return out.getvalue()
+
+
+def _rows(text: str) -> int:
+    return len(list(csv.DictReader(io.StringIO(text))))
 
 
 def test_a_good_fetch_validates(seed_dir):
@@ -16,7 +38,15 @@ def test_a_good_fetch_validates(seed_dir):
 def test_html_served_as_200_is_rejected(seed_dir):
     """Upstream answering an error page with status 200 is the exact failure
     check-data-sources.mjs was rewritten to catch. It must not reach the live
-    snapshot."""
+    snapshot.
+
+    This test does NOT pin the markup branch, despite reading as though it
+    does: the one-line sample below parses to zero data rows, so it is the
+    "parsed to zero rows" branch that rejects it and the test stays green with
+    the markup check deleted. The test that actually pins the markup branch is
+    test_a_realistic_spa_fallback_is_rejected_as_markup_not_by_accident below;
+    this one is kept for the shape of the input, not for the branch it lands
+    on."""
     tables = _good(seed_dir)
     tables["weapon"] = "<!DOCTYPE html><html><body>502 Bad Gateway</body></html>"
     reasons = validate_candidate(tables, previous_counts=None)
@@ -82,6 +112,23 @@ def test_a_realistic_spa_fallback_is_rejected_as_markup_not_by_accident(seed_dir
     )
     reasons = validate_candidate(tables, previous_counts={"weaponAttributes": 17})
     assert any("weaponAttributes" in r for r in reasons)
+
+
+def test_the_row_count_floor_sits_exactly_at_half(seed_dir):
+    """MIN_ROW_RATIO's value was unpinned: anything in roughly (0.004, 1.0]
+    left every test green. Both asserts below are needed -- the first fails if
+    the ratio rises above 0.5, the second if it falls below -- and together
+    they also pin the `<` semantics, which accept exactly half.
+    """
+    tables = _good(seed_dir)
+    tables["weaponAttributes"] = _truncate(tables["weaponAttributes"], 8)
+    assert _rows(tables["weaponAttributes"]) == 8
+
+    at_the_floor = validate_candidate(tables, previous_counts={"weaponAttributes": 16})
+    assert at_the_floor == [], "exactly half the previous rows is accepted"
+
+    below = validate_candidate(tables, previous_counts={"weaponAttributes": 17})
+    assert any("row count" in r for r in below), "one row under the floor is rejected"
 
 
 # --- run_refresh: proof the live dataset survives every failure path -------
@@ -182,3 +229,19 @@ async def test_a_validated_candidate_does_replace_the_live_dataset(tmp_path, see
     assert result.changed is True
     assert app.state.dataset.version == NEW_VERSION
     assert app.state.snapshots.live() is not None
+
+
+async def test_a_programming_error_is_not_reported_as_upstream_being_down(tmp_path, seed_dir):
+    """`except Exception` around the source calls laundered a local bug into
+    "fetch failed: ...", pointing whoever reads /api/meta at a third party."""
+
+    class _Buggy:
+        async def fetch_version(self) -> str:
+            return NEW_VERSION
+
+        async def fetch_tables(self) -> dict[str, str]:
+            raise TypeError("one() takes 1 positional argument but 2 were given")
+
+    app = _app(tmp_path, seed_dir, _Buggy())
+    with pytest.raises(TypeError):
+        await run_refresh(app)

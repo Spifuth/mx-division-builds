@@ -154,7 +154,14 @@ services:
       # create_app() would fail at startup with PermissionError. Measured:
       # `mkdir /srv/snapshots` inside this image exits 1, "Permission denied".
       # /tmp is world-writable regardless of image ownership.
-      TD2_SNAPSHOT_DIR: /tmp/snapshots
+      #
+      # A floor, not the value the suite runs on: conftest.py's
+      # isolated_snapshot_dir overrides this with a fresh pytest tmp dir per
+      # run, so one run's promoted LIVE pointer cannot become the next run's
+      # startup state. This value only applies to non-pytest entry into the
+      # container (`run --rm api-tests python -c "..."`), which would otherwise
+      # inherit the root-owned default and fail the same way.
+      TD2_SNAPSHOT_DIR: /tmp/snapshots-fallback
     entrypoint: []
     command: ["pytest", "-q"]
 
