@@ -60,7 +60,7 @@ mxswat gh-pages ──DB.Version────────┤
                         GET /api/*  →  v0 frontend
 ```
 
-Reference data is loaded and validated at startup and served from memory. 2,682
+Reference data is loaded and validated at startup and served from memory. 2,273
 rows across 20 tables is small enough that no request handler ever touches disk
 for it. A malformed CSV fails the boot rather than a request — the pattern
 `presentation-app` already uses.
