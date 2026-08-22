@@ -4,7 +4,7 @@
 
 **Goal:** a FastAPI backend serving The Division 2 reference data, keeping it fresh from upstream, and storing saved builds behind Discord OAuth — consumed by a v0-generated frontend.
 
-**Architecture:** Reference data is loaded and validated at startup into `app.state` and served from memory; 2,682 rows across 20 tables never justify a query. A background job polls a cheap version token upstream and, when it changes, fetches a candidate snapshot, validates it, and hot-swaps it in — rejecting anything malformed so the API keeps serving the last known-good data when upstream breaks. Saved builds go to SQLite. Auth is Discord OAuth with a mock provider that fails closed.
+**Architecture:** Reference data is loaded and validated at startup into `app.state` and served from memory; 2,273 rows across 20 tables never justify a query. A background job polls a cheap version token upstream and, when it changes, fetches a candidate snapshot, validates it, and hot-swaps it in — rejecting anything malformed so the API keeps serving the last known-good data when upstream breaks. Saved builds go to SQLite. Auth is Discord OAuth with a mock provider that fails closed.
 
 **Tech Stack:** Python 3.12 · FastAPI · uvicorn · Pydantic v2 · pydantic-settings · aiosqlite · itsdangerous · httpx · pytest
 
