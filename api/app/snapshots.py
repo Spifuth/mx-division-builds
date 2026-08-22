@@ -18,6 +18,15 @@ class SnapshotStore:
 
     def write_candidate(self, tables: dict[str, str], version: str, date: str) -> Path:
         """Write a snapshot without making it live. Nothing served changes here."""
+        # `date` names a directory under root, so it has to be a plain segment.
+        # Two concrete failures if it is not: an absolute string makes pathlib's
+        # `/` discard root entirely and write outside the store, and the literal
+        # "LIVE" creates a directory where the pointer file goes, after which
+        # every promote() raises IsADirectoryError. Neither is reachable from
+        # today's callers -- date is always a server-generated ISO date -- which
+        # is exactly when a guard is cheap to add.
+        if not date or "/" in date or "\\" in date or date in {".", "..", self._pointer.name}:
+            raise ValueError(f"invalid snapshot date {date!r}")
         target = self.root / date
         suffix = 1
         while target.exists():
