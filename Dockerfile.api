@@ -17,6 +17,13 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# Create the mount points in the image, owned by the runtime user. Docker seeds
+# an EMPTY named volume from the image path -- content and ownership both -- so
+# without this the volumes come up root-owned and the non-root process cannot
+# write a snapshot or a database. The failure is late and confusing: the service
+# boots fine, serves fine, and only fails when a refresh first tries to write.
+RUN mkdir -p /srv/snapshots /srv/db && chown -R api:api /srv/snapshots /srv/db
+
 USER api
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
