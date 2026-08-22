@@ -1,0 +1,2328 @@
+# TD2 Build API Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** a FastAPI backend serving The Division 2 reference data, keeping it fresh from upstream, and storing saved builds behind Discord OAuth — consumed by a v0-generated frontend.
+
+**Architecture:** Reference data is loaded and validated at startup into `app.state` and served from memory; 2,682 rows across 20 tables never justify a query. A background job polls a cheap version token upstream and, when it changes, fetches a candidate snapshot, validates it, and hot-swaps it in — rejecting anything malformed so the API keeps serving the last known-good data when upstream breaks. Saved builds go to SQLite. Auth is Discord OAuth with a mock provider that fails closed.
+
+**Tech Stack:** Python 3.12 · FastAPI · uvicorn · Pydantic v2 · pydantic-settings · aiosqlite · itsdangerous · httpx · pytest
+
+Spec: `docs/superpowers/specs/2026-08-22-td2-build-api-design.md`
+
+## Global Constraints
+
+- **The API contract is FROZEN.** v0 is already building against it with its own mock data. Paths, query parameters and response shapes come from the spec verbatim. If something must change, stop and raise it — do not quietly adjust.
+- **Nothing new on the host OS.** Every `python`/`pip`/`pytest` invocation runs through `./scripts/dev.sh`. The host has no Python and must not gain any.
+- **Tailnet-only exposure.** No Traefik route, no public DNS, no `/srv/nebula` service.
+- **No internal addresses or machine names in tracked files.** This fork is public on GitHub.
+- **No secrets in the repo.** Any file matching `**/.env*` is blocked by a deny rule — you cannot read, write or list one. Design around it; the API must boot with no env file present.
+- **Python 3.12.** All dependencies pinned to exact versions.
+- **Never push.** Never commit to `master`.
+- **Git identity:** pass `-c user.name=Spifuth -c user.email=Github.spifuth@gmail.com` per command. Never modify git config.
+- **A check that cannot fail is a defect.** This project has shipped four of them. Every validation test needs a demonstrated failing case.
+
+## File Structure
+
+| Path | Responsibility | Task |
+|---|---|---|
+| `Dockerfile.api` | Python 3.12 image; deps installed into the image | 1 |
+| `api/requirements.txt` | Pinned runtime dependencies | 1 |
+| `api/requirements-dev.txt` | Pinned test dependencies | 1 |
+| `api/app/main.py` | Lifespan, middleware, router wiring | 1 |
+| `api/app/config.py` | `pydantic-settings`; environment only | 1 |
+| `api/app/loader.py` | CSV → typed rows. Startup only | 2 |
+| `api/app/models.py` | Pydantic response models | 2 |
+| `api/app/routes/data.py` | The reference-data endpoints | 2,3 |
+| `api/app/sources/base.py` | The interface a data source implements | 4 |
+| `api/app/sources/buildstation.py` | The only source today | 4 |
+| `api/app/snapshots.py` | Dated snapshot store; promote and roll back | 4 |
+| `api/app/refresh.py` | Poll, fetch, validate, promote | 5 |
+| `api/app/routes/admin.py` | `POST /api/admin/refresh` | 5 |
+| `api/app/auth.py` | Discord OAuth + the mock provider | 6 |
+| `api/app/routes/auth.py` | The four auth endpoints | 6 |
+| `api/app/db.py` | SQLite: WAL, schema, build queries | 7 |
+| `api/app/routes/builds.py` | Saved-build endpoints | 7 |
+| `api/app/routes/compute.py` | Phase 2 stub, returns 501 | 8 |
+| `api/tests/` | pytest | all |
+
+---
+
+## Task 1: Container, skeleton, health
+
+**Files:**
+- Create: `Dockerfile.api`, `api/requirements.txt`, `api/requirements-dev.txt`, `api/app/__init__.py`, `api/app/main.py`, `api/app/config.py`, `api/tests/__init__.py`, `api/tests/test_health.py`
+- Modify: `docker-compose.dev.yml`, `.gitignore`, `.dockerignore`
+
+**Interfaces:**
+- Produces: `create_app() -> FastAPI`; `Settings` with `data_dir`, `cors_origins`, `auth_mode`, `allow_mock_auth`, `log_level`.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `api/tests/test_health.py`:
+
+```python
+from fastapi.testclient import TestClient
+
+from app.main import create_app
+
+
+def test_health_is_independent_of_everything_else():
+    """Liveness must not depend on upstream, the database, or the dataset.
+
+    A health check that goes red when a third party is down cannot be used to
+    decide whether to restart the container.
+    """
+    with TestClient(create_app()) as client:
+        response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+```
+
+- [ ] **Step 2: Pin the dependencies**
+
+The failing-test run comes after the container exists — Steps 3 to 9 build the
+thing that can run a test at all. The test above is written first regardless, so
+the implementation is written against it rather than the other way round.
+
+
+Create `api/requirements.txt`:
+
+```
+fastapi==0.121.2
+uvicorn[standard]==0.41.0
+pydantic==2.13.1
+pydantic-settings==2.7.1
+httpx==0.28.1
+aiosqlite==0.20.0
+itsdangerous==2.2.0
+```
+
+Create `api/requirements-dev.txt`:
+
+```
+-r requirements.txt
+pytest==8.3.4
+pytest-asyncio==0.25.2
+```
+
+Exact pins, no ranges: the whole premise of this repo is that a clone reproduces.
+
+- [ ] **Step 3: Write the image**
+
+Create `Dockerfile.api`:
+
+```dockerfile
+# API image. Dependencies are baked in rather than mounted, so the container
+# starts deterministically and the host never needs Python.
+FROM python:3.12-slim
+
+WORKDIR /srv
+
+# Non-root, matching the host uid so bind-mounted files stay writable -- same
+# reasoning as Dockerfile.dev.
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g ${GID} api && useradd -u ${UID} -g ${GID} -m -s /bin/sh api
+
+COPY api/requirements.txt api/requirements-dev.txt /srv/
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+USER api
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+- [ ] **Step 4: Write the settings**
+
+Create `api/app/config.py`:
+
+```python
+"""Configuration, from the environment only.
+
+There is no settings file and no `.env`: a global deny rule blocks every agent
+in this project from creating one, and the app is required to boot with none
+present. Every value below therefore has a working default, except the ones
+where a wrong default would be unsafe -- those are validated in auth.py.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="TD2_", extra="ignore")
+
+    # The seed dataset shipped in the repo. A fresh clone with no network boots
+    # and serves from this.
+    data_dir: Path = Path("public/data")
+
+    # Where validated snapshots are written. Outside the repo tree: this is
+    # mutable runtime state, not source.
+    snapshot_dir: Path = Path("/srv/snapshots")
+
+    db_path: Path = Path("/srv/db/builds.db")
+
+    # v0 previews run on vercel.app subdomains; without these the browser
+    # blocks every call and the failure looks like the API is down.
+    cors_origins: list[str] = ["http://localhost:3000", "https://v0.dev"]
+    cors_origin_regex: str = r"https://.*\.vercel\.app"
+
+    auth_mode: str = "discord"
+    allow_mock_auth: bool = False
+    session_secret: str = ""
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    discord_redirect_uri: str = ""
+
+    log_level: str = "INFO"
+
+
+def get_settings() -> Settings:
+    return Settings()
+```
+
+- [ ] **Step 6: Write the app**
+
+Create `api/app/__init__.py` (empty) and `api/app/main.py`:
+
+```python
+"""FastAPI entrypoint.
+
+Startup order matters: the dataset is loaded and validated *before* the app
+serves, so a malformed table fails the boot rather than a request. This is the
+shape presentation-app uses.
+"""
+
+from __future__ import annotations
+
+import logging
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import get_settings
+
+log = logging.getLogger("td2-api")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info("td2-api starting")
+    yield
+    log.info("td2-api stopping")
+
+
+def create_app() -> FastAPI:
+    settings = get_settings()
+    logging.basicConfig(
+        level=settings.log_level.upper(),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
+
+    app = FastAPI(title="TD2 Build API", lifespan=lifespan)
+    app.state.settings = settings
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_origin_regex=settings.cors_origin_regex,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
+    @app.get("/api/health")
+    def health() -> dict:
+        """Liveness only. Deliberately independent of upstream, the dataset and
+        the database: the process is healthy while it can answer, and a health
+        check that goes red when a third party does is useless for deciding
+        whether to restart."""
+        return {"ok": True}
+
+    return app
+
+
+app = create_app()
+```
+
+- [ ] **Step 5: Add the compose services**
+
+In `docker-compose.dev.yml`, add before the `volumes:` block:
+
+```yaml
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    container_name: mxdiv-api
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    working_dir: /srv/api
+    volumes:
+      - ./api:/srv/api
+      - ./public/data:/srv/public/data:ro
+      - api_snapshots:/srv/snapshots
+      - api_db:/srv/db
+    environment:
+      TD2_DATA_DIR: /srv/public/data
+      TD2_SNAPSHOT_DIR: /srv/snapshots
+      TD2_DB_PATH: /srv/db/builds.db
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      # Tailnet-only, same guard as the app service: an unset DEV_BIND_IP would
+      # render ":8000:8000" and publish on every interface, so it hard-fails.
+      - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8000:8000"
+
+  api-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    profiles: ["tools"]
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    working_dir: /srv/api
+    volumes:
+      - ./api:/srv/api
+      - ./public/data:/srv/public/data:ro
+    environment:
+      TD2_DATA_DIR: /srv/public/data
+    entrypoint: []
+    command: ["pytest", "-q"]
+```
+
+And add to the `volumes:` block at the bottom:
+
+```yaml
+  api_snapshots:
+  api_db:
+```
+
+- [ ] **Step 7: Keep Python artefacts out of git and the build context**
+
+Append to `.gitignore`:
+
+```
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+```
+
+Append to `.dockerignore`:
+
+```
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+```
+
+- [ ] **Step 8: Add a pytest config so `app` imports resolve**
+
+Create `api/pytest.ini`:
+
+```ini
+[pytest]
+testpaths = tests
+addopts = -q --strict-markers
+asyncio_mode = auto
+pythonpath = .
+```
+
+- [ ] **Step 9: Build, then run the test and watch it FAIL**
+
+```bash
+./scripts/dev.sh build api
+./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_health.py -v
+```
+
+Expected: a collection error, `ModuleNotFoundError: No module named 'app'`. Do
+not skip this — it is what proves the suite is running your code rather than
+passing vacuously. Only now write `api/app/main.py` from Step 6, then re-run:
+
+```bash
+./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_health.py -v
+```
+
+Expected: `1 passed`.
+
+- [ ] **Step 10: Bring it up and prove the bind**
+
+```bash
+./scripts/dev.sh up -d api
+curl -s http://<TAILNET_IP>:8000/api/health
+```
+
+Expected: `{"ok":true}`. Get the address from `ip -4 -o addr show tailscale0`; never write it into a tracked file.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add Dockerfile.api api/ docker-compose.dev.yml .gitignore .dockerignore
+git commit -m "feat: containerised FastAPI skeleton with a health endpoint"
+```
+
+---
+
+## Task 2: Load the dataset, `/api/meta`, `/api/tables/{name}`
+
+**Files:**
+- Create: `api/app/loader.py`, `api/app/models.py`, `api/app/routes/__init__.py`, `api/app/routes/data.py`, `api/tests/test_loader.py`, `api/tests/test_meta.py`
+- Modify: `api/app/main.py`
+
+**Interfaces:**
+- Consumes: `Settings.data_dir` from Task 1.
+- Produces: `load_dataset(path: Path) -> Dataset`; `Dataset` with `.tables: dict[str, list[dict[str, str]]]`, `.version: str`, `.snapshot_date: str`, `.counts: dict[str, int]`. Tasks 3-5 all read `request.app.state.dataset`.
+
+The twenty table names, exactly: `backpack, brands, brandsetBonuses, chest, gearAttributes, gearMods, gearTalents, gloves, holster, kneepads, mask, skill, skillMods, skillStats, specialization, statsMapping, weapon, weaponAttributes, weaponMods, weaponTalents`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `api/tests/test_loader.py`:
+
+```python
+import pytest
+
+from app.loader import TABLE_NAMES, DatasetError, load_dataset
+
+
+def test_loads_all_twenty_tables(tmp_path, seed_dir):
+    dataset = load_dataset(seed_dir)
+    assert sorted(dataset.tables) == sorted(TABLE_NAMES)
+    assert len(TABLE_NAMES) == 20
+
+
+def test_rows_are_dicts_keyed_by_header(seed_dir):
+    dataset = load_dataset(seed_dir)
+    weapon = dataset.tables["weapon"][0]
+    assert weapon["Name"]
+    assert weapon["Weapon Type"]
+
+
+def test_a_missing_table_fails_the_boot(tmp_path, seed_dir):
+    """Serving 19 of 20 tables is worse than not starting: the frontend gets a
+    partial dataset and no error."""
+    import shutil
+
+    shutil.copytree(seed_dir, tmp_path / "data")
+    (tmp_path / "data" / "weapon.csv").unlink()
+    with pytest.raises(DatasetError, match="weapon"):
+        load_dataset(tmp_path / "data")
+
+
+def test_an_empty_table_fails_the_boot(tmp_path, seed_dir):
+    import shutil
+
+    shutil.copytree(seed_dir, tmp_path / "data")
+    (tmp_path / "data" / "brands.csv").write_text("Brand,Type,Icon\n")
+    with pytest.raises(DatasetError, match="brands"):
+        load_dataset(tmp_path / "data")
+
+
+def test_version_comes_from_the_snapshot_marker(seed_dir):
+    dataset = load_dataset(seed_dir)
+    assert dataset.version == "26.0-mdb"
+```
+
+Create `api/tests/conftest.py`:
+
+```python
+import os
+from pathlib import Path
+
+import pytest
+
+
+@pytest.fixture
+def seed_dir() -> Path:
+    """The dataset shipped in the repo.
+
+    Resolved from the environment the container sets, with a repo-relative
+    fallback so the suite also runs outside the container. It must NOT be
+    skippable: a fixture that skips when its input is missing is how a test
+    goes green while verifying nothing.
+    """
+    path = Path(os.getenv("TD2_DATA_DIR", Path(__file__).parents[2] / "public" / "data"))
+    if not path.is_dir():
+        raise RuntimeError(f"seed dataset not found at {path}; the suite cannot be meaningful without it")
+    return path
+```
+
+- [ ] **Step 2: Run them and watch them fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_loader.py -v`
+
+Expected: `ModuleNotFoundError: No module named 'app.loader'`.
+
+- [ ] **Step 3: Write the loader**
+
+Create `api/app/loader.py`:
+
+```python
+"""CSV -> in-memory dataset. Startup only; no request handler calls this.
+
+Everything is loaded eagerly and validated before the app serves, so a bad
+table is a boot failure rather than a 500 halfway through someone's session.
+"""
+
+from __future__ import annotations
+
+import csv
+from dataclasses import dataclass, field
+from pathlib import Path
+
+TABLE_NAMES = [
+    "backpack", "brands", "brandsetBonuses", "chest", "gearAttributes",
+    "gearMods", "gearTalents", "gloves", "holster", "kneepads", "mask",
+    "skill", "skillMods", "skillStats", "specialization", "statsMapping",
+    "weapon", "weaponAttributes", "weaponMods", "weaponTalents",
+]
+
+# Columns the API's own endpoints depend on. Same contracts as
+# scripts/check-data-sources.mjs -- kept in step deliberately, because the two
+# guard the same failure from different sides.
+GEAR_COLUMNS = ["Quality", "Item Name", "Type", "Brand", "Core", "Attribute 1", "Talent", "Icon"]
+REQUIRED_COLUMNS: dict[str, list[str]] = {
+    "mask": GEAR_COLUMNS, "chest": GEAR_COLUMNS, "gloves": GEAR_COLUMNS,
+    "holster": GEAR_COLUMNS, "kneepads": GEAR_COLUMNS, "backpack": GEAR_COLUMNS,
+    "weapon": [
+        "Name", "Quality", "RPM", "Base Damage", "Mag Size", "Optimal Range",
+        "Reload Speed (ms)", "HSD", "Core 1", "Core 1 Max", "Core 2",
+        "Core 2 Max", "Weapon Type", "Variant", "Talent",
+    ],
+    "skill": [
+        "Skill ID", "Item Name", "Icon", "Variant", "Quality",
+        "Expertise Bonus", "Mod 1", "Mod 2", "Mod 3", "Desc",
+    ],
+    "brands": ["Brand", "Type", "Icon"],
+}
+
+
+class DatasetError(RuntimeError):
+    """A table is missing, empty, or has lost a column the API depends on."""
+
+
+@dataclass(frozen=True)
+class Dataset:
+    tables: dict[str, list[dict[str, str]]]
+    version: str
+    snapshot_date: str
+    source: str
+    counts: dict[str, int] = field(default_factory=dict)
+
+
+def _read_table(path: Path, name: str) -> list[dict[str, str]]:
+    if not path.is_file():
+        raise DatasetError(f"table {name!r} is missing at {path}")
+
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        rows = [{k: (v or "") for k, v in row.items() if k} for row in csv.DictReader(handle)]
+
+    if not rows:
+        raise DatasetError(f"table {name!r} has a header but no rows")
+
+    missing = [c for c in REQUIRED_COLUMNS.get(name, []) if c not in rows[0]]
+    if missing:
+        raise DatasetError(f"table {name!r} lost columns: {', '.join(missing)}")
+
+    return rows
+
+
+def _read_marker(data_dir: Path) -> tuple[str, str, str]:
+    """Version, snapshot date and source, from SNAPSHOT.txt.
+
+    Absent in a freshly fetched candidate, so all three degrade to "unknown"
+    rather than raising -- the caller stamps a candidate itself.
+    """
+    marker = data_dir / "SNAPSHOT.txt"
+    values = {"snapshot": "unknown", "upstream DB.Version": "unknown", "source": "unknown"}
+    if marker.is_file():
+        for line in marker.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition(":")
+            if key.strip() in values and value.strip():
+                values[key.strip()] = value.strip()
+    return values["upstream DB.Version"], values["snapshot"], values["source"]
+
+
+def load_dataset(data_dir: Path) -> Dataset:
+    tables = {name: _read_table(data_dir / f"{name}.csv", name) for name in TABLE_NAMES}
+    version, snapshot_date, source = _read_marker(data_dir)
+    return Dataset(
+        tables=tables,
+        version=version,
+        snapshot_date=snapshot_date,
+        source=source,
+        counts={name: len(rows) for name, rows in tables.items()},
+    )
+```
+
+- [ ] **Step 4: Run the loader tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_loader.py -v`
+
+Expected: `5 passed`.
+
+- [ ] **Step 5: Write the failing meta test**
+
+Create `api/tests/test_meta.py`:
+
+```python
+from fastapi.testclient import TestClient
+
+from app.main import create_app
+
+
+def test_meta_reports_the_dataset():
+    with TestClient(create_app()) as client:
+        body = client.get("/api/meta").json()
+    assert body["version"] == "26.0-mdb"
+    assert body["table_count"] == 20
+    assert body["counts"]["weapon"] > 100
+
+
+def test_raw_table_escape_hatch():
+    with TestClient(create_app()) as client:
+        body = client.get("/api/tables/brands").json()
+    assert body["name"] == "brands"
+    assert body["rows"][0]["Brand"]
+
+
+def test_unknown_table_is_404_not_500():
+    with TestClient(create_app()) as client:
+        assert client.get("/api/tables/nope").status_code == 404
+```
+
+- [ ] **Step 6: Run it and watch it fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_meta.py -v`
+
+Expected: 404s on `/api/meta` — the routes do not exist yet.
+
+- [ ] **Step 7: Add the models**
+
+Create `api/app/models.py`:
+
+```python
+"""Response models. These shapes are the API's contract with a frontend that is
+being written in parallel -- changing one is a breaking change, not a tidy-up."""
+
+from __future__ import annotations
+
+from pydantic import BaseModel
+
+
+class Meta(BaseModel):
+    version: str
+    snapshot_date: str
+    source: str
+    table_count: int
+    counts: dict[str, int]
+    tables: list[str]
+
+
+class RawTable(BaseModel):
+    name: str
+    count: int
+    rows: list[dict[str, str]]
+
+
+class RowList(BaseModel):
+    count: int
+    total: int
+    rows: list[dict[str, str]]
+```
+
+- [ ] **Step 8: Add the routes**
+
+Create `api/app/routes/__init__.py` (empty) and `api/app/routes/data.py`:
+
+```python
+"""Reference-data endpoints. Every one reads from memory; none touches disk."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Query, Request
+
+from app.loader import TABLE_NAMES, Dataset
+from app.models import Meta, RawTable
+
+router = APIRouter(prefix="/api")
+
+
+def dataset(request: Request) -> Dataset:
+    return request.app.state.dataset
+
+
+@router.get("/meta", response_model=Meta)
+def meta(request: Request) -> Meta:
+    data = dataset(request)
+    return Meta(
+        version=data.version,
+        snapshot_date=data.snapshot_date,
+        source=data.source,
+        table_count=len(data.tables),
+        counts=data.counts,
+        tables=sorted(data.tables),
+    )
+
+
+@router.get("/tables/{name}", response_model=RawTable)
+def raw_table(
+    request: Request,
+    name: str,
+    limit: int = Query(default=0, ge=0, le=5000),
+    offset: int = Query(default=0, ge=0),
+) -> RawTable:
+    if name not in TABLE_NAMES:
+        raise HTTPException(status_code=404, detail=f"unknown table {name!r}")
+    rows = dataset(request).tables[name]
+    window = rows[offset : offset + limit] if limit else rows[offset:]
+    return RawTable(name=name, count=len(window), rows=window)
+```
+
+- [ ] **Step 9: Load at startup and wire the router**
+
+In `api/app/main.py`, replace the `lifespan` function and add the router. The full new versions:
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = app.state.settings
+    app.state.dataset = load_dataset(settings.data_dir)
+    log.info(
+        "dataset loaded: %d tables, %d rows, version %s",
+        len(app.state.dataset.tables),
+        sum(app.state.dataset.counts.values()),
+        app.state.dataset.version,
+    )
+    yield
+    log.info("td2-api stopping")
+```
+
+Add the imports `from app.loader import load_dataset` and `from app.routes import data as data_routes`, and inside `create_app()`, after the middleware:
+
+```python
+    app.include_router(data_routes.router)
+```
+
+- [ ] **Step 10: Run the tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
+
+Expected: `9 passed`.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add api/
+git commit -m "feat: load the 20 reference tables at startup and serve meta"
+```
+
+---
+
+## Task 3: The typed reference endpoints
+
+**Files:**
+- Modify: `api/app/routes/data.py`, `api/app/models.py`
+- Create: `api/tests/test_data_endpoints.py`
+
+**Interfaces:**
+- Consumes: `Dataset` from Task 2.
+- Produces: the endpoints v0 is already coded against.
+
+Gear slots, exactly: `mask, chest, backpack, gloves, holster, kneepads`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `api/tests/test_data_endpoints.py`:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+
+from app.main import create_app
+
+
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(create_app()) as c:
+        yield c
+
+
+def test_weapons_list(client):
+    body = client.get("/api/weapons").json()
+    assert body["total"] > 100
+    assert body["rows"][0]["Name"]
+
+
+def test_weapons_filter_by_type(client):
+    body = client.get("/api/weapons", params={"type": "Rifle"}).json()
+    assert body["total"] > 0
+    assert {r["Weapon Type"] for r in body["rows"]} == {"Rifle"}
+
+
+def test_weapons_search_is_case_insensitive(client):
+    body = client.get("/api/weapons", params={"q": "police"}).json()
+    assert body["total"] > 0
+
+
+def test_weapon_by_name(client):
+    listed = client.get("/api/weapons", params={"limit": 1}).json()["rows"][0]
+    got = client.get(f"/api/weapons/{listed['Name']}").json()
+    assert got["Name"] == listed["Name"]
+
+
+def test_unknown_weapon_is_404(client):
+    assert client.get("/api/weapons/definitely-not-a-gun").status_code == 404
+
+
+@pytest.mark.parametrize("slot", ["mask", "chest", "backpack", "gloves", "holster", "kneepads"])
+def test_every_gear_slot_serves(client, slot):
+    body = client.get(f"/api/gear/{slot}").json()
+    assert body["total"] > 0
+    assert body["rows"][0]["Item Name"]
+
+
+def test_unknown_gear_slot_is_404(client):
+    assert client.get("/api/gear/hat").status_code == 404
+
+
+def test_brands_are_joined_with_their_set_bonuses(client):
+    rows = client.get("/api/brands").json()["rows"]
+    assert rows[0]["Brand"]
+    assert "bonuses" in rows[0]
+
+
+def test_skills_and_one_skill(client):
+    rows = client.get("/api/skills").json()["rows"]
+    assert rows[0]["Skill ID"]
+    one = client.get(f"/api/skills/{rows[0]['Skill ID']}").json()
+    assert one["Skill ID"] == rows[0]["Skill ID"]
+    # NON-EMPTY, deliberately. `assert "stats" in one` passes on a join that
+    # matches nothing, which is exactly what an earlier draft of this endpoint
+    # did -- it keyed on Variant alone and matched 0 of 43 rows.
+    assert one["stats"], "the skillStats join produced nothing"
+    assert one["stats"][0]["Stat"]
+
+
+def test_every_skill_joins_to_its_stats(client):
+    """All 43, not just the first. A join that works for one row and silently
+    fails for the rest is the shape this project keeps shipping."""
+    rows = client.get("/api/skills").json()["rows"]
+    empty = []
+    for row in rows:
+        one = client.get(f"/api/skills/{row['Skill ID']}").json()
+        if not one["stats"]:
+            empty.append(row["Skill ID"])
+    assert not empty, f"skills with no stats: {empty}"
+
+
+def test_the_remaining_reference_endpoints(client):
+    for path in (
+        "/api/specializations",
+        "/api/talents/gear",
+        "/api/talents/weapon",
+        "/api/attributes/gear",
+        "/api/attributes/weapon",
+        "/api/mods/gear",
+        "/api/mods/weapon",
+        "/api/mods/skill",
+    ):
+        body = client.get(path).json()
+        assert body["total"] > 0, path
+
+
+def test_limit_and_offset_window(client):
+    first = client.get("/api/weapons", params={"limit": 5}).json()
+    second = client.get("/api/weapons", params={"limit": 5, "offset": 5}).json()
+    assert len(first["rows"]) == 5
+    assert first["rows"][0] != second["rows"][0]
+    assert first["total"] == second["total"]  # total is the match count, not the page
+```
+
+- [ ] **Step 2: Run and watch them fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_data_endpoints.py -v`
+
+Expected: 404s across the board.
+
+- [ ] **Step 3: Add the shared helpers and the endpoints**
+
+Append to `api/app/routes/data.py`:
+
+```python
+GEAR_SLOTS = ["mask", "chest", "backpack", "gloves", "holster", "kneepads"]
+
+TALENT_TABLES = {"gear": "gearTalents", "weapon": "weaponTalents"}
+ATTRIBUTE_TABLES = {"gear": "gearAttributes", "weapon": "weaponAttributes"}
+MOD_TABLES = {"gear": "gearMods", "weapon": "weaponMods", "skill": "skillMods"}
+
+
+def _window(rows: list[dict], q: str | None, limit: int, offset: int) -> RowList:
+    """Search, then page. `total` is the number of matches, not the page size --
+    a frontend needs it to render pagination, and reporting the page length
+    there would silently make every result set look like one page."""
+    if q:
+        needle = q.casefold()
+        rows = [r for r in rows if any(needle in str(v).casefold() for v in r.values())]
+    total = len(rows)
+    window = rows[offset : offset + limit] if limit else rows[offset:]
+    return RowList(count=len(window), total=total, rows=window)
+
+
+@router.get("/weapons", response_model=RowList)
+def weapons(
+    request: Request,
+    type: str | None = None,
+    quality: str | None = None,
+    q: str | None = None,
+    limit: int = Query(default=0, ge=0, le=5000),
+    offset: int = Query(default=0, ge=0),
+) -> RowList:
+    rows = dataset(request).tables["weapon"]
+    if type:
+        rows = [r for r in rows if r.get("Weapon Type", "").casefold() == type.casefold()]
+    if quality:
+        rows = [r for r in rows if r.get("Quality", "").casefold() == quality.casefold()]
+    return _window(rows, q, limit, offset)
+
+
+@router.get("/weapons/{name}")
+def weapon(request: Request, name: str) -> dict:
+    for row in dataset(request).tables["weapon"]:
+        if row.get("Name", "").casefold() == name.casefold():
+            return row
+    raise HTTPException(status_code=404, detail=f"unknown weapon {name!r}")
+
+
+@router.get("/gear/{slot}", response_model=RowList)
+def gear(
+    request: Request,
+    slot: str,
+    quality: str | None = None,
+    brand: str | None = None,
+    q: str | None = None,
+    limit: int = Query(default=0, ge=0, le=5000),
+    offset: int = Query(default=0, ge=0),
+) -> RowList:
+    if slot not in GEAR_SLOTS:
+        raise HTTPException(status_code=404, detail=f"unknown gear slot {slot!r}")
+    rows = dataset(request).tables[slot]
+    if quality:
+        rows = [r for r in rows if r.get("Quality", "").casefold() == quality.casefold()]
+    if brand:
+        rows = [r for r in rows if r.get("Brand", "").casefold() == brand.casefold()]
+    return _window(rows, q, limit, offset)
+
+
+@router.get("/brands", response_model=RowList)
+def brands(request: Request, q: str | None = None) -> RowList:
+    data = dataset(request)
+    bonuses: dict[str, list[dict[str, str]]] = {}
+    for row in data.tables["brandsetBonuses"]:
+        bonuses.setdefault(row.get("Brand", ""), []).append(row)
+    rows = [{**b, "bonuses": bonuses.get(b.get("Brand", ""), [])} for b in data.tables["brands"]]
+    return _window(rows, q, 0, 0)
+
+
+@router.get("/skills", response_model=RowList)
+def skills(request: Request, q: str | None = None) -> RowList:
+    return _window(dataset(request).tables["skill"], q, 0, 0)
+
+
+@router.get("/skills/{skill_id}")
+def skill(request: Request, skill_id: str) -> dict:
+    data = dataset(request)
+    for row in data.tables["skill"]:
+        if row.get("Skill ID", "").casefold() == skill_id.casefold():
+            # skillStats keys on a display name, not on Skill ID or Variant.
+            # "Sticky Bomb" + "Burn" -> "Burn Sticky Bomb". Verified: this form
+            # matches 43/43 rows, joining on Variant alone matches 0, and
+            # joining Skill ID to "Skill Stat ID" appears to match 43/43 but is
+            # a coincidence -- Skill Stat ID is a row counter, so it would pair
+            # Sticky Bomb with Achilles Pulse. statsService.js:624 builds the
+            # same key: `${skill.variant} ${skill.itemName}`.
+            key = f"{row.get('Variant', '')} {row.get('Item Name', '')}".casefold()
+            stats = [
+                s for s in data.tables["skillStats"]
+                if s.get("Skill Variant Name", "").casefold() == key
+            ]
+            return {**row, "stats": stats}
+    raise HTTPException(status_code=404, detail=f"unknown skill {skill_id!r}")
+
+
+@router.get("/specializations", response_model=RowList)
+def specializations(request: Request) -> RowList:
+    return _window(dataset(request).tables["specialization"], None, 0, 0)
+
+
+@router.get("/talents/{kind}", response_model=RowList)
+def talents(request: Request, kind: str, q: str | None = None) -> RowList:
+    if kind not in TALENT_TABLES:
+        raise HTTPException(status_code=404, detail=f"unknown talent kind {kind!r}")
+    return _window(dataset(request).tables[TALENT_TABLES[kind]], q, 0, 0)
+
+
+@router.get("/attributes/{kind}", response_model=RowList)
+def attributes(request: Request, kind: str) -> RowList:
+    if kind not in ATTRIBUTE_TABLES:
+        raise HTTPException(status_code=404, detail=f"unknown attribute kind {kind!r}")
+    return _window(dataset(request).tables[ATTRIBUTE_TABLES[kind]], None, 0, 0)
+
+
+@router.get("/mods/{kind}", response_model=RowList)
+def mods(request: Request, kind: str, q: str | None = None) -> RowList:
+    if kind not in MOD_TABLES:
+        raise HTTPException(status_code=404, detail=f"unknown mod kind {kind!r}")
+    return _window(dataset(request).tables[MOD_TABLES[kind]], q, 0, 0)
+```
+
+Change the models import in `api/app/routes/data.py` to `from app.models import Meta, RawTable, RowList`.
+
+- [ ] **Step 4: Run the tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
+
+Expected: all pass, 20+ tests.
+
+- [ ] **Step 5: Prove it against the running service**
+
+```bash
+./scripts/dev.sh restart api
+curl -s "http://<TAILNET_IP>:8000/api/weapons?type=Rifle&limit=2" | head -c 300
+```
+
+Expected: JSON with `total` > 0 and two rows.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add api/
+git commit -m "feat: the reference-data endpoints v0 is built against"
+```
+
+---
+
+## Task 4: Snapshot store and the source interface
+
+**Files:**
+- Create: `api/app/sources/__init__.py`, `api/app/sources/base.py`, `api/app/sources/buildstation.py`, `api/app/snapshots.py`, `api/tests/test_snapshots.py`
+
+**Interfaces:**
+- Produces: `DataSource` protocol with `async fetch_version() -> str` and `async fetch_tables() -> dict[str, str]` (name → raw CSV text); `SnapshotStore(root)` with `.write_candidate(tables, version) -> Path`, `.promote(path)`, `.live() -> Path | None`, `.list() -> list[Path]`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `api/tests/test_snapshots.py`:
+
+```python
+from app.snapshots import SnapshotStore
+
+
+def test_a_candidate_is_not_live_until_promoted(tmp_path):
+    store = SnapshotStore(tmp_path)
+    assert store.live() is None
+    candidate = store.write_candidate({"brands": "Brand,Type,Icon\na,b,c\n"}, "27.0-mdb", "2026-09-01")
+    assert store.live() is None, "writing a candidate must not change what is served"
+    store.promote(candidate)
+    assert store.live() == candidate
+
+
+def test_promotion_is_reversible(tmp_path):
+    store = SnapshotStore(tmp_path)
+    first = store.write_candidate({"brands": "Brand\na\n"}, "26.0-mdb", "2026-08-22")
+    store.promote(first)
+    second = store.write_candidate({"brands": "Brand\nb\n"}, "27.0-mdb", "2026-09-01")
+    store.promote(second)
+    assert store.live() == second
+    store.promote(first)
+    assert store.live() == first, "rolling back must not require re-fetching upstream"
+
+
+def test_a_candidate_carries_its_own_snapshot_marker(tmp_path):
+    store = SnapshotStore(tmp_path)
+    candidate = store.write_candidate({"brands": "Brand\na\n"}, "27.0-mdb", "2026-09-01")
+    marker = (candidate / "SNAPSHOT.txt").read_text()
+    assert "27.0-mdb" in marker
+    assert "2026-09-01" in marker
+```
+
+- [ ] **Step 2: Run and watch fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_snapshots.py -v`
+
+Expected: `ModuleNotFoundError: No module named 'app.snapshots'`.
+
+- [ ] **Step 3: Write the source interface**
+
+Create `api/app/sources/__init__.py` (empty) and `api/app/sources/base.py`:
+
+```python
+"""What a data source has to provide.
+
+The Division 2 has no official API, and buildstation.app is the only source
+today. The owner intends to replace it. Keeping the surface this small is what
+makes that a sibling module and one config value rather than a rewrite.
+"""
+
+from __future__ import annotations
+
+from typing import Protocol
+
+
+class DataSource(Protocol):
+    name: str
+
+    async def fetch_version(self) -> str:
+        """A cheap token that changes when the game data changes.
+
+        Polled often; must not require pulling the whole dataset.
+        """
+
+    async def fetch_tables(self) -> dict[str, str]:
+        """Every table, as raw CSV text keyed by table name.
+
+        Raw text, not parsed rows: the bytes as served are the authoritative
+        artefact, and parsing is the validator's job, not the source's.
+        """
+```
+
+Create `api/app/sources/buildstation.py`:
+
+```python
+"""The only source today.
+
+Two upstreams, not one. The 20 tables come from buildstation.app; the version
+token does not live there -- that endpoint answers
+`{"message":"Unknown collection"}` -- it lives on mxswat's gh-pages branch.
+Polling the small one and only pulling the big one when it moves is the whole
+reason a refresh is cheap.
+
+Fetching server-side also sidesteps the CORS allowlist that broke this app
+twice: buildstation.app only sends Access-Control-Allow-Origin for
+https://mxswat.github.io, and a server has no origin to be judged on.
+"""
+
+from __future__ import annotations
+
+import asyncio
+
+import httpx
+
+from app.loader import TABLE_NAMES
+
+BASE = "https://buildstation.app/api/td2/v2/data/mx"
+VERSION_URL = "https://raw.githubusercontent.com/mxswat/mx-division-builds/gh-pages/DB.Version"
+
+
+class BuildstationSource:
+    name = "buildstation.app"
+
+    def __init__(self, timeout: float = 30.0) -> None:
+        self._timeout = timeout
+
+    async def fetch_version(self) -> str:
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.get(VERSION_URL)
+            response.raise_for_status()
+            return response.text.strip()
+
+    async def fetch_tables(self) -> dict[str, str]:
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            async def one(name: str) -> tuple[str, str]:
+                response = await client.get(f"{BASE}/{name}")
+                response.raise_for_status()
+                return name, response.text
+
+            results = await asyncio.gather(*(one(n) for n in TABLE_NAMES))
+        return dict(results)
+```
+
+- [ ] **Step 4: Write the snapshot store**
+
+Create `api/app/snapshots.py`:
+
+```python
+"""Dated snapshots on disk, with an explicit live pointer.
+
+Snapshots are kept rather than overwritten so a rollback does not require
+re-fetching from the source that just broke -- which is exactly when a rollback
+is needed.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+
+class SnapshotStore:
+    def __init__(self, root: Path) -> None:
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=True)
+        self._pointer = self.root / "LIVE"
+
+    def write_candidate(self, tables: dict[str, str], version: str, date: str) -> Path:
+        """Write a snapshot without making it live. Nothing served changes here."""
+        target = self.root / date
+        suffix = 1
+        while target.exists():
+            suffix += 1
+            target = self.root / f"{date}.{suffix}"
+        target.mkdir(parents=True)
+
+        for name, text in tables.items():
+            (target / f"{name}.csv").write_text(text, encoding="utf-8")
+
+        (target / "SNAPSHOT.txt").write_text(
+            "\n".join(
+                [
+                    f"snapshot: {date}",
+                    f"upstream DB.Version: {version}",
+                    "source: https://buildstation.app/api/td2/v2/data/mx",
+                    f"tables: {len(tables)}",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        return target
+
+    def promote(self, snapshot: Path) -> None:
+        snapshot = Path(snapshot)
+        if not snapshot.is_dir():
+            raise FileNotFoundError(f"no snapshot at {snapshot}")
+        self._pointer.write_text(snapshot.name, encoding="utf-8")
+
+    def live(self) -> Path | None:
+        if not self._pointer.is_file():
+            return None
+        candidate = self.root / self._pointer.read_text(encoding="utf-8").strip()
+        return candidate if candidate.is_dir() else None
+
+    def list(self) -> list[Path]:
+        return sorted(p for p in self.root.iterdir() if p.is_dir())
+```
+
+- [ ] **Step 5: Run the tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_snapshots.py -v`
+
+Expected: `3 passed`.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add api/
+git commit -m "feat: dated snapshot store behind a swappable source interface"
+```
+
+---
+
+## Task 5: Refresh, validation, and the admin trigger
+
+**Files:**
+- Create: `api/app/refresh.py`, `api/app/routes/admin.py`, `api/tests/test_refresh.py`
+- Modify: `api/app/main.py`, `api/app/models.py`
+
+**Interfaces:**
+- Consumes: `DataSource`, `SnapshotStore`, `load_dataset`.
+- Produces: `validate_candidate(tables: dict[str, str]) -> list[str]` returning reasons (empty means valid); `RefreshResult`; `async run_refresh(app, force=False) -> RefreshResult`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `api/tests/test_refresh.py`:
+
+```python
+from app.refresh import validate_candidate
+
+
+def _good(seed_dir) -> dict[str, str]:
+    return {p.stem: p.read_text(encoding="utf-8") for p in seed_dir.glob("*.csv")}
+
+
+def test_a_good_fetch_validates(seed_dir):
+    assert validate_candidate(_good(seed_dir), previous_counts=None) == []
+
+
+def test_html_served_as_200_is_rejected(seed_dir):
+    """Upstream answering an error page with status 200 is the exact failure
+    check-data-sources.mjs was rewritten to catch. It must not reach the live
+    snapshot."""
+    tables = _good(seed_dir)
+    tables["weapon"] = "<!DOCTYPE html><html><body>502 Bad Gateway</body></html>"
+    reasons = validate_candidate(tables, previous_counts=None)
+    assert any("weapon" in r for r in reasons)
+
+
+def test_a_missing_table_is_rejected(seed_dir):
+    tables = _good(seed_dir)
+    del tables["brands"]
+    assert any("brands" in r for r in validate_candidate(tables, previous_counts=None))
+
+
+def test_a_dropped_column_is_rejected(seed_dir):
+    tables = _good(seed_dir)
+    tables["weapon"] = "Name,Quality\nFoo,High End\n"
+    assert any("weapon" in r for r in validate_candidate(tables, previous_counts=None))
+
+
+def test_a_collapsed_row_count_is_rejected(seed_dir):
+    """A table going from 300 rows to 2 is a bad fetch, not a game update.
+    Without this, a truncated response silently replaces good data."""
+    tables = _good(seed_dir)
+    header = tables["weapon"].splitlines()[0]
+    body = tables["weapon"].splitlines()[1]
+    tables["weapon"] = f"{header}\n{body}\n"
+    reasons = validate_candidate(tables, previous_counts={"weapon": 300})
+    assert any("row count" in r for r in reasons)
+
+
+def test_an_empty_fetch_is_rejected(seed_dir):
+    assert validate_candidate({}, previous_counts=None) != []
+```
+
+- [ ] **Step 2: Run and watch fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_refresh.py -v`
+
+Expected: `ModuleNotFoundError: No module named 'app.refresh'`.
+
+- [ ] **Step 3: Write the refresh module**
+
+Create `api/app/refresh.py`:
+
+```python
+"""Fetch, validate, promote.
+
+A fetch is never trusted. The live snapshot is only replaced by a candidate
+that passes every check below, so when upstream is down, truncated, or serving
+an error page, the API keeps answering with the last known-good data. That is
+the point of the design: the source is a third party nobody here controls.
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import logging
+from dataclasses import dataclass
+from datetime import date
+
+from app.loader import REQUIRED_COLUMNS, TABLE_NAMES
+
+log = logging.getLogger("td2-api.refresh")
+
+# Below this fraction of the previous row count, treat the table as truncated
+# rather than legitimately shrunk. Real balance patches remove a handful of
+# rows; a bad fetch removes most of them.
+MIN_ROW_RATIO = 0.5
+
+
+@dataclass
+class RefreshResult:
+    changed: bool
+    version: str | None
+    reasons: list[str]
+    snapshot: str | None = None
+
+
+def validate_candidate(
+    tables: dict[str, str], previous_counts: dict[str, int] | None
+) -> list[str]:
+    """Return the reasons a candidate is unacceptable. Empty means acceptable."""
+    reasons: list[str] = []
+
+    for name in TABLE_NAMES:
+        text = tables.get(name)
+        if text is None:
+            reasons.append(f"{name}: missing from the fetch")
+            continue
+
+        stripped = text.lstrip()
+        if stripped.startswith("<"):
+            # An SPA fallback or an error page. Content-type cannot be trusted
+            # here either -- this has been served as 200 text/html before.
+            reasons.append(f"{name}: response is markup, not CSV")
+            continue
+
+        rows = list(csv.DictReader(io.StringIO(text)))
+        if not rows:
+            reasons.append(f"{name}: parsed to zero rows")
+            continue
+
+        missing = [c for c in REQUIRED_COLUMNS.get(name, []) if c not in rows[0]]
+        if missing:
+            reasons.append(f"{name}: lost columns {', '.join(missing)}")
+            continue
+
+        if previous_counts and name in previous_counts:
+            floor = previous_counts[name] * MIN_ROW_RATIO
+            if len(rows) < floor:
+                reasons.append(
+                    f"{name}: row count collapsed {previous_counts[name]} -> {len(rows)}"
+                )
+
+    return reasons
+
+
+async def run_refresh(app, force: bool = False) -> RefreshResult:
+    source = app.state.source
+    store = app.state.snapshots
+    current = app.state.dataset
+
+    try:
+        version = await source.fetch_version()
+    except Exception as exc:  # noqa: BLE001 - upstream is a third party
+        log.warning("version poll failed: %s", exc)
+        return RefreshResult(changed=False, version=None, reasons=[f"version poll failed: {exc}"])
+
+    if version == current.version and not force:
+        return RefreshResult(changed=False, version=version, reasons=[])
+
+    try:
+        tables = await source.fetch_tables()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("fetch failed: %s", exc)
+        return RefreshResult(changed=False, version=version, reasons=[f"fetch failed: {exc}"])
+
+    reasons = validate_candidate(tables, previous_counts=current.counts)
+    if reasons:
+        log.warning("candidate rejected: %s", "; ".join(reasons))
+        return RefreshResult(changed=False, version=version, reasons=reasons)
+
+    candidate = store.write_candidate(tables, version, date.today().isoformat())
+    store.promote(candidate)
+
+    from app.loader import load_dataset
+
+    app.state.dataset = load_dataset(candidate)
+    log.info("promoted snapshot %s (version %s)", candidate.name, version)
+    return RefreshResult(changed=True, version=version, reasons=[], snapshot=candidate.name)
+```
+
+- [ ] **Step 4: Run the validation tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_refresh.py -v`
+
+Expected: `6 passed`.
+
+- [ ] **Step 5: Add the admin route and wire state**
+
+Create `api/app/routes/admin.py`:
+
+```python
+"""Manual refresh trigger.
+
+Deliberately not authenticated: the service is tailnet-only and has no public
+route. That stops being acceptable the moment it is exposed publicly, which is
+recorded in the spec's out-of-scope section.
+"""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, Request
+
+from app.refresh import run_refresh
+
+router = APIRouter(prefix="/api/admin")
+
+
+@router.post("/refresh")
+async def refresh(request: Request, force: bool = False) -> dict:
+    result = await run_refresh(request.app, force=force)
+    return {
+        "changed": result.changed,
+        "version": result.version,
+        "snapshot": result.snapshot,
+        "reasons": result.reasons,
+    }
+```
+
+In `api/app/main.py`'s `lifespan`, after loading the dataset:
+
+```python
+    app.state.snapshots = SnapshotStore(settings.snapshot_dir)
+    app.state.source = BuildstationSource()
+
+    live = app.state.snapshots.live()
+    if live is not None:
+        app.state.dataset = load_dataset(live)
+        log.info("serving promoted snapshot %s", live.name)
+```
+
+Add imports for `SnapshotStore` and `BuildstationSource`, and `app.include_router(admin_routes.router)` in `create_app()`.
+
+- [ ] **Step 6: Extend `/api/meta` with the refresh state**
+
+In `api/app/models.py`, add to `Meta`:
+
+```python
+    last_refresh: dict | None = None
+```
+
+In `api/app/routes/data.py`'s `meta()`, pass `last_refresh=getattr(request.app.state, "last_refresh", None)`. In `run_refresh`, set `app.state.last_refresh = {"changed": result.changed, "version": result.version, "reasons": result.reasons}` before returning.
+
+- [ ] **Step 7: Prove a rejected fetch leaves the live data alone**
+
+```bash
+./scripts/dev.sh restart api
+curl -s http://<TAILNET_IP>:8000/api/meta | head -c 200
+curl -s -X POST "http://<TAILNET_IP>:8000/api/admin/refresh"
+curl -s http://<TAILNET_IP>:8000/api/meta | head -c 200
+```
+
+Expected: `changed` is `false` when the version has not moved, and `/api/meta` reports the same counts before and after.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add api/
+git commit -m "feat: refresh from upstream, and refuse to promote a bad fetch"
+```
+
+---
+
+## Task 6: Auth — Discord shape, mock provider, fail closed
+
+**Files:**
+- Create: `api/app/auth.py`, `api/app/routes/auth.py`, `api/tests/test_auth.py`
+- Modify: `api/app/main.py`
+
+**Interfaces:**
+- Produces: `current_user(request) -> dict | None` with keys `id` (str), `name` (str), `mode` (str); `MOCK_ID_PREFIX = "mock:"`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `api/tests/test_auth.py`:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+
+from app.auth import AuthConfigError, MOCK_ID_PREFIX, build_provider
+from app.config import Settings
+from app.main import create_app
+
+
+def _mock_settings(**over) -> Settings:
+    base = {"auth_mode": "mock", "allow_mock_auth": True, "session_secret": "test-secret"}
+    return Settings(**{**base, **over})
+
+
+def test_discord_without_credentials_refuses_to_boot():
+    """Failing closed. A permissive fallback here would mean anyone is anyone,
+    with nothing in the logs to say so -- the same reasoning as ${DEV_BIND_IP:?}
+    in the compose file."""
+    with pytest.raises(AuthConfigError, match="DISCORD"):
+        build_provider(Settings(auth_mode="discord", session_secret="s"))
+
+
+def test_mock_needs_both_switches():
+    with pytest.raises(AuthConfigError, match="ALLOW_MOCK_AUTH"):
+        build_provider(Settings(auth_mode="mock", allow_mock_auth=False, session_secret="s"))
+
+
+def test_mock_login_issues_a_session(monkeypatch):
+    # base_url must be https: the session cookie is Secure, and TestClient's
+    # default http://testserver silently discards it -- every assertion below
+    # would then fail for the wrong reason.
+    monkeypatch.setenv("TD2_AUTH_MODE", "mock")
+    monkeypatch.setenv("TD2_ALLOW_MOCK_AUTH", "true")
+    monkeypatch.setenv("TD2_SESSION_SECRET", "test-secret")
+    with TestClient(create_app(), base_url="https://testserver") as client:
+        assert client.get("/api/auth/me").json()["user"] is None
+        client.get("/api/auth/login", params={"as": "tester"}, follow_redirects=False)
+        me = client.get("/api/auth/me").json()
+        assert me["user"]["name"] == "tester"
+        assert me["mode"] == "mock"
+        assert me["user"]["id"].startswith(MOCK_ID_PREFIX)
+
+
+def test_the_mode_is_visible_on_every_response(monkeypatch):
+    """A mock nobody can see is the hazard, not the mock."""
+    monkeypatch.setenv("TD2_AUTH_MODE", "mock")
+    monkeypatch.setenv("TD2_ALLOW_MOCK_AUTH", "true")
+    monkeypatch.setenv("TD2_SESSION_SECRET", "test-secret")
+    with TestClient(create_app()) as client:
+        assert client.get("/api/health").headers["X-Auth-Mode"] == "mock"
+
+
+def test_logout_clears_the_session(monkeypatch):
+    monkeypatch.setenv("TD2_AUTH_MODE", "mock")
+    monkeypatch.setenv("TD2_ALLOW_MOCK_AUTH", "true")
+    monkeypatch.setenv("TD2_SESSION_SECRET", "test-secret")
+    with TestClient(create_app(), base_url="https://testserver") as client:
+        client.get("/api/auth/login", params={"as": "tester"}, follow_redirects=False)
+        client.post("/api/auth/logout")
+        assert client.get("/api/auth/me").json()["user"] is None
+```
+
+- [ ] **Step 2: Run and watch fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_auth.py -v`
+
+Expected: `ModuleNotFoundError: No module named 'app.auth'`.
+
+- [ ] **Step 3: Write the auth module**
+
+Create `api/app/auth.py`:
+
+```python
+"""Discord OAuth, with a mock provider for building the frontend first.
+
+Mirrors Heolstor/web/auth.py: itsdangerous-signed session cookies, OAuth state
+with a short expiry, and an exact-match redirect URI because that is how Discord
+compares it.
+
+Two things are taken from Heolstor's scar tissue up front. Snowflakes are kept
+as STRINGS everywhere -- they exceed JavaScript's safe-integer limit, and
+Heolstor needed a coercion shim because its web and bot halves disagreed on the
+type. And mock identities carry a prefix no real snowflake can have, so every
+mock-owned row is findable in one query at cutover.
+"""
+
+from __future__ import annotations
+
+import logging
+import secrets
+import time
+
+from itsdangerous import BadSignature, URLSafeTimedSerializer
+
+from app.config import Settings
+
+log = logging.getLogger("td2-api.auth")
+
+MOCK_ID_PREFIX = "mock:"
+SESSION_COOKIE = "td2_session"
+SESSION_MAX_AGE = 60 * 60 * 24 * 7
+OAUTH_STATE_MAX_AGE = 300
+
+DISCORD_AUTHORIZE = "https://discord.com/api/v10/oauth2/authorize"
+DISCORD_TOKEN = "https://discord.com/api/v10/oauth2/token"
+DISCORD_USER = "https://discord.com/api/v10/users/@me"
+
+
+class AuthConfigError(RuntimeError):
+    """The auth configuration is unsafe or incomplete. Always fatal at boot."""
+
+
+class MockProvider:
+    mode = "mock"
+
+    def login_target(self, name: str) -> tuple[str, dict | None]:
+        user = {"id": f"{MOCK_ID_PREFIX}{name}", "name": name}
+        return "/api/auth/me", user
+
+
+class DiscordProvider:
+    mode = "discord"
+
+    def __init__(self, settings: Settings) -> None:
+        self.client_id = settings.discord_client_id
+        self.client_secret = settings.discord_client_secret
+        self.redirect_uri = settings.discord_redirect_uri
+        self._states: dict[str, float] = {}
+
+    def login_target(self, name: str | None = None) -> tuple[str, None]:
+        state = secrets.token_urlsafe(32)
+        now = time.time()
+        self._states = {s: t for s, t in self._states.items() if now - t < OAUTH_STATE_MAX_AGE}
+        self._states[state] = now
+        url = (
+            f"{DISCORD_AUTHORIZE}?client_id={self.client_id}"
+            f"&redirect_uri={self.redirect_uri}&response_type=code&scope=identify&state={state}"
+        )
+        return url, None
+
+    def consume_state(self, state: str) -> bool:
+        issued = self._states.pop(state, None)
+        return issued is not None and time.time() - issued < OAUTH_STATE_MAX_AGE
+
+
+def build_provider(settings: Settings):
+    """Resolve the provider, or refuse to run.
+
+    Every failure here is fatal on purpose. An auth layer that degrades to
+    something permissive when misconfigured is worse than one that will not
+    start, because nothing downstream can tell the difference.
+    """
+    if not settings.session_secret:
+        raise AuthConfigError("TD2_SESSION_SECRET is required to sign sessions")
+
+    mode = settings.auth_mode.lower()
+
+    if mode == "mock":
+        if not settings.allow_mock_auth:
+            raise AuthConfigError(
+                "AUTH_MODE=mock also requires ALLOW_MOCK_AUTH=1. Two switches on "
+                "purpose: one typo or one copied env file must not be enough to "
+                "turn real identity off."
+            )
+        log.warning("AUTH IS MOCKED - every identity is fake. Do not expose this.")
+        return MockProvider()
+
+    if mode == "discord":
+        missing = [
+            n for n, v in (
+                ("TD2_DISCORD_CLIENT_ID", settings.discord_client_id),
+                ("TD2_DISCORD_CLIENT_SECRET", settings.discord_client_secret),
+                ("TD2_DISCORD_REDIRECT_URI", settings.discord_redirect_uri),
+            ) if not v
+        ]
+        if missing:
+            raise AuthConfigError(f"AUTH_MODE=discord requires: {', '.join(missing)}")
+        return DiscordProvider(settings)
+
+    raise AuthConfigError(f"unknown AUTH_MODE {settings.auth_mode!r}")
+
+
+def serializer(settings: Settings) -> URLSafeTimedSerializer:
+    return URLSafeTimedSerializer(settings.session_secret, salt="td2-session")
+
+
+def read_session(request) -> dict | None:
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
+        return None
+    try:
+        return serializer(request.app.state.settings).loads(token, max_age=SESSION_MAX_AGE)
+    except BadSignature:
+        return None
+
+
+def current_user(request) -> dict | None:
+    return read_session(request)
+```
+
+- [ ] **Step 4: Write the routes**
+
+Create `api/app/routes/auth.py`:
+
+```python
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
+
+from app.auth import SESSION_COOKIE, SESSION_MAX_AGE, current_user, serializer
+
+router = APIRouter(prefix="/api/auth")
+
+
+@router.get("/login")
+def login(request: Request, response: Response, **_):
+    provider = request.app.state.auth
+    name = request.query_params.get("as", "tester")
+    target, user = provider.login_target(name)
+
+    if user is None:
+        return RedirectResponse(target, status_code=307)
+
+    token = serializer(request.app.state.settings).dumps(user)
+    redirect = RedirectResponse(target, status_code=307)
+    redirect.set_cookie(
+        SESSION_COOKIE, token, max_age=SESSION_MAX_AGE,
+        httponly=True, samesite="lax", secure=True,
+    )
+    return redirect
+
+
+@router.get("/callback")
+async def callback(request: Request):
+    provider = request.app.state.auth
+    if provider.mode == "mock":
+        raise HTTPException(status_code=404, detail="no callback in mock mode")
+    raise HTTPException(status_code=501, detail="Discord callback lands with the real credentials")
+
+
+@router.get("/me")
+def me(request: Request) -> dict:
+    return {"user": current_user(request), "mode": request.app.state.auth.mode}
+
+
+@router.post("/logout")
+def logout(request: Request) -> Response:
+    response = Response(status_code=204)
+    response.delete_cookie(SESSION_COOKIE)
+    return response
+```
+
+- [ ] **Step 5: Wire it and add the header middleware**
+
+In `api/app/main.py`, inside `lifespan` before yielding: `app.state.auth = build_provider(settings)`.
+
+In `create_app()`, after the CORS middleware:
+
+```python
+    @app.middleware("http")
+    async def stamp_auth_mode(request, call_next):
+        response = await call_next(request)
+        response.headers["X-Auth-Mode"] = getattr(request.app.state, "auth", None) and request.app.state.auth.mode or "unset"
+        return response
+```
+
+Add `app.include_router(auth_routes.router)` and the imports.
+
+- [ ] **Step 6: Set the dev environment**
+
+In `docker-compose.dev.yml`, add to the `api` service's `environment:`:
+
+```yaml
+      TD2_AUTH_MODE: mock
+      TD2_ALLOW_MOCK_AUTH: "true"
+      TD2_SESSION_SECRET: dev-only-not-a-secret
+```
+
+And to `api-tests`:
+
+```yaml
+      TD2_AUTH_MODE: mock
+      TD2_ALLOW_MOCK_AUTH: "true"
+      TD2_SESSION_SECRET: test-secret
+```
+
+- [ ] **Step 7: Run the tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
+
+Expected: all pass.
+
+- [ ] **Step 8: Prove the fail-closed path by hand**
+
+```bash
+./scripts/dev.sh --profile tools run --rm -e TD2_AUTH_MODE=discord -e TD2_SESSION_SECRET=x \
+  api-tests python -c "from app.main import create_app; create_app()"
+```
+
+Expected: a non-zero exit and `AuthConfigError` naming the missing Discord variables. Paste the output — this is the check that must not become a fifth one that cannot fail.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add api/ docker-compose.dev.yml
+git commit -m "feat: Discord-shaped auth with a mock provider that fails closed"
+```
+
+---
+
+## Task 7: SQLite and saved builds
+
+**Files:**
+- Create: `api/app/db.py`, `api/app/routes/builds.py`, `api/tests/test_builds.py`
+- Modify: `api/app/main.py`, `api/app/models.py`
+
+**Interfaces:**
+- Consumes: `current_user` from Task 6.
+- Produces: `init_db(path)`, and async `save_build`, `get_build`, `update_build`, `delete_build`, `list_builds`, `list_user_builds`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `api/tests/test_builds.py`:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+
+from app.main import create_app
+
+BUILD = {
+    "name": "Test build",
+    "slots": {"Mask": {"Item Name": "Ninja Bike Messenger Mask"}, "Primary": {"Name": "Police M4"}},
+    "shd": {"offensive": 10, "defensive": 5, "utility": 3},
+    "notes": "",
+}
+
+
+@pytest.fixture
+def client(monkeypatch, tmp_path):
+    monkeypatch.setenv("TD2_AUTH_MODE", "mock")
+    monkeypatch.setenv("TD2_ALLOW_MOCK_AUTH", "true")
+    monkeypatch.setenv("TD2_SESSION_SECRET", "test-secret")
+    monkeypatch.setenv("TD2_DB_PATH", str(tmp_path / "builds.db"))
+    # https, not http: the session cookie is Secure and TestClient drops it
+    # otherwise, which would make every ownership test fail as a 401.
+    with TestClient(create_app(), base_url="https://testserver") as c:
+        yield c
+
+
+def _login(client, name):
+    client.get("/api/auth/login", params={"as": name}, follow_redirects=False)
+
+
+def test_anonymous_cannot_save(client):
+    assert client.post("/api/builds", json=BUILD).status_code == 401
+
+
+def test_save_and_load_roundtrip(client):
+    _login(client, "alice")
+    created = client.post("/api/builds", json=BUILD).json()
+    assert created["id"]
+    loaded = client.get(f"/api/builds/{created['id']}").json()
+    assert loaded["name"] == BUILD["name"]
+    assert loaded["slots"] == BUILD["slots"]
+
+
+def test_loading_increments_views(client):
+    _login(client, "alice")
+    build_id = client.post("/api/builds", json=BUILD).json()["id"]
+    client.get(f"/api/builds/{build_id}")
+    second = client.get(f"/api/builds/{build_id}").json()
+    assert second["views"] >= 2
+
+
+def test_another_user_cannot_edit_or_delete(client):
+    _login(client, "alice")
+    build_id = client.post("/api/builds", json=BUILD).json()["id"]
+    client.post("/api/auth/logout")
+    _login(client, "mallory")
+    assert client.patch(f"/api/builds/{build_id}", json={"name": "stolen"}).status_code == 403
+    assert client.delete(f"/api/builds/{build_id}").status_code == 403
+    assert client.get(f"/api/builds/{build_id}").json()["name"] == BUILD["name"]
+
+
+def test_owner_can_edit_and_delete(client):
+    _login(client, "alice")
+    build_id = client.post("/api/builds", json=BUILD).json()["id"]
+    assert client.patch(f"/api/builds/{build_id}", json={"name": "renamed"}).status_code == 200
+    assert client.get(f"/api/builds/{build_id}").json()["name"] == "renamed"
+    assert client.delete(f"/api/builds/{build_id}").status_code == 204
+    assert client.get(f"/api/builds/{build_id}").status_code == 404
+
+
+def test_mine_lists_only_my_builds(client):
+    _login(client, "alice")
+    client.post("/api/builds", json=BUILD)
+    client.post("/api/auth/logout")
+    _login(client, "bob")
+    client.post("/api/builds", json={**BUILD, "name": "bob's"})
+    mine = client.get("/api/builds/mine").json()["rows"]
+    assert [b["name"] for b in mine] == ["bob's"]
+
+
+def test_unknown_build_is_404(client):
+    assert client.get("/api/builds/nope").status_code == 404
+```
+
+- [ ] **Step 2: Run and watch fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_builds.py -v`
+
+Expected: 404s — the routes do not exist.
+
+- [ ] **Step 3: Write the database layer**
+
+Create `api/app/db.py`:
+
+```python
+"""SQLite for saved builds. Raw SQL, following Heolstor/shared/database.py.
+
+Two departures from that file, both deliberate:
+
+author_id is TEXT. Discord snowflakes exceed JavaScript's safe-integer limit, so
+Heolstor's web half stores them as strings while its bot half stores ints, and it
+needed a coercion shim to stop the two disagreeing. Text from the start removes
+the bug class instead of managing it.
+
+Schema changes go through PRAGMA user_version, not `try: ALTER TABLE / except
+OperationalError: pass`. That idiom cannot tell "column already exists" from a
+real error, and a new project has no reason to inherit it.
+"""
+
+from __future__ import annotations
+
+import json
+import secrets
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+import aiosqlite
+
+SCHEMA_VERSION = 1
+
+COLUMNS = [
+    "id", "name", "author_id", "author_name", "slots", "shd",
+    "notes", "created_at", "updated_at", "views",
+]
+COLUMNS_SQL = ", ".join(COLUMNS)
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS builds (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    author_id   TEXT NOT NULL,
+    author_name TEXT NOT NULL,
+    slots       TEXT NOT NULL,
+    shd         TEXT NOT NULL DEFAULT '{}',
+    notes       TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT,
+    views       INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_builds_author ON builds(author_id);
+CREATE INDEX IF NOT EXISTS idx_builds_created ON builds(created_at DESC);
+"""
+
+_db_path: Path | None = None
+
+
+def set_db_path(path: Path) -> None:
+    global _db_path
+    _db_path = Path(path)
+
+
+def get_db_path() -> Path:
+    if _db_path is None:
+        raise RuntimeError("set_db_path() must be called before any query")
+    return _db_path
+
+
+def generate_id() -> str:
+    return secrets.token_urlsafe(8)
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def init_db(path: Path) -> None:
+    set_db_path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path)
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        conn.executescript(SCHEMA)
+        conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _row_to_build(row) -> dict:
+    build = dict(zip(COLUMNS, row))
+    build["slots"] = json.loads(build["slots"])
+    build["shd"] = json.loads(build["shd"])
+    return build
+
+
+async def save_build(user: dict, payload: dict) -> str:
+    build_id = generate_id()
+    async with aiosqlite.connect(get_db_path()) as db:
+        await db.execute(
+            f"INSERT INTO builds ({COLUMNS_SQL}) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (
+                build_id, payload["name"], user["id"], user["name"],
+                json.dumps(payload.get("slots", {})), json.dumps(payload.get("shd", {})),
+                payload.get("notes", ""), _now(), None, 0,
+            ),
+        )
+        await db.commit()
+    return build_id
+
+
+async def get_build(build_id: str, count_view: bool = False) -> dict | None:
+    async with aiosqlite.connect(get_db_path()) as db:
+        if count_view:
+            await db.execute("UPDATE builds SET views = views + 1 WHERE id = ?", (build_id,))
+            await db.commit()
+        async with db.execute(
+            f"SELECT {COLUMNS_SQL} FROM builds WHERE id = ?", (build_id,)
+        ) as cursor:
+            row = await cursor.fetchone()
+    return _row_to_build(row) if row else None
+
+
+async def update_build(build_id: str, payload: dict) -> None:
+    async with aiosqlite.connect(get_db_path()) as db:
+        await db.execute(
+            "UPDATE builds SET name = COALESCE(?, name), slots = COALESCE(?, slots), "
+            "shd = COALESCE(?, shd), notes = COALESCE(?, notes), updated_at = ? WHERE id = ?",
+            (
+                payload.get("name"),
+                json.dumps(payload["slots"]) if "slots" in payload else None,
+                json.dumps(payload["shd"]) if "shd" in payload else None,
+                payload.get("notes"),
+                _now(),
+                build_id,
+            ),
+        )
+        await db.commit()
+
+
+async def delete_build(build_id: str) -> None:
+    async with aiosqlite.connect(get_db_path()) as db:
+        await db.execute("DELETE FROM builds WHERE id = ?", (build_id,))
+        await db.commit()
+
+
+async def list_builds(limit: int = 50) -> list[dict]:
+    async with aiosqlite.connect(get_db_path()) as db:
+        async with db.execute(
+            f"SELECT {COLUMNS_SQL} FROM builds ORDER BY created_at DESC LIMIT ?", (limit,)
+        ) as cursor:
+            rows = await cursor.fetchall()
+    return [_row_to_build(r) for r in rows]
+
+
+async def list_user_builds(author_id: str, limit: int = 100) -> list[dict]:
+    async with aiosqlite.connect(get_db_path()) as db:
+        async with db.execute(
+            f"SELECT {COLUMNS_SQL} FROM builds WHERE author_id = ? "
+            "ORDER BY created_at DESC LIMIT ?",
+            (author_id, limit),
+        ) as cursor:
+            rows = await cursor.fetchall()
+    return [_row_to_build(r) for r in rows]
+```
+
+- [ ] **Step 4: Write the routes**
+
+Create `api/app/routes/builds.py`:
+
+```python
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Query, Request, Response
+from pydantic import BaseModel, Field
+
+from app import db
+from app.auth import current_user
+
+router = APIRouter(prefix="/api/builds")
+
+
+class BuildIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    slots: dict = Field(default_factory=dict)
+    shd: dict = Field(default_factory=dict)
+    notes: str = ""
+
+
+class BuildPatch(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    slots: dict | None = None
+    shd: dict | None = None
+    notes: str | None = None
+
+
+def _require_user(request: Request) -> dict:
+    user = current_user(request)
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in to save builds")
+    return user
+
+
+async def _owned_or_403(build_id: str, request: Request) -> dict:
+    build = await db.get_build(build_id)
+    if build is None:
+        raise HTTPException(status_code=404, detail="no such build")
+    user = _require_user(request)
+    if build["author_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="not your build")
+    return build
+
+
+@router.post("")
+async def create(request: Request, payload: BuildIn) -> dict:
+    user = _require_user(request)
+    build_id = await db.save_build(user, payload.model_dump())
+    return {"id": build_id, "url": f"/build/{build_id}"}
+
+
+@router.get("/mine")
+async def mine(request: Request, limit: int = Query(default=100, ge=1, le=500)) -> dict:
+    user = _require_user(request)
+    rows = await db.list_user_builds(user["id"], limit)
+    return {"count": len(rows), "rows": rows}
+
+
+@router.get("")
+async def recent(limit: int = Query(default=50, ge=1, le=200)) -> dict:
+    rows = await db.list_builds(limit)
+    return {"count": len(rows), "rows": rows}
+
+
+@router.get("/{build_id}")
+async def load(build_id: str) -> dict:
+    build = await db.get_build(build_id, count_view=True)
+    if build is None:
+        raise HTTPException(status_code=404, detail="no such build")
+    return build
+
+
+@router.patch("/{build_id}")
+async def patch(build_id: str, payload: BuildPatch, request: Request) -> dict:
+    await _owned_or_403(build_id, request)
+    await db.update_build(build_id, payload.model_dump(exclude_none=True))
+    return await db.get_build(build_id)
+
+
+@router.delete("/{build_id}", status_code=204)
+async def remove(build_id: str, request: Request) -> Response:
+    await _owned_or_403(build_id, request)
+    await db.delete_build(build_id)
+    return Response(status_code=204)
+```
+
+**Route order matters:** `/mine` is declared before `/{build_id}`, or FastAPI matches `mine` as a build id and `/api/builds/mine` returns 404 forever.
+
+- [ ] **Step 5: Wire it**
+
+In `lifespan`: `init_db(settings.db_path)`. Add `app.include_router(builds_routes.router)` and the imports.
+
+- [ ] **Step 6: Run the tests**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
+
+Expected: all pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add api/
+git commit -m "feat: saved builds in SQLite, owned by the Discord session"
+```
+
+---
+
+## Task 8: Compute stub, HTTPS on the tailnet, documentation
+
+**Files:**
+- Create: `api/app/routes/compute.py`, `api/tests/test_compute_stub.py`, `docs/api.md`
+- Modify: `api/app/main.py`, `docs/dev.md`
+
+- [ ] **Step 1: Write the failing test**
+
+Create `api/tests/test_compute_stub.py`:
+
+```python
+from fastapi.testclient import TestClient
+
+from app.main import create_app
+
+
+def test_compute_is_501_until_phase_two():
+    """Not 404. The frontend wires this call now and it must be distinguishable
+    from a typo in the path."""
+    with TestClient(create_app()) as client:
+        response = client.post("/api/compute", json={"slots": {}})
+    assert response.status_code == 501
+    assert "phase" in response.json()["detail"].lower()
+```
+
+- [ ] **Step 2: Run and watch fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_compute_stub.py -v`
+
+Expected: 404, not 501.
+
+- [ ] **Step 3: Write the stub**
+
+Create `api/app/routes/compute.py`:
+
+```python
+"""Phase 2 lands here: the damage math, ported from src/utils/statsService.js.
+
+501 rather than 404 on purpose -- the frontend wires the call now, and a 404
+would be indistinguishable from a wrong path. When Phase 2 lands, no frontend
+change is needed.
+"""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+router = APIRouter(prefix="/api")
+
+
+@router.post("/compute")
+def compute(payload: dict) -> dict:
+    raise HTTPException(
+        status_code=501,
+        detail="Damage computation is Phase 2 and is not implemented yet.",
+    )
+```
+
+Wire it with `app.include_router(compute_routes.router)`.
+
+- [ ] **Step 4: Run the whole suite**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
+
+Expected: everything passes, output pristine.
+
+- [ ] **Step 5: Publish over HTTPS on the tailnet**
+
+```bash
+sudo tailscale serve --bg --https=8443 http://127.0.0.1:8000
+sudo tailscale serve status
+```
+
+Expected: a `https://<host>.ts.net:8443/` mapping. **This step needs the owner** — the `tailscale` CLI requires privileges an agent does not have here. If it cannot be run, report it and leave the plain-HTTP tailnet bind in place; everything else in this task still applies.
+
+Verify from the owner's workstation: `https://<host>.ts.net:8443/api/health` returns `{"ok":true}`.
+
+- [ ] **Step 6: Write the API document**
+
+Create `docs/api.md`: the endpoint table from the spec, the exact base URL form, an example request and response for `/api/weapons` and `/api/builds`, and a paragraph stating that the contract is fixed because the frontend is built against it.
+
+- [ ] **Step 7: Extend `docs/dev.md`**
+
+Add an "API" section: how to start it (`./scripts/dev.sh up -d api`), how to run its tests (`./scripts/dev.sh --profile tools run --rm api-tests pytest`), that auth is mocked and what the two switches are, and that `/api/compute` is a deliberate 501.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add api/ docs/
+git commit -m "feat: compute stub, tailnet HTTPS, and the API documentation"
+```
+
+---
+
+## Verifying
+
+```sh
+./scripts/dev.sh --profile tools run --rm api-tests pytest       # the API suite
+./scripts/dev.sh --profile tools run --rm tools npm test         # the frontend's damage-math suite
+curl -s http://<TAILNET_IP>:8000/api/meta                        # dataset actually loaded
+curl -s -X POST http://<TAILNET_IP>:8000/api/admin/refresh        # upstream reachable, candidate judged
+```
+
+## Done when
+
+- `./scripts/dev.sh up -d api` serves on the tailnet, and over HTTPS via `tailscale serve`.
+- Every endpoint in the spec's contract answers with the documented shape.
+- `/api/compute` returns 501.
+- A deliberately corrupted candidate is rejected and the live dataset is unchanged — demonstrated, not asserted.
+- Login works end to end in mock mode; one mock user cannot edit another's build.
+- `AUTH_MODE=discord` with no credentials refuses to boot, with the error naming what is missing.
+- The host still has no Python.
+
+## Deliberately not in scope
+
+- **The damage math.** Phase 2.
+- **Public exposure**, Traefik, Infisical, backups, monitoring.
+- **Real Discord credentials.**
+- **A second data source.** The interface exists; the implementation does not.
+- **Rate limiting.** Required before any public exposure; pointless on a tailnet-only dev service.
