@@ -1,15 +1,24 @@
 #!/usr/bin/env node
 /**
- * Checks the data sources shipped in public/data/ in three layers, because
- * each one fails differently and only the last two are visible from the server:
+ * Checks that every data table the app asks for is actually shipped, served
+ * and shaped the way the code expects.
  *
- *   1. REACHABLE  -- does the URL answer 200?
+ * The expected table list is extracted from the dataUrl("...") calls in
+ * src/utils/dataImporter.js -- the code that does the fetching -- and NOT from
+ * a listing of public/data/. Deriving it from the directory would compare the
+ * directory against itself: a typo'd dataUrl("brandSetBonuses") would still
+ * report every table OK while the running app 404s. The two sides are then
+ * reconciled, so both a referenced-but-absent table and a shipped-but-orphaned
+ * CSV are failures.
+ *
+ * Each referenced table is then checked in three layers:
+ *
+ *   1. REACHABLE -- does the URL answer 200?
  *   2. BROWSER-FETCHABLE -- would a browser be allowed to read the response?
- *      The provider (buildstation.app) returns 200 to anyone but only sends
- *      Access-Control-Allow-Origin for https://mxswat.github.io. curl ignores
- *      CORS, so layer 1 passes while every browser request is blocked, and
- *      dataImporter's rejection surfaces as App.vue's misleading "too many
- *      people are connected to the server" screen.
+ *      Data is same-origin now that it ships in public/data/, so this normally
+ *      passes trivially; the layer stays as a guard for non-same-origin setups
+ *      (a CDN or separate data host), where a 200 to curl can still be a hard
+ *      block in every browser.
  *   3. USABLE -- do the columns classes.js reads still exist? A 200 with
  *      drifted headers builds an inventory of undefined.
  *
@@ -17,10 +26,10 @@
  * several tables quote description fields containing newlines, so naive line
  * splitting overcounts (gearTalents reads as 414 lines but is 206 rows).
  *
- * Usage:  node scripts/check-data-sources.mjs [appOrigin]
- *         appOrigin defaults to http://$DEV_HOST:$DEV_PORT
+ * Usage:  node scripts/check-data-sources.mjs <appOrigin>
+ *         e.g. node scripts/check-data-sources.mjs http://10.0.0.5:8090/
  */
-import { readdirSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import Papa from "papaparse";
@@ -40,49 +49,97 @@ const CONTRACTS = {
           "Slot One", "Slot Two", "Slot Three", "Mod 1", "Mod 2", "Mod 3", "Desc"],
 };
 
-// Derive the table list from what actually ships, not from config. This
-// checks the real artifact and cannot drift from it.
+// --- origin -----------------------------------------------------------------
+// Required. There is no useful default: the one-shot tools container cannot
+// reach the dev server on "localhost", so a default would only ever produce a
+// confusing wall of ECONNREFUSED.
+const originArg = process.argv[2];
+if (!originArg) {
+  console.error("usage: node scripts/check-data-sources.mjs <appOrigin>");
+  console.error("");
+  console.error("  e.g. npm run check http://10.0.0.5:8090/");
+  console.error("  Run `./scripts/dev.sh config` to see the address the app is published on.");
+  process.exit(1);
+}
+
+let appOrigin;
+try {
+  appOrigin = new URL(originArg).origin;
+} catch {
+  console.error(`usage: node scripts/check-data-sources.mjs <appOrigin>`);
+  console.error(`  not a valid absolute URL: ${originArg}`);
+  process.exit(1);
+}
+
+// --- expected tables, from the code that fetches them ------------------------
+const importerPath = join(root, "src", "utils", "dataImporter.js");
+const importerSrc = readFileSync(importerPath, "utf8");
+const referenced = [
+  ...new Set(
+    [...importerSrc.matchAll(/dataUrl\(\s*["'`]([^"'`]+)["'`]\s*\)/g)].map((m) => m[1])
+  ),
+].sort();
+
+if (referenced.length === 0) {
+  console.error(`no dataUrl("...") calls found in ${importerPath}`);
+  console.error("Either the file moved or the call shape changed; this check is blind until fixed.");
+  process.exit(1);
+}
+
+// --- reconcile against what actually ships -----------------------------------
 const dataDir = join(root, "public", "data");
-const dataUrls = readdirSync(dataDir)
-  .filter((f) => f.endsWith(".csv"))
-  .sort()
-  .map((f) => [f.replace(/\.csv$/, ""), `data/${f}`]);
+const shipped = new Set(
+  readdirSync(dataDir).filter((f) => f.endsWith(".csv")).map((f) => f.replace(/\.csv$/, ""))
+);
 
-const origin = process.argv[2] || "http://localhost:8090";
+const missing = referenced.filter((t) => !shipped.has(t));
+const orphans = [...shipped].filter((t) => !referenced.includes(t)).sort();
 
-console.log(`app origin: ${origin}`);
-console.log(`checking ${dataUrls.length} data sources as a browser would\n`);
+console.log(`app origin: ${appOrigin}`);
+console.log(`${referenced.length} tables referenced by src/utils/dataImporter.js`);
+console.log(`checking them as a browser would\n`);
 
 let failed = 0;
 
-for (const [key, raw] of dataUrls) {
-  const url = new URL(raw, origin);
-  const crossOrigin = url.origin !== origin;
-  const name = key;
+for (const t of missing) {
+  failed++;
+  console.log(`${"FAIL".padEnd(5)} ${t.padEnd(22)} referenced by dataImporter.js but public/data/${t}.csv does not exist`);
+}
+for (const t of orphans) {
+  failed++;
+  console.log(`${"FAIL".padEnd(5)} ${t.padEnd(22)} orphan: public/data/${t}.csv is shipped but no dataUrl() call references it`);
+}
+
+// --- fetch + schema ----------------------------------------------------------
+for (const name of referenced) {
+  if (missing.includes(name)) continue; // already reported; nothing to fetch
+
+  const url = new URL(`data/${name}.csv`, originArg);
+  const crossOrigin = url.origin !== appOrigin;
 
   let verdict = "OK", detail;
   try {
-    const res = await fetch(url, { headers: { Origin: origin } });
+    const res = await fetch(url, { headers: { Origin: appOrigin } });
     const body = await res.text();
     const acao = res.headers.get("access-control-allow-origin");
 
     if (!res.ok) {
       verdict = "FAIL";
       detail = `HTTP ${res.status}`;
-    } else if (crossOrigin && acao !== origin && acao !== "*") {
+    } else if (crossOrigin && acao !== appOrigin && acao !== "*") {
       verdict = "FAIL";
       detail = `cross-origin and CORS-blocked (allow-origin: ${acao ?? "absent"})`;
     } else {
       const rows = Papa.parse(body.trim()).data;
       const headers = rows.shift() ?? [];
-      const missing = (CONTRACTS[name] ?? []).filter((c) => !headers.includes(c));
+      const missingCols = (CONTRACTS[name] ?? []).filter((c) => !headers.includes(c));
 
       if (rows.length < 1) {
         verdict = "FAIL";
         detail = `200 but no data rows (${body.length} bytes)`;
-      } else if (missing.length) {
+      } else if (missingCols.length) {
         verdict = "FAIL";
-        detail = `schema drift -- missing: ${missing.join(", ")}`;
+        detail = `schema drift -- missing: ${missingCols.join(", ")}`;
       } else {
         const where = crossOrigin ? "cross-origin, CORS ok" : "same-origin";
         const checked = CONTRACTS[name] ? `contract ok` : "no class contract";
@@ -100,7 +157,7 @@ for (const [key, raw] of dataUrls) {
 
 console.log(
   failed
-    ? `\n${failed}/${dataUrls.length} data sources are NOT usable by the app.`
-    : `\nAll ${dataUrls.length} data sources reachable, CORS-clear and schema-valid from ${origin}.`
+    ? `\n${failed} problem(s) across ${referenced.length} referenced data sources.`
+    : `\nAll ${referenced.length} data sources reachable, CORS-clear and schema-valid from ${appOrigin}.`
 );
 process.exit(failed ? 1 : 0);

@@ -3,5 +3,5 @@ upstream DB.Version: 26.0-mdb
 source: https://buildstation.app/api/td2/v2/data/mx
 tables: 20
 
-Regenerate with /srv/project/data/td2-reference/snapshot.mjs, then re-run
-scripts/import-snapshot.mjs to refresh these files.
+Regenerate with the snapshot script in the reference store, then re-run
+scripts/import-snapshot.mjs <snapshot-dir> to refresh these files.

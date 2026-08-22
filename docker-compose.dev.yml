@@ -16,8 +16,11 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/node_modules
+    # Optional: a fresh clone has no .env.local (it is gitignored), and the
+    # short form makes compose exit 1 when the file is absent.
     env_file:
-      - .env.local
+      - path: .env.local
+        required: false
     environment:
       # Bind inside the container; the tailnet restriction is done by the
       # published-port address below, not by the app.
@@ -43,7 +46,8 @@ services:
       - .:/app
       - node_modules:/app/node_modules
     env_file:
-      - .env.local
+      - path: .env.local
+        required: false
     entrypoint: []
     command: ["node", "--version"]
 

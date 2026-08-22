@@ -21,7 +21,8 @@ and the browser updates.
 ```sh
 alias mxrun='./scripts/dev.sh --profile tools run --rm tools'
 
-mxrun npm run check      # data sources: reachable, CORS-clear, schema-valid
+mxrun npm run check http://<TAILNET_IP>:8090/   # data sources: reachable + schema-valid
+mxrun npm run build-prod # production build into dist/
 mxrun npm run lint
 mxrun npm test           # not wired up yet -- lands in a later phase
 mxrun npm install <pkg>
@@ -29,7 +30,11 @@ mxrun npm install <pkg>
 
 ## Config
 
-`.env.local` is gitignored and holds the data URLs. The dev-server bind address
-is not stored anywhere -- `scripts/dev.sh` derives it from `tailscale0`. `.env.local` does
-not survive a fresh clone — the values are documented in the Obsidian vault
-under `MX Division Builds`.
+Nothing is required. The data tables ship in `public/data/` (refresh them with
+`scripts/import-snapshot.mjs <snapshot-dir>`, which also rewrites
+`public/DB.Version` — the cache key browsers compare against), and the
+dev-server bind address is not stored anywhere: `scripts/dev.sh` derives it
+from `tailscale0`.
+
+`.env.local` is gitignored and entirely optional — compose declares it
+`required: false`, so a fresh clone builds and starts without one.
