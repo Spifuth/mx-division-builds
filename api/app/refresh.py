@@ -237,12 +237,33 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
         log.warning("candidate rejected: %s", "; ".join(reasons))
         return finish(RefreshResult(changed=False, version=version, reasons=reasons))
 
-    candidate = store.write_candidate(tables, version, date.today().isoformat())
-    store.promote(candidate)
-
     from app.loader import load_dataset
 
-    app.state.dataset = load_dataset(candidate)
+    try:
+        candidate = store.write_candidate(tables, version, date.today().isoformat())
+        # Loaded BEFORE it is promoted. write_candidate is not atomic -- mkdir,
+        # then 20 separate writes -- so a full disk or a kill leaves a partial
+        # directory behind. Loading first means such a directory can never
+        # become LIVE and take the next boot down with it.
+        dataset = load_dataset(candidate)
+        store.promote(candidate)
+    except PROGRAMMING_ERRORS:
+        raise
+    except Exception as exc:  # noqa: BLE001 - disk, permissions, a partial write
+        # Wrapped for the reason finish()'s comment gives: without this the
+        # route 500s and app.state.last_refresh still advertises the previous
+        # success as though it were this attempt. That is not hypothetical --
+        # a PermissionError on /srv/snapshots did exactly this.
+        log.exception("could not promote a validated candidate")
+        return finish(
+            RefreshResult(
+                changed=False,
+                version=version,
+                reasons=[f"promotion failed: {describe_error(exc)}"],
+            )
+        )
+
+    app.state.dataset = dataset
     log.info("promoted snapshot %s (version %s)", candidate.name, version)
     return finish(
         RefreshResult(changed=True, version=version, reasons=[], snapshot=candidate.name)

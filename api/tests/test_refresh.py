@@ -3,8 +3,10 @@ import io
 from types import SimpleNamespace
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.loader import load_dataset
+from app.main import create_app
 from app.refresh import run_refresh, validate_candidate, version_rejection
 from app.snapshots import SnapshotStore
 
@@ -294,8 +296,11 @@ class _VersionPollFails:
 
 
 class _FetchFails:
+    def __init__(self, version: str = NEW_VERSION) -> None:
+        self._version = version
+
     async def fetch_version(self) -> str:
-        return NEW_VERSION
+        return self._version
 
     async def fetch_tables(self) -> dict[str, str]:
         raise RuntimeError("connection reset")
@@ -312,6 +317,23 @@ class _VersionOnly:
 
     async def fetch_tables(self) -> dict[str, str]:
         raise AssertionError("a rejected version token must not trigger a 20-table fetch")
+
+
+class _StoreWriteFails:
+    """A SnapshotStore that fails the way a full disk or a bad mount does.
+
+    The message carries a filesystem path on purpose: /api/meta serves
+    `reasons` to the browser origins CORS opens to.
+    """
+
+    def write_candidate(self, tables, version, date):
+        raise OSError(28, "No space left on device", "/srv/snapshots/2026-08-23")
+
+    def promote(self, snapshot) -> None:
+        raise AssertionError("nothing may be promoted after the write failed")
+
+    def live(self):
+        return None
 
 
 class _FetchesTables:
@@ -435,3 +457,59 @@ async def test_a_programming_error_is_not_reported_as_upstream_being_down(tmp_pa
     app = _app(tmp_path, seed_dir, _Buggy())
     with pytest.raises(TypeError):
         await run_refresh(app)
+
+
+# --- last_refresh: what /api/meta reports about the attempt just made ------
+
+
+async def test_a_failed_promotion_is_recorded_as_this_attempt_not_the_last_success(
+    tmp_path, seed_dir
+):
+    """finish() wrapped the five returned paths but not the write/promote/load
+    block, so an exception there 500'd the route and left app.state.last_refresh
+    advertising the previous success as though it were this attempt. Measured,
+    not imagined: a PermissionError on the snapshot volume did exactly this.
+    """
+    app = _app(tmp_path, seed_dir, _FetchesTables(_good(seed_dir)))
+    app.state.last_refresh = {"changed": True, "version": SEED_VERSION, "reasons": []}
+    app.state.snapshots = _StoreWriteFails()
+    before = app.state.dataset
+
+    result = await run_refresh(app)
+
+    assert result.changed is False
+    assert app.state.dataset is before, "a failed write must not touch the live dataset"
+    assert app.state.last_refresh["changed"] is False
+    assert app.state.last_refresh["reasons"] == result.reasons
+    assert any("promotion failed" in r for r in result.reasons)
+    assert not any("/srv" in r for r in result.reasons), (
+        "reasons reach browser origins CORS opens to -- no filesystem paths"
+    )
+
+
+async def test_last_refresh_follows_the_latest_attempt(tmp_path, seed_dir):
+    """The field had no test at all: deleting finish() or /api/meta's
+    passthrough left the suite green."""
+    app = _app(tmp_path, seed_dir, _FetchesTables(_good(seed_dir)))
+
+    await run_refresh(app)
+    assert app.state.last_refresh == {"changed": True, "version": NEW_VERSION, "reasons": []}
+
+    app.state.source = _FetchFails(version="28.0-mdb")
+    await run_refresh(app)
+    assert app.state.last_refresh["changed"] is False
+    assert app.state.last_refresh["version"] == "28.0-mdb"
+    assert any("fetch failed" in r for r in app.state.last_refresh["reasons"])
+
+
+def test_meta_surfaces_the_last_refresh(tmp_path, seed_dir, monkeypatch):
+    monkeypatch.setenv("TD2_SNAPSHOT_DIR", str(tmp_path))
+    app = create_app()
+    with TestClient(app) as client:
+        assert client.get("/api/meta").json()["last_refresh"] is None
+
+        app.state.source = _FetchesTables(_good(seed_dir), version=SEED_VERSION)
+        client.post("/api/admin/refresh?force=true")
+        body = client.get("/api/meta").json()
+
+    assert body["last_refresh"] == {"changed": True, "version": SEED_VERSION, "reasons": []}
