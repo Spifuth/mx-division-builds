@@ -54,9 +54,12 @@ describe("addCHDAndOrHSDOnTopOfFlatDamage", () => {
   // -- calcDmgToArmored/calcDmgToOutOfCover multiply it, and the UI's
   // roundValue() wraps it in Number(). Changing the return type is the owner's
   // call, not this task's.
-  // `it.fails` asserts the bug is STILL PRESENT, so the suite stays green while
-  // documenting it. When someone makes the function return a Number this line
-  // goes red -- that is the signal to drop `.fails`, not to weaken the test.
+  // `it.fails` asserts the body THROWS -- not specifically that this bug is
+  // present -- so the suite stays green while documenting it. When someone
+  // makes the function return a Number this line goes red: that is the signal
+  // to drop `.fails`, not to weaken the test. The three tests above call the
+  // same function unguarded, so a rename or deletion goes red there first;
+  // if they ever go away, this one quietly stops meaning anything.
   it.fails("returns a string, not a number (should be a number)", () => {
     expect(typeof statsService.addCHDAndOrHSDOnTopOfFlatDamage(1000, 0, 0, 0, 0)).toBe("number");
   });
