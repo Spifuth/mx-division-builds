@@ -8,3 +8,8 @@ docs
 
 # SDD scratch (briefs, reports, diffs) -- keep out of the build context
 .superpowers
+
+__pycache__
+*.pyc
+.pytest_cache
+.venv

@@ -33,3 +33,9 @@ test/*
 
 # ignored as a precaution
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/

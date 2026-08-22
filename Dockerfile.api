@@ -1,0 +1,22 @@
+# API image. Dependencies are baked in rather than mounted, so the container
+# starts deterministically and the host never needs Python.
+FROM python:3.12-slim
+
+WORKDIR /srv
+
+# Non-root, matching the host uid so bind-mounted files stay writable -- same
+# reasoning as Dockerfile.dev.
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g ${GID} api && useradd -u ${UID} -g ${GID} -m -s /bin/sh api
+
+COPY api/requirements.txt api/requirements-dev.txt /srv/
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+USER api
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

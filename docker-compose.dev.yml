@@ -96,5 +96,55 @@ services:
       - --remote-allow-origins=*
       - about:blank
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    container_name: mxdiv-api
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    working_dir: /srv/api
+    volumes:
+      - ./api:/srv/api
+      - ./public/data:/srv/public/data:ro
+      - api_snapshots:/srv/snapshots
+      - api_db:/srv/db
+    environment:
+      TD2_DATA_DIR: /srv/public/data
+      TD2_SNAPSHOT_DIR: /srv/snapshots
+      TD2_DB_PATH: /srv/db/builds.db
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      # Tailnet-only, same guard as the app service: an unset DEV_BIND_IP would
+      # render ":8000:8000" and publish on every interface, so it hard-fails.
+      - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8000:8000"
+
+  api-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    profiles: ["tools"]
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    working_dir: /srv/api
+    volumes:
+      - ./api:/srv/api
+      - ./public/data:/srv/public/data:ro
+    environment:
+      TD2_DATA_DIR: /srv/public/data
+    entrypoint: []
+    command: ["pytest", "-q"]
+
 volumes:
   node_modules:
+  api_snapshots:
+  api_db:
