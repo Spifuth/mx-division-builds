@@ -197,7 +197,41 @@ services:
     entrypoint: []
     command: ["pytest", "-q"]
 
+  # The v0-generated Next.js UI. It lives in a sibling directory rather than
+  # this repo -- it is the owner's frontend and will likely become its own repo
+  # -- but it is wired here so it shares a network with the API it calls.
+  ui:
+    build:
+      context: ../td2-build-page
+      dockerfile: Dockerfile.dev
+      args:
+        UID: ${HOST_UID:-1000}
+        GID: ${HOST_GID:-1000}
+    container_name: mxdiv-ui
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ../td2-build-page:/app
+      - ui_node_modules:/app/node_modules
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Where the real API lives from inside this network. Unused until the
+      # rewrite in next.config.mjs is switched on -- the app's own /app/api/*
+      # mock routes answer by default.
+      TD2_API_ORIGIN: http://api:8000
+    ports:
+      # Tailnet-only, same hard-fail guard as every other service here: an unset
+      # DEV_BIND_IP would render ":3000:3000" and publish on every interface.
+      - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:3000:3000"
+      # Loopback too, so a browser sees a trustworthy origin and will store the
+      # API's Secure session cookie. See the api service for the full reasoning.
+      - "127.0.0.1:3000:3000"
+
 volumes:
   node_modules:
+  ui_node_modules:
   api_snapshots:
   api_db:

@@ -1995,380 +1995,137 @@ git commit -m "feat: Discord-shaped auth with a mock provider that fails closed"
 - Create: `api/app/db.py`, `api/app/routes/builds.py`, `api/tests/test_builds.py`
 - Modify: `api/app/main.py`, `api/app/models.py`
 
+**REWRITTEN 2026-08-23.** The original version of this task was wrong in two
+ways that would have produced a schema the frontend cannot use. Both were found
+by reading the committed frontend rather than by reasoning:
+
+1. It assumed a loadout stores **item ids**. It stores **names**.
+   `lib/use-loadout-lookup.ts:38-65` resolves every slot with `x.name === name`,
+   and `item-picker-dialog.tsx` passes `onSelect(item.name)`. `BuildLoadout`'s
+   twelve `string | null` are display names.
+2. It assumed ownership is the session alone. The frontend sends an
+   **`edit_token`** on every mutation and has no auth code at all — v0 ran out
+   of credits before wiring Discord. So the API honours both: the token always,
+   the session additionally when one is present.
+
+The authoritative shapes are in
+`docs/superpowers/specs/2026-08-23-frontend-contract-types.ts` — `Build`,
+`BuildLoadout`, `ShdPerks`, `SHD_NODES`, `BUILD_SLOT_KEYS`. Read it.
+
 **Interfaces:**
-- Consumes: `current_user` from Task 6.
-- Produces: `init_db(path)`, and async `save_build`, `get_build`, `update_build`, `delete_build`, `list_builds`, `list_user_builds`.
+- Consumes: `current_user(request) -> dict | None` from Task 6.
+- Produces: `init_db(path)`, and async `save_build`, `get_build`, `update_build`,
+  `delete_build`, `list_builds`.
+
+### The contract, taken from the frontend's own mock handlers
+
+| Method | Path | Behaviour |
+|---|---|---|
+| POST | `/api/builds` | **201** `{id, edit_token, url, build}` |
+| GET | `/api/builds/{id}` | the `Build`; increments `views`; **404** `{error}` if absent |
+| PATCH | `/api/builds/{id}` | body must carry `edit_token` (string) — **400** `{"error": "edit_token is required"}` if not; **403** if wrong; **404** if absent; returns the updated `Build` |
+| DELETE | `/api/builds/{id}` | same token rules; returns `{"success": true}` |
+| GET | `/api/builds?limit=` | `{total, limit, offset, results}` of `Build` |
+
+The list endpoint returns the **full envelope**, not the mock's bare
+`{results}`: `components/compare/builds-compare.tsx:46` declares the response as
+`ListResponse<Build>`, so the mock is the thing that disagrees with the
+frontend's own type. Matching the type is safe — SWR only reads `.results`.
+
+Error bodies are `{"error": "..."}`, not FastAPI's default `{"detail": ...}`.
+`lib/fetcher.ts` reads `body.error`; a `detail` key surfaces as
+`Request failed: 400` and hides the reason.
+
+### A Build
+
+```
+id          str    secrets.token_urlsafe(8)
+name        str    "Unnamed Build" when blank
+notes       str
+shdLevel    int
+shdPerks    ShdPerks
+loadout     BuildLoadout   twelve keys, item NAMES or null
+views       int
+createdAt   str    ISO 8601 UTC
+updatedAt   str    ISO 8601 UTC
+```
+
+`ShdPerks` is four nodes — `offense`, `defense`, `handling`, `utility` — each a
+map of four named stats to an integer 0–50. The exact stat keys are in
+`SHD_NODES` in the types file; copy them, do not invent them.
+
+**Sanitise `shdPerks` server-side.** The frontend has `sanitizeShdPerks` which
+clamps to 0–50, rounds, drops unknown node and stat keys, and defaults missing
+ones to 0. The API must do the same and must not trust the client — a browser is
+not the only thing that can POST here. Same for `loadout`: accept only the
+twelve `BUILD_SLOT_KEYS`, coerce anything that is not a string to `null`.
+
+### Ownership
+
+Every build gets an `edit_token` (`secrets.token_urlsafe(16)`), returned **once**
+at creation and never again — not in `GET`, not in the list. Store a hash of it,
+not the token, for the same reason a password is not stored in the clear.
+
+When a session exists, record `author_id` and `author_name` too. A mutation is
+authorised if **either** the token matches **or** the session owns the build.
+That is deliberately two paths: the frontend has no login yet, and the token has
+to keep working after it gains one.
+
+`author_id` is **TEXT**. Discord snowflakes exceed JavaScript's safe-integer
+limit; Heolstor stores them as int in one half and str in the other and needed a
+coercion shim to stop the two disagreeing.
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `api/tests/test_builds.py`:
+Cover, at minimum: the create/load round trip; `views` incrementing; a second
+holder of a wrong token getting 403 on both PATCH and DELETE; a missing token
+getting 400 with `{"error": ...}`; an unknown id getting 404; `shdPerks`
+sanitising a level of 999, a level of -5, an unknown node key and an unknown
+stat key; a `loadout` with a bogus slot key being dropped and a non-string value
+becoming `null`; the list envelope having all four keys; and `edit_token` being
+absent from every read path.
 
-```python
-import pytest
-from fastapi.testclient import TestClient
-
-from app.main import create_app
-
-BUILD = {
-    "name": "Test build",
-    "slots": {"Mask": {"Item Name": "Ninja Bike Messenger Mask"}, "Primary": {"Name": "Police M4"}},
-    "shd": {"offensive": 10, "defensive": 5, "utility": 3},
-    "notes": "",
-}
-
-
-@pytest.fixture
-def client(monkeypatch, tmp_path):
-    monkeypatch.setenv("TD2_AUTH_MODE", "mock")
-    monkeypatch.setenv("TD2_ALLOW_MOCK_AUTH", "true")
-    monkeypatch.setenv("TD2_SESSION_SECRET", "test-secret")
-    monkeypatch.setenv("TD2_DB_PATH", str(tmp_path / "builds.db"))
-    # https, not http: the session cookie is Secure and TestClient drops it
-    # otherwise, which would make every ownership test fail as a 401.
-    with TestClient(create_app(), base_url="https://testserver") as c:
-        yield c
-
-
-def _login(client, name):
-    client.get("/api/auth/login", params={"as": name}, follow_redirects=False)
-
-
-def test_anonymous_cannot_save(client):
-    assert client.post("/api/builds", json=BUILD).status_code == 401
-
-
-def test_save_and_load_roundtrip(client):
-    _login(client, "alice")
-    created = client.post("/api/builds", json=BUILD).json()
-    assert created["id"]
-    loaded = client.get(f"/api/builds/{created['id']}").json()
-    assert loaded["name"] == BUILD["name"]
-    assert loaded["slots"] == BUILD["slots"]
-
-
-def test_loading_increments_views(client):
-    _login(client, "alice")
-    build_id = client.post("/api/builds", json=BUILD).json()["id"]
-    client.get(f"/api/builds/{build_id}")
-    second = client.get(f"/api/builds/{build_id}").json()
-    assert second["views"] >= 2
-
-
-def test_another_user_cannot_edit_or_delete(client):
-    _login(client, "alice")
-    build_id = client.post("/api/builds", json=BUILD).json()["id"]
-    client.post("/api/auth/logout")
-    _login(client, "mallory")
-    assert client.patch(f"/api/builds/{build_id}", json={"name": "stolen"}).status_code == 403
-    assert client.delete(f"/api/builds/{build_id}").status_code == 403
-    assert client.get(f"/api/builds/{build_id}").json()["name"] == BUILD["name"]
-
-
-def test_owner_can_edit_and_delete(client):
-    _login(client, "alice")
-    build_id = client.post("/api/builds", json=BUILD).json()["id"]
-    assert client.patch(f"/api/builds/{build_id}", json={"name": "renamed"}).status_code == 200
-    assert client.get(f"/api/builds/{build_id}").json()["name"] == "renamed"
-    assert client.delete(f"/api/builds/{build_id}").status_code == 204
-    assert client.get(f"/api/builds/{build_id}").status_code == 404
-
-
-def test_mine_lists_only_my_builds(client):
-    _login(client, "alice")
-    client.post("/api/builds", json=BUILD)
-    client.post("/api/auth/logout")
-    _login(client, "bob")
-    client.post("/api/builds", json={**BUILD, "name": "bob's"})
-    mine = client.get("/api/builds/mine").json()["rows"]
-    assert [b["name"] for b in mine] == ["bob's"]
-
-
-def test_unknown_build_is_404(client):
-    assert client.get("/api/builds/nope").status_code == 404
-```
-
-- [ ] **Step 2: Run and watch fail**
+- [ ] **Step 2: Run them and watch them fail**
 
 Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_builds.py -v`
 
-Expected: 404s — the routes do not exist.
+- [ ] **Step 3: Write `api/app/db.py`**
 
-- [ ] **Step 3: Write the database layer**
+SQLite via `aiosqlite`, raw SQL, following `Heolstor/shared/database.py`: WAL,
+`busy_timeout`, an explicit column-list constant so `SELECT` order cannot drift,
+`secrets.token_urlsafe` ids. Schema versioned with `PRAGMA user_version`.
 
-Create `api/app/db.py`:
+Do **not** copy Heolstor's `try: ALTER TABLE / except OperationalError: pass`
+migration idiom — it cannot tell "column already exists" from a real error.
 
-```python
-"""SQLite for saved builds. Raw SQL, following Heolstor/shared/database.py.
+`loadout` and `shdPerks` are JSON TEXT columns. The DB path comes from
+`settings.db_path` and lives in a Docker volume, already created owned by the
+runtime user in `Dockerfile.api`.
 
-Two departures from that file, both deliberate:
+- [ ] **Step 4: Write `api/app/routes/builds.py`**
 
-author_id is TEXT. Discord snowflakes exceed JavaScript's safe-integer limit, so
-Heolstor's web half stores them as strings while its bot half stores ints, and it
-needed a coercion shim to stop the two disagreeing. Text from the start removes
-the bug class instead of managing it.
+**Route order matters:** any literal path segment must be declared before
+`/{build_id}`, or FastAPI matches it as an id.
 
-Schema changes go through PRAGMA user_version, not `try: ALTER TABLE / except
-OperationalError: pass`. That idiom cannot tell "column already exists" from a
-real error, and a new project has no reason to inherit it.
-"""
+- [ ] **Step 5: Wire it into `lifespan` and `create_app()`**
 
-from __future__ import annotations
-
-import json
-import secrets
-import sqlite3
-from datetime import datetime, timezone
-from pathlib import Path
-
-import aiosqlite
-
-SCHEMA_VERSION = 1
-
-COLUMNS = [
-    "id", "name", "author_id", "author_name", "slots", "shd",
-    "notes", "created_at", "updated_at", "views",
-]
-COLUMNS_SQL = ", ".join(COLUMNS)
-
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS builds (
-    id          TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    author_id   TEXT NOT NULL,
-    author_name TEXT NOT NULL,
-    slots       TEXT NOT NULL,
-    shd         TEXT NOT NULL DEFAULT '{}',
-    notes       TEXT NOT NULL DEFAULT '',
-    created_at  TEXT NOT NULL,
-    updated_at  TEXT,
-    views       INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS idx_builds_author ON builds(author_id);
-CREATE INDEX IF NOT EXISTS idx_builds_created ON builds(created_at DESC);
-"""
-
-_db_path: Path | None = None
-
-
-def set_db_path(path: Path) -> None:
-    global _db_path
-    _db_path = Path(path)
-
-
-def get_db_path() -> Path:
-    if _db_path is None:
-        raise RuntimeError("set_db_path() must be called before any query")
-    return _db_path
-
-
-def generate_id() -> str:
-    return secrets.token_urlsafe(8)
-
-
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def init_db(path: Path) -> None:
-    set_db_path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    try:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout=5000")
-        conn.executescript(SCHEMA)
-        conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def _row_to_build(row) -> dict:
-    build = dict(zip(COLUMNS, row))
-    build["slots"] = json.loads(build["slots"])
-    build["shd"] = json.loads(build["shd"])
-    return build
-
-
-async def save_build(user: dict, payload: dict) -> str:
-    build_id = generate_id()
-    async with aiosqlite.connect(get_db_path()) as db:
-        await db.execute(
-            f"INSERT INTO builds ({COLUMNS_SQL}) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (
-                build_id, payload["name"], user["id"], user["name"],
-                json.dumps(payload.get("slots", {})), json.dumps(payload.get("shd", {})),
-                payload.get("notes", ""), _now(), None, 0,
-            ),
-        )
-        await db.commit()
-    return build_id
-
-
-async def get_build(build_id: str, count_view: bool = False) -> dict | None:
-    async with aiosqlite.connect(get_db_path()) as db:
-        if count_view:
-            await db.execute("UPDATE builds SET views = views + 1 WHERE id = ?", (build_id,))
-            await db.commit()
-        async with db.execute(
-            f"SELECT {COLUMNS_SQL} FROM builds WHERE id = ?", (build_id,)
-        ) as cursor:
-            row = await cursor.fetchone()
-    return _row_to_build(row) if row else None
-
-
-async def update_build(build_id: str, payload: dict) -> None:
-    async with aiosqlite.connect(get_db_path()) as db:
-        await db.execute(
-            "UPDATE builds SET name = COALESCE(?, name), slots = COALESCE(?, slots), "
-            "shd = COALESCE(?, shd), notes = COALESCE(?, notes), updated_at = ? WHERE id = ?",
-            (
-                payload.get("name"),
-                json.dumps(payload["slots"]) if "slots" in payload else None,
-                json.dumps(payload["shd"]) if "shd" in payload else None,
-                payload.get("notes"),
-                _now(),
-                build_id,
-            ),
-        )
-        await db.commit()
-
-
-async def delete_build(build_id: str) -> None:
-    async with aiosqlite.connect(get_db_path()) as db:
-        await db.execute("DELETE FROM builds WHERE id = ?", (build_id,))
-        await db.commit()
-
-
-async def list_builds(limit: int = 50) -> list[dict]:
-    async with aiosqlite.connect(get_db_path()) as db:
-        async with db.execute(
-            f"SELECT {COLUMNS_SQL} FROM builds ORDER BY created_at DESC LIMIT ?", (limit,)
-        ) as cursor:
-            rows = await cursor.fetchall()
-    return [_row_to_build(r) for r in rows]
-
-
-async def list_user_builds(author_id: str, limit: int = 100) -> list[dict]:
-    async with aiosqlite.connect(get_db_path()) as db:
-        async with db.execute(
-            f"SELECT {COLUMNS_SQL} FROM builds WHERE author_id = ? "
-            "ORDER BY created_at DESC LIMIT ?",
-            (author_id, limit),
-        ) as cursor:
-            rows = await cursor.fetchall()
-    return [_row_to_build(r) for r in rows]
-```
-
-- [ ] **Step 4: Write the routes**
-
-Create `api/app/routes/builds.py`:
-
-```python
-from __future__ import annotations
-
-from fastapi import APIRouter, HTTPException, Query, Request, Response
-from pydantic import BaseModel, Field
-
-from app import db
-from app.auth import current_user
-
-router = APIRouter(prefix="/api/builds")
-
-
-class BuildIn(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
-    slots: dict = Field(default_factory=dict)
-    shd: dict = Field(default_factory=dict)
-    notes: str = ""
-
-
-class BuildPatch(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=120)
-    slots: dict | None = None
-    shd: dict | None = None
-    notes: str | None = None
-
-
-def _require_user(request: Request) -> dict:
-    user = current_user(request)
-    if user is None:
-        raise HTTPException(status_code=401, detail="sign in to save builds")
-    return user
-
-
-async def _owned_or_403(build_id: str, request: Request) -> dict:
-    build = await db.get_build(build_id)
-    if build is None:
-        raise HTTPException(status_code=404, detail="no such build")
-    user = _require_user(request)
-    if build["author_id"] != user["id"]:
-        raise HTTPException(status_code=403, detail="not your build")
-    return build
-
-
-@router.post("")
-async def create(request: Request, payload: BuildIn) -> dict:
-    user = _require_user(request)
-    build_id = await db.save_build(user, payload.model_dump())
-    return {"id": build_id, "url": f"/build/{build_id}"}
-
-
-@router.get("/mine")
-async def mine(request: Request, limit: int = Query(default=100, ge=1, le=500)) -> dict:
-    user = _require_user(request)
-    rows = await db.list_user_builds(user["id"], limit)
-    return {"count": len(rows), "rows": rows}
-
-
-@router.get("")
-async def recent(limit: int = Query(default=50, ge=1, le=200)) -> dict:
-    rows = await db.list_builds(limit)
-    return {"count": len(rows), "rows": rows}
-
-
-@router.get("/{build_id}")
-async def load(build_id: str) -> dict:
-    build = await db.get_build(build_id, count_view=True)
-    if build is None:
-        raise HTTPException(status_code=404, detail="no such build")
-    return build
-
-
-@router.patch("/{build_id}")
-async def patch(build_id: str, payload: BuildPatch, request: Request) -> dict:
-    await _owned_or_403(build_id, request)
-    await db.update_build(build_id, payload.model_dump(exclude_none=True))
-    return await db.get_build(build_id)
-
-
-@router.delete("/{build_id}", status_code=204)
-async def remove(build_id: str, request: Request) -> Response:
-    await _owned_or_403(build_id, request)
-    await db.delete_build(build_id)
-    return Response(status_code=204)
-```
-
-**Route order matters:** `/mine` is declared before `/{build_id}`, or FastAPI matches `mine` as a build id and `/api/builds/mine` returns 404 forever.
-
-- [ ] **Step 5: Wire it**
-
-In `lifespan`: `init_db(settings.db_path)`. Add `app.include_router(builds_routes.router)` and the imports.
-
-- [ ] **Step 6: Run the tests**
+- [ ] **Step 6: Run the suite**
 
 Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
 
-Expected: all pass.
+- [ ] **Step 7: Prove it against the real frontend**
 
-- [ ] **Step 7: Commit**
+Remove `/api/builds` from the `beforeFiles` exclusion list in
+`/srv/project/Web/td2-build-page/next.config.mjs` so the UI hits the real API,
+then create, load, edit and delete a build through it. Paste the results. Put
+the exclusion back only if something is broken — the point is that it works.
+
+- [ ] **Step 8: Commit**
 
 ```bash
 git add api/
-git commit -m "feat: saved builds in SQLite, owned by the Discord session"
+git commit -m "feat: saved builds in SQLite, owned by a token and a session"
 ```
-
----
 
 ## Task 8: Compute stub, HTTPS on the tailnet, documentation
 
