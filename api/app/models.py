@@ -62,3 +62,60 @@ class ListResponse(BaseModel):
     limit: int
     offset: int
     results: list[dict[str, Any]]
+
+
+class Build(BaseModel):
+    """`Build` from types.ts, and the one shape in this file worth declaring
+    twice.
+
+    The other entity shapes are built in normalise.py from CSV rows and are
+    asserted field by field in tests/test_contract.py, so a pydantic class for
+    each of them would only be a second place for the contract to drift. This
+    one is different in two ways: the API *produces* it rather than adapting
+    it, so there is no CSV to check it against -- and it is the record that a
+    secret is stored beside.
+
+    FastAPI serialises a response through this model and drops anything not
+    declared on it, which makes `edit_token`/`edit_token_hash` unable to reach
+    a client even if some future SELECT starts fetching the column. db.py's
+    BUILD_PUBLIC_COLUMNS is the first guard; this is the independent second.
+    """
+
+    id: str
+    name: str
+    notes: str
+    shdLevel: int
+    # Node key -> stat key -> level, 0-50. Deliberately not a nested model per
+    # node: SHD_NODES in db.py is the single definition of which keys exist,
+    # and repeating it as pydantic classes would let the two disagree.
+    shdPerks: dict[str, dict[str, int]]
+    loadout: dict[str, str | None]
+    views: int
+    createdAt: str
+    updatedAt: str
+
+
+class BuildCreated(BaseModel):
+    """The 201 body. `edit_token` appears here and on no other response in the
+    API -- it is minted, returned once, and only its hash is kept."""
+
+    id: str
+    edit_token: str
+    url: str
+    build: Build
+
+
+class BuildList(ListResponse):
+    """ListResponse<Build>.
+
+    The frontend's own mock handler returns a bare `{results}`, but
+    builds-compare.tsx declares the response as `ListResponse<Build>`, which
+    reads all four fields -- so the mock is the thing that disagrees with the
+    frontend's type. Matching the type is safe: SWR only reads `.results`.
+
+    `results` narrows the base class's `list[dict[str, Any]]` to `list[Build]`
+    on purpose. A bare dict list would pass any key straight through, including
+    one named edit_token.
+    """
+
+    results: list[Build]

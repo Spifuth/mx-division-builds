@@ -26,10 +26,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth import build_provider
 from app.config import get_settings
+from app.db import init_db
 from app.loader import DatasetError, load_dataset
 from app.refresh import describe_error
 from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
+from app.routes import builds as builds_routes
 from app.routes import data as data_routes
 from app.snapshots import SnapshotStore
 from app.sources.buildstation import BuildstationSource
@@ -41,6 +43,13 @@ log = logging.getLogger("td2-api")
 async def lifespan(app: FastAPI):
     settings = app.state.settings
     app.state.degraded = None
+
+    # First, and before anything is serving. init_db creates the file, sets WAL
+    # and runs any migration, so an unwritable volume fails the boot loudly
+    # instead of surfacing as a 500 on the first person who saves a build --
+    # which is the shape the snapshot directory's ownership bug took.
+    init_db(settings.db_path)
+
     app.state.dataset = load_dataset(settings.data_dir)
 
     app.state.snapshots = SnapshotStore(settings.snapshot_dir)
@@ -131,13 +140,16 @@ def create_app() -> FastAPI:
     app.include_router(data_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(auth_routes.router)
+    app.include_router(builds_routes.router)
 
     @app.get("/api/health")
     def health() -> dict:
         """Liveness only. Deliberately independent of upstream, the dataset and
         the database: the process is healthy while it can answer, and a health
         check that goes red when a third party does is useless for deciding
-        whether to restart."""
+        whether to restart. The database is the one dependency this service
+        cannot serve without -- which is exactly why it is checked at boot,
+        where a failure stops the container, rather than here."""
         return {"ok": True}
 
     return app

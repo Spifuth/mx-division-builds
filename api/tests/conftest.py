@@ -34,3 +34,23 @@ def isolated_snapshot_dir(tmp_path_factory) -> Path:
     path = tmp_path_factory.mktemp("snapshots")
     os.environ["TD2_SNAPSHOT_DIR"] = str(path)
     return path
+
+
+@pytest.fixture(autouse=True, scope="session")
+def isolated_db_path(tmp_path_factory) -> Path:
+    """A builds database that belongs to this run and no other.
+
+    Same reasoning as isolated_snapshot_dir above, and the same hazard: as of
+    Task 7 every create_app() calls init_db(settings.db_path) in its lifespan,
+    and ~250 tests call create_app(). Without this they all share whatever
+    fixed path the environment names -- /srv/db/builds.db, which inside the
+    `api` service is the REAL volume. A test run would then write builds into
+    production data and read one run's rows in the next.
+
+    Autouse and session-scoped so it is set before the first create_app();
+    tests/test_builds.py narrows it further to one file per test, because it
+    counts rows.
+    """
+    path = tmp_path_factory.mktemp("db") / "builds.db"
+    os.environ["TD2_DB_PATH"] = str(path)
+    return path
