@@ -34,6 +34,28 @@ REQUIRED_COLUMNS: dict[str, list[str]] = {
         "Expertise Bonus", "Mod 1", "Mod 2", "Mod 3", "Desc",
     ],
     "brands": ["Brand", "Type", "Icon"],
+
+    # Added after the Task 3b review. Everything above guarded the tables the
+    # ENDPOINTS read; normalise.py then grew ~30 more column dependencies across
+    # the tables below and none were validated at boot. Refresh only requires a
+    # 50% header overlap, so an upstream rename of `val` to `Val` would promote
+    # a snapshot in which all 192 brand set bonuses silently degrade to bare
+    # labels -- 200 OK, nothing in the logs, no test red, because the bonus-text
+    # assertions run against the seed. That is the same shape as the brands join
+    # that already shipped broken once in this project.
+    "brandsetBonuses": ["Brand", "stat", "val", "stat1", "val1", "Talent"],
+    "skillStats": [
+        "Skill Variant Name", "Stat", "Val",
+        "Tier 0", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6",
+    ],
+    "gearTalents": ["Quality", "Slot", "Talent", "Desc"],
+    "weaponTalents": ["Quality", "Name", "Desc"],
+    "gearAttributes": ["Quality", "Type", "Stat", "Max"],
+    "weaponAttributes": ["Quality", "Type", "Stat", "Max"],
+    "gearMods": ["Quality", "Type", "Stat", "Max"],
+    "weaponMods": ["Slot", "Type", "Name", "valPos", "pos", "valNeg", "neg"],
+    "skillMods": ["Skill Mod ID", "Skill Type", "Skill Mod Slot", "Mod Attribute"],
+    "specialization": ["Name", "Stat", "Val"],
 }
 
 

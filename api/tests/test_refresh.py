@@ -160,27 +160,49 @@ def test_a_header_only_table_is_rejected(seed_dir):
 
 
 def test_another_tables_body_is_rejected_where_there_are_no_required_columns(seed_dir):
-    """13 of the 20 tables have no REQUIRED_COLUMNS entry, so for them the
-    validator reduced to "present, not markup, non-empty, not collapsed" --
-    nothing that says the body is *this table*.
+    """The header check is the ONLY thing standing behind a table with no
+    column contract, so it needs a case where nothing else can fire.
 
-    gearMods is the measured case: 16 rows, so a MIN_ROW_RATIO floor of 8.
-    Upstream answering it with a different collection's CSV -- one path rename
-    away -- is not markup, parses fine, and 9 rows clears the floor. Only the
-    header tells the two apart, and skillMods shares exactly one column name
-    with gearMods out of four.
+    After the Task 3b review, 19 of 20 tables gained a REQUIRED_COLUMNS entry --
+    normalise.py had grown ~30 column dependencies that nothing validated at
+    boot. That is a strictly better guard, and it also means this test's
+    original subject (gearMods) is now caught by the column check instead, which
+    would have quietly turned this into a test of a different branch.
+
+    statsMapping is the one table left without a contract. Feeding it brands'
+    body is not markup, parses fine, and clears the row floor; only the header
+    says it is the wrong table.
     """
     live = load_dataset(seed_dir)
     tables = _good(seed_dir)
-    tables["gearMods"] = _truncate(tables["skillMods"], 9)
-    assert _rows(tables["gearMods"]) == 9 > live.counts["gearMods"] * 0.5
+    floor = live.counts["statsMapping"] * 0.5
+    tables["statsMapping"] = _truncate(tables["brands"], int(floor) + 2)
+    assert _rows(tables["statsMapping"]) > floor, "the row-count check must not be what fires"
 
     reasons = validate_candidate(
         tables, previous_counts=live.counts, previous_headers=live.headers
     )
 
     assert len(reasons) == 1
-    assert "gearMods" in reasons[0] and "header" in reasons[0]
+    assert "statsMapping" in reasons[0] and "header" in reasons[0]
+
+
+def test_a_table_that_now_has_a_column_contract_is_caught_by_it(seed_dir):
+    """The other half of the same change: gearMods used to reach the header
+    check because it had no contract. It has one now, so the column check must
+    be what fires -- and this test exists so that stays true rather than
+    silently reverting to the weaker guard."""
+    live = load_dataset(seed_dir)
+    tables = _good(seed_dir)
+    tables["gearMods"] = _truncate(tables["skillMods"], 9)
+
+    reasons = validate_candidate(
+        tables, previous_counts=live.counts, previous_headers=live.headers
+    )
+
+    assert len(reasons) == 1
+    assert "gearMods" in reasons[0]
+    assert "lost columns" in reasons[0], f"expected the column check to fire, got: {reasons[0]}"
 
 
 def test_a_json_error_document_is_rejected(seed_dir):

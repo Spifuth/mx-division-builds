@@ -443,10 +443,34 @@ def test_every_field_declared_unsupported_is_actually_empty(client):
     }
     assert set(unsupported) == set(samples), "every entity gets an entry, even an empty one"
 
+    # `image` and `brand` are optional in types.ts, so a normaliser is allowed to
+    # omit them entirely. Every other unsupported field is REQUIRED there, which
+    # means it must be present and empty -- not absent.
+    OPTIONAL_IN_TYPES = {"image", "brand"}
+
     for entity, path in samples.items():
         results = client.get(path, params={"limit": 5000}).json()["results"]
+        assert results, f"{entity}: nothing to check"
         for field in unsupported[entity]:
-            values = {repr(r.get(field)) for r in results}
-            assert values <= {"0", "''", "[]", "None"}, (
+            if field in OPTIONAL_IN_TYPES:
+                values = {repr(r.get(field)) for r in results}
+                assert values <= {"0", "''", "[]", "None"}, (
+                    f"{entity}.{field} is declared unsupported but carries {sorted(values)[:3]}"
+                )
+                continue
+
+            # Presence first. Without this the assertion below accepts "None"
+            # from .get() on a field that does not exist at all, so a typo in
+            # UNSUPPORTED_FIELDS -- "armour" for "armor" -- passes here while
+            # /api/meta greys out nothing and the UI draws a confident zero as
+            # fact. This is the one check protecting the whole unsupported-field
+            # mechanism, and it was the one check that could not fail.
+            missing = [r for r in results if field not in r]
+            assert not missing, (
+                f"{entity}.{field} is declared unsupported but is not a field on "
+                f"{len(missing)} of {len(results)} rows -- is it spelled right?"
+            )
+            values = {repr(r[field]) for r in results}
+            assert values <= {"0", "''", "[]"}, (
                 f"{entity}.{field} is declared unsupported but carries {sorted(values)[:3]}"
             )
