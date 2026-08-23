@@ -659,3 +659,24 @@ def test_the_list_pages(client):
 def test_an_empty_list_is_still_the_envelope(client):
     body = client.get("/api/builds").json()
     assert body == {"total": 0, "limit": body["limit"], "offset": 0, "results": []}
+
+
+def test_a_peek_does_not_count_as_a_view(client):
+    """The frontend renders the build page twice per request -- once for
+    generateMetadata, once for the page -- so without a no-count read every
+    shared link records two views per visitor and the only number this feature
+    reports is quietly double. Its mock kept a separate `peekBuild` for this.
+    """
+    created = client.post("/api/builds", json={"name": "peek", "loadout": {}}).json()
+    build_id = created["id"]
+
+    client.get(f"/api/builds/{build_id}")
+    counted = client.get(f"/api/builds/{build_id}").json()["views"]
+
+    peeked = client.get(
+        f"/api/builds/{build_id}", headers={"X-No-View-Count": "1"}
+    ).json()
+    assert peeked["views"] == counted, "a peek must not move the counter"
+
+    after = client.get(f"/api/builds/{build_id}").json()["views"]
+    assert after == counted + 1, "a real read must still count"

@@ -110,8 +110,13 @@ async def create_build(request: Request):
 
 @router.get("/{build_id}", response_model=Build)
 async def read_build(request: Request, build_id: str):
+    # A reader that is not a visit sends X-No-View-Count. The frontend's build
+    # page renders twice per request -- generateMetadata and the page itself --
+    # and its mock kept a separate `peekBuild` so the title lookup would not
+    # count. Without this every shared link records two views per visitor.
+    count_view = "x-no-view-count" not in request.headers
     try:
-        return await db.get_build(_db_path(request), build_id)
+        return await db.get_build(_db_path(request), build_id, count_view=count_view)
     except db.BuildNotFound:
         return _error(404, "Build not found")
 

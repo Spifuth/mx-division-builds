@@ -454,20 +454,32 @@ async def save_build(path: Path, payload: Mapping, *, user: Mapping | None = Non
     return _row_to_build(inserted), token
 
 
-async def get_build(path: Path, build_id: str) -> dict:
-    """Read a build and count the read.
+async def get_build(path: Path, build_id: str, *, count_view: bool = True) -> dict:
+    """Read a build, counting the read unless asked not to.
 
     The increment and the read are one statement so two concurrent readers
     cannot both return the same number; the frontend's mock does the same
     thing, and the count is the only signal a shared build has.
+
+    count_view=False exists for readers that are not visits. The frontend's
+    build page renders twice per request -- once for generateMetadata, once for
+    the page -- and its mock had a separate `peekBuild` for exactly this. Without
+    it every shared link would count two views per visitor, which quietly makes
+    the one number this feature reports wrong.
     """
     async with _connect(path) as conn:
-        cursor = await conn.execute(
-            f"UPDATE builds SET views = views + 1 WHERE id = ? RETURNING {_PUBLIC_SQL}",
-            (build_id,),
-        )
-        row = await cursor.fetchone()
-        await conn.commit()
+        if count_view:
+            cursor = await conn.execute(
+                f"UPDATE builds SET views = views + 1 WHERE id = ? RETURNING {_PUBLIC_SQL}",
+                (build_id,),
+            )
+            row = await cursor.fetchone()
+            await conn.commit()
+        else:
+            cursor = await conn.execute(
+                f"SELECT {_PUBLIC_SQL} FROM builds WHERE id = ?", (build_id,)
+            )
+            row = await cursor.fetchone()
     if row is None:
         raise BuildNotFound(build_id)
     return _row_to_build(row)
