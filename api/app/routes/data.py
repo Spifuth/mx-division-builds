@@ -49,8 +49,21 @@ def _window(rows: list[dict], q: str | None, limit: int, offset: int) -> ListRes
     return ListResponse(total=total, limit=limit, offset=offset, results=window)
 
 
+# `id` is synthetic and prefixed by kind and slot -- "mask-coyote-s-mask",
+# "weapon-the-bighorn". Searching it means typing "mask" into the gear box
+# matches all 76 masks and "weapon" matches all 323 weapons, with nothing to
+# say the filter did nothing. It is also the one field the caller never sees.
+# `slot` joins it for the same reason: on /api/gear/mask every row's slot IS
+# "mask", so the term the user is most likely to type matches the whole table.
+# Losing "search by slot name" on /api/gear costs nothing -- the UI picks a slot
+# with tabs, not with the search box.
+_UNSEARCHABLE = frozenset({"id", "slot"})
+
+
 def _matches(row: dict, needle: str) -> bool:
-    for value in row.values():
+    for key, value in row.items():
+        if key in _UNSEARCHABLE:
+            continue
         if isinstance(value, str):
             if needle in value.casefold():
                 return True

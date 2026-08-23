@@ -518,8 +518,15 @@ def test_a_blank_name_becomes_unnamed_build(client):
 
 def test_absurd_text_is_bounded_before_it_reaches_the_disk(client):
     """/api/builds is anonymous-writable by anyone who can reach the service.
-    An unbounded TEXT column behind that is a disk-filling primitive."""
-    created = _create(client, name="A" * 10_000, notes="B" * 500_000,
+    An unbounded TEXT column behind that is a disk-filling primitive.
+
+    The payload stays under MAX_BODY_BYTES on purpose. It used to send 500 KB of
+    notes, which the body cap added later refuses outright -- so this would have
+    passed for the wrong reason, proving the body cap rather than the per-field
+    caps it exists to prove. The two guards are pinned separately:
+    test_an_oversized_body_is_refused_before_it_is_buffered covers the other side.
+    """
+    created = _create(client, name="A" * 10_000, notes="B" * 100_000,
                       loadout=_loadout(Primary="C" * 10_000))
     build = created["build"]
     assert len(build["name"]) < 1_000
@@ -680,3 +687,40 @@ def test_a_peek_does_not_count_as_a_view(client):
 
     after = client.get(f"/api/builds/{build_id}").json()["views"]
     assert after == counted + 1, "a real read must still count"
+
+
+def test_a_giant_integer_literal_is_a_400_not_a_500(client):
+    """CPython caps integer-string conversion at 4300 digits and raises
+    ValueError -- not JSONDecodeError. The narrow except tuple let it through as
+    an unauthenticated 500 written by Starlette's error middleware, which is
+    also the one response shape in the API with no X-Auth-Mode header.
+    """
+    body = '{"name": "x", "shdLevel": ' + "9" * 5000 + "}"
+    response = client.post(
+        "/api/builds", content=body, headers={"Content-Type": "application/json"}
+    )
+    assert response.status_code < 500, f"got {response.status_code}"
+
+
+def test_a_deeply_nested_body_is_a_400_not_a_500(client):
+    """Same class, different exception: json.loads raises RecursionError, which
+    the narrow tuple also missed."""
+    body = "[" * 200_000 + "]" * 200_000
+    response = client.post(
+        "/api/builds", content=body, headers={"Content-Type": "application/json"}
+    )
+    assert response.status_code < 500, f"got {response.status_code}"
+
+
+def test_an_oversized_body_is_refused_before_it_is_buffered(client):
+    """Nothing upstream caps a request body, so without this an unauthenticated
+    POST can exhaust the worker's memory and take every other endpoint with it.
+    """
+    from app.routes.builds import MAX_BODY_BYTES
+
+    body = '{"name": "' + "a" * (MAX_BODY_BYTES + 10_000) + '"}'
+    response = client.post(
+        "/api/builds", content=body, headers={"Content-Type": "application/json"}
+    )
+    assert response.status_code < 500
+    assert response.json().get("error")

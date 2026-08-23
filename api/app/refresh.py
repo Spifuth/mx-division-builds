@@ -279,6 +279,12 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
         # become LIVE and take the next boot down with it.
         dataset = load_dataset(candidate)
         store.promote(candidate)
+        # Bounded here, not just bounded in principle. prune() shipped with a
+        # test and no caller, so the store grew on every refresh anyway --
+        # six directories from six development refreshes before this was spotted.
+        pruned = store.prune()
+        if pruned:
+            log.info("pruned %d old snapshot(s)", len(pruned))
     except PROGRAMMING_ERRORS:
         raise
     except Exception as exc:  # noqa: BLE001 - disk, permissions, a partial write
@@ -296,6 +302,11 @@ async def run_refresh(app, force: bool = False) -> RefreshResult:
         )
 
     app.state.dataset = dataset
+    # A successful promotion means the degraded banner is no longer true. It was
+    # set at boot and never cleared, so /api/meta kept reporting "serving the
+    # seed dataset instead" after a refresh had already fixed it -- the one
+    # operator-visible signal that the data is not what it claims, lying.
+    app.state.degraded = None
     log.info("promoted snapshot %s (version %s)", candidate.name, version)
     return finish(
         RefreshResult(changed=True, version=version, reasons=[], snapshot=candidate.name)

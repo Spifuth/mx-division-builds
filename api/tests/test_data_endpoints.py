@@ -226,3 +226,22 @@ def test_the_raw_csv_quality_no_longer_matches_a_normalised_filter(client):
     "Standard" and "High End" would work and no assertion above would notice.
     """
     assert client.get("/api/weapons", params={"quality": "High End"}).json()["total"] == 0
+
+
+def test_search_does_not_match_the_synthetic_id(client):
+    """Typing "mask" into the gear search must not return every mask.
+
+    ids are built as kind-plus-slug, so searching them made the prefix match the
+    whole table: /api/gear/mask?q=mask returned 76 of 76, /api/weapons?q=weapon
+    323 of 323, with nothing to indicate the filter had done nothing. id is also
+    the one field the user never sees.
+    """
+    everything = client.get("/api/gear/mask").json()["total"]
+    by_prefix = client.get("/api/gear/mask", params={"q": "mask"}).json()
+
+    assert by_prefix["total"] < everything, "a structural field still matches every row"
+    assert by_prefix["total"] > 0, "and it must still find the masks actually named 'mask'"
+    assert all("mask" in r["name"].casefold() for r in by_prefix["results"])
+
+    weapons = client.get("/api/weapons").json()["total"]
+    assert client.get("/api/weapons", params={"q": "weapon"}).json()["total"] < weapons

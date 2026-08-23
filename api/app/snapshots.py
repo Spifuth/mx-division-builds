@@ -90,5 +90,17 @@ class SnapshotStore:
             shutil.rmtree(path)
         return surplus
 
+    @staticmethod
+    def _order(path: Path) -> tuple[str, int]:
+        """Sort key: date, then the numeric collision suffix.
+
+        Plain lexicographic sorting puts "2026-08-22.10" before "2026-08-22.2",
+        so prune()'s "oldest first" would invert at the eleventh snapshot of a
+        day and delete the newest instead.
+        """
+        name = path.name
+        stem, _, suffix = name.partition(".")
+        return (stem, int(suffix) if suffix.isdigit() else 1)
+
     def list(self) -> list[Path]:
-        return sorted(p for p in self.root.iterdir() if p.is_dir())
+        return sorted((p for p in self.root.iterdir() if p.is_dir()), key=self._order)

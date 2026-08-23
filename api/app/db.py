@@ -141,6 +141,11 @@ class SchemaTooNew(RuntimeError):
     """
 
 
+class BuildStoreUnavailable(RuntimeError):
+    """The database could not be written -- disk full, or locked past the
+    busy_timeout. Distinct from a caller error so the route can answer 503."""
+
+
 class BuildNotFound(LookupError):
     """No build with that id. A 404, never a 403 -- see the route."""
 
@@ -440,6 +445,13 @@ async def save_build(path: Path, payload: Mapping, *, user: Mapping | None = Non
                     row,
                 )
                 inserted = await cursor.fetchone()
+            except sqlite3.OperationalError as exc:
+                # Disk full, or a lock held past busy_timeout. Left unhandled
+                # this surfaces as {"detail": "Internal Server Error"} -- the
+                # one response shape this module's docstring says must never
+                # reach lib/fetcher.ts, which reads .error and would show the
+                # user "Request failed: 500" with the reason hidden.
+                raise BuildStoreUnavailable(str(exc)) from exc
             except sqlite3.IntegrityError:
                 # 64 bits of id against a table this size makes a collision
                 # implausible rather than impossible, and the cost of being

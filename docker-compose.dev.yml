@@ -208,6 +208,10 @@ services:
         UID: ${HOST_UID:-1000}
         GID: ${HOST_GID:-1000}
     container_name: mxdiv-ui
+    # Opt-in. It builds from ../td2-build-page, which is NOT part of this
+    # repository, so without a profile a bare `./scripts/dev.sh up` on a fresh
+    # clone of this public fork fails at build time on a missing directory.
+    profiles: ["ui"]
     init: true
     security_opt:
       - no-new-privileges:true

@@ -30,12 +30,16 @@ from __future__ import annotations
 
 import json
 
+import logging
+
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 
 from app import db
 from app.auth import current_user
 from app.models import Build, BuildCreated, BuildList
+
+log = logging.getLogger("td2-api.builds")
 
 router = APIRouter(prefix="/api/builds")
 
@@ -55,6 +59,29 @@ def _error(status: int, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error": message})
 
 
+# Nothing upstream caps a request body: uvicorn does not, no middleware does,
+# and `tailscale serve` does not. `request.body()` buffers the whole thing and
+# `json.loads` allocates again, so an unauthenticated POST of a multi-gigabyte
+# body OOM-kills the single worker -- taking the reference-data endpoints down
+# with it. The per-field caps in db.py bound what is STORED, which is after the
+# body is already resident.
+#
+# 256 KiB is far above any real build: the largest legitimate payload is twelve
+# item names, a name, notes and the SHD grid.
+MAX_BODY_BYTES = 256 * 1024
+
+
+def _store_error(exc: "db.BuildStoreUnavailable"):
+    """503 in this API's own error shape.
+
+    Left to propagate, a disk-full or lock-timeout writes Starlette's
+    {"detail": "Internal Server Error"} -- the one shape lib/fetcher.ts cannot
+    read, so the user sees "Request failed: 500" with the reason hidden.
+    """
+    log.warning("build store unavailable: %s", exc)
+    return _error(503, "Build storage is temporarily unavailable")
+
+
 async def _json_object(request: Request) -> dict | None:
     """The request body as a dict, or None for anything else.
 
@@ -62,9 +89,24 @@ async def _json_object(request: Request) -> dict | None:
     here would be a 500 written by Starlette's error middleware -- a stack
     trace in the logs for someone typing curl badly.
     """
+    body = b""
+    async for chunk in request.stream():
+        body += chunk
+        # Refuse mid-stream rather than after buffering it all, or the cap does
+        # not protect the thing it exists to protect.
+        if len(body) > MAX_BODY_BYTES:
+            return None
+
     try:
-        parsed = json.loads(await request.body())
-    except (json.JSONDecodeError, UnicodeDecodeError):
+        parsed = json.loads(body)
+    # Deliberately broad. The narrow tuple that was here caught the two obvious
+    # cases and let two others through as unauthenticated 500s, both reachable
+    # with a plain curl: an integer literal over CPython's 4300-digit cap raises
+    # ValueError (not JSONDecodeError), and a deeply nested array raises
+    # RecursionError, which is not even an Exception subclass's usual haunt.
+    # Every parse failure means the same thing to the caller -- "that was not a
+    # JSON object" -- so they get the same answer.
+    except (ValueError, UnicodeDecodeError, RecursionError):
         return None
     return parsed if isinstance(parsed, dict) else None
 
@@ -95,7 +137,12 @@ async def create_build(request: Request):
     # Nothing from `body` is trusted or even read here: db.save_build cleans
     # every field it stores and ignores every field it does not know, so id,
     # views, createdAt and author_id cannot be chosen by the caller.
-    build, token = await db.save_build(_db_path(request), body, user=current_user(request))
+    try:
+        build, token = await db.save_build(
+            _db_path(request), body, user=current_user(request)
+        )
+    except db.BuildStoreUnavailable as exc:
+        return _store_error(exc)
     return BuildCreated(
         id=build["id"],
         edit_token=token,
