@@ -595,13 +595,13 @@ def test_meta_surfaces_the_last_refresh(tmp_path, seed_dir, monkeypatch):
     monkeypatch.setenv("TD2_SNAPSHOT_DIR", str(tmp_path))
     app = create_app()
     with TestClient(app) as client:
-        assert client.get("/api/meta").json()["last_refresh"] is None
+        assert client.get("/api/meta").json()["lastRefresh"] is None
 
         app.state.source = _FetchesTables(_good(seed_dir), version=SEED_VERSION)
         client.post("/api/admin/refresh?force=true")
         body = client.get("/api/meta").json()
 
-    assert body["last_refresh"] == {"changed": True, "version": SEED_VERSION, "reasons": []}
+    assert body["lastRefresh"] == {"changed": True, "version": SEED_VERSION, "reasons": []}
 
 
 # --- a bad promoted snapshot must not take the service down ----------------
@@ -629,8 +629,8 @@ def test_a_broken_promoted_snapshot_falls_back_to_the_seed(tmp_path, seed_dir, m
         assert client.get("/api/health").json() == {"ok": True}
         assert client.get("/api/weapons").json()["total"] > 100
 
-    assert meta["version"] == SEED_VERSION, "the seed must still be served"
-    assert meta["table_count"] == 20
+    assert meta["datasetVersion"] == SEED_VERSION, "the seed must still be served"
+    assert meta["tableCount"] == 20
     assert meta["degraded"], "a silent fallback is a stale dashboard: /api/meta must say so"
     assert broken.name in meta["degraded"]
 
@@ -648,5 +648,5 @@ def test_a_healthy_promoted_snapshot_is_not_reported_as_degraded(tmp_path, seed_
         meta = client.get("/api/meta").json()
 
     assert meta["degraded"] is None
-    assert meta["version"] == SEED_VERSION
-    assert meta["table_count"] == 20
+    assert meta["datasetVersion"] == SEED_VERSION
+    assert meta["tableCount"] == 20

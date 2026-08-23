@@ -1,84 +1,133 @@
-"""Reference-data endpoints. Every one reads from memory; none touches disk."""
+"""Reference-data endpoints. Every one reads from memory; none touches disk.
+
+Each handler does the same three things in the same order: pick the rows,
+normalise them into the shape `types.ts` declares, then window the result. The
+normalising happens *before* the search so `q` only ever matches text the caller
+can actually see -- searching the raw CSV would let a query hit a column that
+never appears in the response, which reads as a broken filter.
+"""
 
 from __future__ import annotations
 
-import re
-from typing import Any
-
 from fastapi import APIRouter, HTTPException, Query, Request
 
+from app import normalise
 from app.loader import TABLE_NAMES, Dataset
-from app.models import Meta, RawTable, RowList
+from app.models import ListResponse, Meta
 
 router = APIRouter(prefix="/api")
 
-
-def dataset(request: Request) -> Dataset:
-    return request.app.state.dataset
-
-
-@router.get("/meta", response_model=Meta)
-def meta(request: Request) -> Meta:
-    data = dataset(request)
-    return Meta(
-        version=data.version,
-        snapshot_date=data.snapshot_date,
-        source=data.source,
-        table_count=len(data.tables),
-        counts=data.counts,
-        tables=sorted(data.tables),
-        last_refresh=getattr(request.app.state, "last_refresh", None),
-        degraded=getattr(request.app.state, "degraded", None),
-    )
-
-
-@router.get("/tables/{name}", response_model=RawTable)
-def raw_table(
-    request: Request,
-    name: str,
-    limit: int = Query(default=0, ge=0, le=5000),
-    offset: int = Query(default=0, ge=0),
-) -> RawTable:
-    if name not in TABLE_NAMES:
-        raise HTTPException(status_code=404, detail=f"unknown table {name!r}")
-    rows = dataset(request).tables[name]
-    window = rows[offset : offset + limit] if limit else rows[offset:]
-    return RawTable(name=name, count=len(window), rows=window)
-
-
-GEAR_SLOTS = ["mask", "chest", "backpack", "gloves", "holster", "kneepads"]
+GEAR_SLOTS = list(normalise.GEAR_SLOTS)
 
 TALENT_TABLES = {"gear": "gearTalents", "weapon": "weaponTalents"}
 ATTRIBUTE_TABLES = {"gear": "gearAttributes", "weapon": "weaponAttributes"}
 MOD_TABLES = {"gear": "gearMods", "weapon": "weaponMods", "skill": "skillMods"}
 
 
-def _window(rows: list[dict], q: str | None, limit: int, offset: int) -> RowList:
-    """Search, then page. `total` is the number of matches, not the page size --
-    a frontend needs it to render pagination, and reporting the page length
-    there would silently make every result set look like one page."""
+def dataset(request: Request) -> Dataset:
+    return request.app.state.dataset
+
+
+# The frontend's mock handlers all default to these two, and it reads both back
+# off the envelope. `limit=0` still means "no ceiling" for the raw escape hatch
+# and for internal callers; the frontend never sends it.
+Limit = Query(default=100, ge=0, le=5000)
+Offset = Query(default=0, ge=0)
+
+
+def _window(rows: list[dict], q: str | None, limit: int, offset: int) -> ListResponse:
+    """Search, then page.
+
+    `total` is the number of matches, not the page size -- reporting the page
+    length there would silently make every result set look like one page.
+    """
     if q:
         needle = q.casefold()
-        rows = [r for r in rows if any(needle in str(v).casefold() for v in r.values())]
+        rows = [r for r in rows if _matches(r, needle)]
     total = len(rows)
     window = rows[offset : offset + limit] if limit else rows[offset:]
-    return RowList(count=len(window), total=total, rows=window)
+    return ListResponse(total=total, limit=limit, offset=offset, results=window)
 
 
-@router.get("/weapons", response_model=RowList)
+def _matches(row: dict, needle: str) -> bool:
+    for value in row.values():
+        if isinstance(value, str):
+            if needle in value.casefold():
+                return True
+        elif isinstance(value, list):
+            if any(isinstance(v, str) and needle in v.casefold() for v in value):
+                return True
+    return False
+
+
+def _gear_set_names(data: Dataset) -> frozenset[str]:
+    """The 27 brands.csv rows whose Type is "Gearset".
+
+    A gear piece's Brand column holds either a civilian brand or a gear set
+    name with nothing to tell them apart, and `types.ts` keeps the two in
+    different fields, so the split has to come from brands.csv.
+    """
+    return frozenset(
+        r.get("Brand", "") for r in data.tables["brands"] if r.get("Type", "") == "Gearset"
+    )
+
+
+# --- meta and the raw escape hatch ----------------------------------------
+
+
+@router.get("/meta", response_model=Meta)
+def meta(request: Request) -> Meta:
+    data = dataset(request)
+    return Meta(
+        datasetVersion=data.version,
+        tables=[{"name": name, "rows": count} for name, count in sorted(data.counts.items())],
+        snapshotDate=data.snapshot_date,
+        source=data.source,
+        tableCount=len(data.tables),
+        counts=data.counts,
+        unsupportedFields=normalise.UNSUPPORTED_FIELDS,
+        lastRefresh=getattr(request.app.state, "last_refresh", None),
+        degraded=getattr(request.app.state, "degraded", None),
+    )
+
+
+@router.get("/tables/{name}", response_model=ListResponse)
+def raw_table(
+    request: Request,
+    name: str,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    """The unnormalised rows, CSV headers and all.
+
+    The one endpoint that deliberately does not adapt: it exists so a column
+    that has no home in `types.ts` yet is still reachable without a code change.
+    """
+    if name not in TABLE_NAMES:
+        raise HTTPException(status_code=404, detail=f"unknown table {name!r}")
+    return _window([dict(r) for r in dataset(request).tables[name]], None, limit, offset)
+
+
+# --- weapons --------------------------------------------------------------
+
+
+@router.get("/weapons", response_model=ListResponse)
 def weapons(
     request: Request,
     type: str | None = None,
     quality: str | None = None,
     q: str | None = None,
-    limit: int = Query(default=0, ge=0, le=5000),
-    offset: int = Query(default=0, ge=0),
-) -> RowList:
-    rows = dataset(request).tables["weapon"]
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    rows = [normalise.weapon(r) for r in dataset(request).tables["weapon"]]
+    # Filtered on the normalised values, not the raw ones: the frontend only
+    # ever knows the names it was served, so `?quality=Standard` has to match
+    # the rows the list called Standard.
     if type:
-        rows = [r for r in rows if r.get("Weapon Type", "").casefold() == type.casefold()]
+        rows = [r for r in rows if r["type"].casefold() == type.casefold()]
     if quality:
-        rows = [r for r in rows if r.get("Quality", "").casefold() == quality.casefold()]
+        rows = [r for r in rows if r["quality"].casefold() == quality.casefold()]
     return _window(rows, q, limit, offset)
 
 
@@ -86,115 +135,217 @@ def weapons(
 def weapon(request: Request, name: str) -> dict:
     for row in dataset(request).tables["weapon"]:
         if row.get("Name", "").casefold() == name.casefold():
-            # Copy. This was the one endpoint handing a caller the shared row
-            # object itself; Dataset is only shallow-frozen, so anything that
-            # later wrote into the response would corrupt it for every request
-            # that followed. Its siblings all build fresh dicts already.
-            return dict(row)
+            return normalise.weapon(row)
     raise HTTPException(status_code=404, detail=f"unknown weapon {name!r}")
 
 
-@router.get("/gear/{slot}", response_model=RowList)
+# --- gear -----------------------------------------------------------------
+
+
+def _gear_rows(data: Dataset, slots: list[str]) -> list[dict]:
+    sets = _gear_set_names(data)
+    return [normalise.gear(r, slot, sets) for slot in slots for r in data.tables[slot]]
+
+
+@router.get("/gear", response_model=ListResponse)
+def all_gear(
+    request: Request,
+    quality: str | None = None,
+    brand: str | None = None,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    """Every slot at once, for the compare and lookup views that need the whole
+    catalogue in one call rather than six."""
+    return _filter_gear(_gear_rows(dataset(request), GEAR_SLOTS), quality, brand, q, limit, offset)
+
+
+@router.get("/gear/{slot}", response_model=ListResponse)
 def gear(
     request: Request,
     slot: str,
     quality: str | None = None,
     brand: str | None = None,
     q: str | None = None,
-    limit: int = Query(default=0, ge=0, le=5000),
-    offset: int = Query(default=0, ge=0),
-) -> RowList:
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
     if slot not in GEAR_SLOTS:
         raise HTTPException(status_code=404, detail=f"unknown gear slot {slot!r}")
-    rows = dataset(request).tables[slot]
+    return _filter_gear(_gear_rows(dataset(request), [slot]), quality, brand, q, limit, offset)
+
+
+def _filter_gear(
+    rows: list[dict],
+    quality: str | None,
+    brand: str | None,
+    q: str | None,
+    limit: int,
+    offset: int,
+) -> ListResponse:
     if quality:
-        rows = [r for r in rows if r.get("Quality", "").casefold() == quality.casefold()]
+        rows = [r for r in rows if r["quality"].casefold() == quality.casefold()]
     if brand:
-        rows = [r for r in rows if r.get("Brand", "").casefold() == brand.casefold()]
+        # Matches either field. One CSV column feeds both `brand` and
+        # `gearSet`, so `?brand=True Patriot` naming a gear set is a reasonable
+        # thing for a caller to do and returning nothing would look broken.
+        needle = brand.casefold()
+        rows = [
+            r
+            for r in rows
+            if r.get("brand", "").casefold() == needle or r.get("gearSet", "").casefold() == needle
+        ]
     return _window(rows, q, limit, offset)
 
 
-# brandsetBonuses keys on the brand name with the bonus TIER appended directly,
-# no separator: "5.11 Tactical0", "5.11 Tactical1", "5.11 Tactical2" against
-# brands.csv's plain "5.11 Tactical". Joining on the raw string matches 0 of 66
-# -- measured, this endpoint shipped that way and returned "bonuses": [] for
-# every brand with a 200 and a plausible total.
-#
-# The digit is the tier (0 = 1-piece, 1 = 2-piece, 2 = 3-piece), so it is data,
-# not noise: it is stripped for the join and kept as `tier` on each bonus.
-_BRAND_TIER = re.compile(r"^(?P<brand>.*?)(?P<tier>\d+)$")
+# --- brands and gear sets -------------------------------------------------
 
 
-def _brand_key(raw: str) -> tuple[str, int | None]:
-    match = _BRAND_TIER.match(raw)
-    if not match:
-        return raw, None
-    return match.group("brand"), int(match.group("tier"))
+@router.get("/brands", response_model=ListResponse)
+def brands(
+    request: Request,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    """Civilian brands only.
 
+    types.ts calls gear sets "distinct from civilian Brands", and
+    sets-compare.tsx concatenates this list with /api/gear-sets -- anything in
+    both is rendered twice, once under each heading.
 
-@router.get("/brands", response_model=RowList)
-def brands(request: Request, q: str | None = None) -> RowList:
+    "Exotic" and "Crafted" are pseudo-brands with no set bonuses at all, so an
+    empty ladder is correct for exactly those two and wrong for any other.
+    """
     data = dataset(request)
-    bonuses: dict[str, list[dict[str, Any]]] = {}
-    for row in data.tables["brandsetBonuses"]:
-        brand, tier = _brand_key(row.get("Brand", ""))
-        bonuses.setdefault(brand, []).append({**row, "tier": tier})
-    for entries in bonuses.values():
-        entries.sort(key=lambda e: (e["tier"] is None, e["tier"]))
-
-    # "Exotic" and "Crafted" are pseudo-brands with no set bonuses at all, so an
-    # empty list is correct for exactly those two and wrong for any other.
-    rows = [{**b, "bonuses": bonuses.get(b.get("Brand", ""), [])} for b in data.tables["brands"]]
-    return _window(rows, q, 0, 0)
+    bonuses = normalise.group_bonuses(data.tables["brandsetBonuses"])
+    rows = [
+        normalise.brand(b, bonuses.get(b.get("Brand", ""), []))
+        for b in data.tables["brands"]
+        if b.get("Type", "") != "Gearset"
+    ]
+    return _window(rows, q, limit, offset)
 
 
-@router.get("/skills", response_model=RowList)
-def skills(request: Request, q: str | None = None) -> RowList:
-    return _window(dataset(request).tables["skill"], q, 0, 0)
+@router.get("/gear-sets", response_model=ListResponse)
+def gear_sets(
+    request: Request,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    data = dataset(request)
+    bonuses = normalise.group_bonuses(data.tables["brandsetBonuses"])
+    rows = [
+        normalise.gear_set(b, bonuses.get(b.get("Brand", ""), []))
+        for b in data.tables["brands"]
+        if b.get("Type", "") == "Gearset"
+    ]
+    return _window(rows, q, limit, offset)
+
+
+# --- skills ---------------------------------------------------------------
+
+
+def _skills(data: Dataset) -> list[dict]:
+    """The 43 variant rows folded into the 12 base skills they belong to.
+
+    Grouping order follows the CSV so a refresh that appends rows does not
+    reshuffle the list; ids do not depend on it either way.
+    """
+    stats: dict[str, list[dict]] = {}
+    for row in data.tables["skillStats"]:
+        stats.setdefault(row.get("Skill Variant Name", "").strip().casefold(), []).append(row)
+
+    grouped: dict[str, list[dict]] = {}
+    for row in data.tables["skill"]:
+        grouped.setdefault(row.get("Item Name", ""), []).append(row)
+    return [normalise.skill(rows, stats) for rows in grouped.values()]
+
+
+@router.get("/skills", response_model=ListResponse)
+def skills(
+    request: Request,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    return _window(_skills(dataset(request)), q, limit, offset)
 
 
 @router.get("/skills/{skill_id}")
 def skill(request: Request, skill_id: str) -> dict:
-    data = dataset(request)
-    for row in data.tables["skill"]:
-        if row.get("Skill ID", "").casefold() == skill_id.casefold():
-            # skillStats keys on a display name, not on Skill ID or Variant.
-            # "Sticky Bomb" + "Burn" -> "Burn Sticky Bomb". Verified: this form
-            # matches 43/43 rows, joining on Variant alone matches 0, and
-            # joining Skill ID to "Skill Stat ID" appears to match 43/43 but is
-            # a coincidence -- Skill Stat ID is a row counter, so it would pair
-            # Sticky Bomb with Achilles Pulse. statsService.js:624 builds the
-            # same key: `${skill.variant} ${skill.itemName}`.
-            key = f"{row.get('Variant', '')} {row.get('Item Name', '')}".casefold()
-            stats = [
-                s for s in data.tables["skillStats"]
-                if s.get("Skill Variant Name", "").casefold() == key
-            ]
-            return {**row, "stats": stats}
+    """Addressed by the `id` the list serves, not by skill.csv's Skill ID.
+
+    Skill ID numbers the 43 *variants*, and a Skill is one of the 12 base
+    skills that own them, so there is no Skill ID that names one. The frontend
+    looks a skill up by the id it was handed anyway.
+    """
+    wanted = skill_id.casefold()
+    for entity in _skills(dataset(request)):
+        if entity["id"].casefold() == wanted:
+            return entity
     raise HTTPException(status_code=404, detail=f"unknown skill {skill_id!r}")
 
 
-@router.get("/specializations", response_model=RowList)
-def specializations(request: Request) -> RowList:
-    return _window(dataset(request).tables["specialization"], None, 0, 0)
+# --- specializations, talents, attributes, mods ---------------------------
 
 
-@router.get("/talents/{kind}", response_model=RowList)
-def talents(request: Request, kind: str, q: str | None = None) -> RowList:
+@router.get("/specializations", response_model=ListResponse)
+def specializations(
+    request: Request,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
+    """specialization.csv's 22 rows are 7 specs' stat lines, one row per stat,
+    so the entity is the distinct Name rather than the row."""
+    seen: list[str] = []
+    for row in dataset(request).tables["specialization"]:
+        name = row.get("Name", "")
+        if name and name not in seen:
+            seen.append(name)
+    return _window([normalise.specialization(n) for n in seen], q, limit, offset)
+
+
+@router.get("/talents/{kind}", response_model=ListResponse)
+def talents(
+    request: Request,
+    kind: str,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
     if kind not in TALENT_TABLES:
         raise HTTPException(status_code=404, detail=f"unknown talent kind {kind!r}")
-    return _window(dataset(request).tables[TALENT_TABLES[kind]], q, 0, 0)
+    rows = [normalise.talent(r, kind) for r in dataset(request).tables[TALENT_TABLES[kind]]]
+    return _window(rows, q, limit, offset)
 
 
-@router.get("/attributes/{kind}", response_model=RowList)
-def attributes(request: Request, kind: str) -> RowList:
+@router.get("/attributes/{kind}", response_model=ListResponse)
+def attributes(
+    request: Request,
+    kind: str,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
     if kind not in ATTRIBUTE_TABLES:
         raise HTTPException(status_code=404, detail=f"unknown attribute kind {kind!r}")
-    return _window(dataset(request).tables[ATTRIBUTE_TABLES[kind]], None, 0, 0)
+    rows = [normalise.attribute(r, kind) for r in dataset(request).tables[ATTRIBUTE_TABLES[kind]]]
+    return _window(rows, q, limit, offset)
 
 
-@router.get("/mods/{kind}", response_model=RowList)
-def mods(request: Request, kind: str, q: str | None = None) -> RowList:
+@router.get("/mods/{kind}", response_model=ListResponse)
+def mods(
+    request: Request,
+    kind: str,
+    q: str | None = None,
+    limit: int = Limit,
+    offset: int = Offset,
+) -> ListResponse:
     if kind not in MOD_TABLES:
         raise HTTPException(status_code=404, detail=f"unknown mod kind {kind!r}")
-    return _window(dataset(request).tables[MOD_TABLES[kind]], q, 0, 0)
+    rows = [normalise.mod(r, kind) for r in dataset(request).tables[MOD_TABLES[kind]]]
+    return _window(rows, q, limit, offset)
