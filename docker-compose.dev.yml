@@ -118,6 +118,19 @@ services:
       TD2_DATA_DIR: /srv/public/data
       TD2_SNAPSHOT_DIR: /srv/snapshots
       TD2_DB_PATH: /srv/db/builds.db
+      # The identity provider is fake until the owner registers a Discord app;
+      # the endpoints are already the real ones. Two switches, not one: mode
+      # alone does nothing without the explicit permission below, so a stray
+      # TD2_AUTH_MODE=mock in a copied environment cannot turn real identity
+      # off by itself.
+      TD2_AUTH_MODE: mock
+      TD2_ALLOW_MOCK_AUTH: "true"
+      # Generated per invocation by scripts/dev.sh, never stored -- the same
+      # derive-don't-store rule as DEV_BIND_IP. `:?` because compose renders an
+      # unset variable as the empty string, and an empty signing secret is a
+      # session anyone can forge; build_provider() refuses to start on one, so
+      # this only changes WHERE the failure is reported.
+      TD2_SESSION_SECRET: ${DEV_SESSION_SECRET:?run through ./scripts/dev.sh, which generates one}
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     ports:
       # Tailnet-only, same guard as the app service: an unset DEV_BIND_IP would
@@ -162,6 +175,16 @@ services:
       # container (`run --rm api-tests python -c "..."`), which would otherwise
       # inherit the root-owned default and fail the same way.
       TD2_SNAPSHOT_DIR: /tmp/snapshots-fallback
+      # create_app() refuses to build an unconfigured auth layer, and ~170
+      # tests across the suite call it. Set here so those tests keep testing
+      # what they are about; tests/test_auth.py clears all six TD2_AUTH*/
+      # TD2_DISCORD* variables per test so it cannot pass on this ambient
+      # value instead of on the code.
+      TD2_AUTH_MODE: mock
+      TD2_ALLOW_MOCK_AUTH: "true"
+      # A literal, unlike the `api` service above: it signs nothing that
+      # outlives a one-shot container, and the tests that care set their own.
+      TD2_SESSION_SECRET: test-secret
     entrypoint: []
     command: ["pytest", "-q"]
 

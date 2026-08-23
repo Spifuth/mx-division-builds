@@ -20,6 +20,14 @@ if [ -z "${DEV_BIND_IP}" ]; then
 fi
 
 export DEV_BIND_IP
+
+# Session signing key for the API. Generated per invocation rather than stored:
+# the repo is public, and a key in a tracked file is a key regardless of what
+# the comment beside it claims. Sessions not surviving a restart is the correct
+# trade for a dev service.
+DEV_SESSION_SECRET="${DEV_SESSION_SECRET:-$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')}"
+export DEV_SESSION_SECRET
+
 export HOST_UID="$(id -u)"
 export HOST_GID="$(id -g)"
 

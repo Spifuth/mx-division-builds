@@ -9,6 +9,11 @@ and still fails the boot; a malformed *promoted snapshot* does not, because
 LIVE would still point at it on the next restart and the service would stay
 down forever over data it already has a known-good replacement for. That case
 falls back to the seed and says so on /api/meta.
+
+Auth runs the other way. build_provider() is called from create_app() rather
+than from the lifespan, so a misconfigured auth layer kills the process before
+it can listen: serving with the wrong identity provider is not a degraded mode,
+it is a different service wearing this one's name.
 """
 
 from __future__ import annotations
@@ -19,10 +24,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth import build_provider
 from app.config import get_settings
 from app.loader import DatasetError, load_dataset
 from app.refresh import describe_error
 from app.routes import admin as admin_routes
+from app.routes import auth as auth_routes
 from app.routes import data as data_routes
 from app.snapshots import SnapshotStore
 from app.sources.buildstation import BuildstationSource
@@ -81,6 +88,13 @@ def create_app() -> FastAPI:
     app = FastAPI(title="TD2 Build API", lifespan=lifespan)
     app.state.settings = settings
 
+    # Before anything else, and deliberately not in the lifespan. A
+    # misconfigured auth layer must stop the process from existing, not start
+    # it and then answer every request the wrong way. AuthConfigError raised
+    # here propagates out of `app = create_app()` at import time, so uvicorn
+    # exits non-zero and never binds a socket.
+    app.state.auth = build_provider(settings)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -88,10 +102,35 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
+        # Without this the browser refuses to let JS read X-Auth-Mode on a
+        # cross-origin response, and the frontend is cross-origin by design
+        # (localhost:3000, *.vercel.app). A warning only curl can see is not a
+        # warning for the person it is meant for.
+        expose_headers=["X-Auth-Mode"],
     )
+
+    @app.middleware("http")
+    async def stamp_auth_mode(request, call_next):
+        """Say which provider answered, on every response.
+
+        The mock is only dangerous while it is invisible, so this is
+        unconditional: 200s, 204s, redirects, 404s no route matched, 422s and
+        CORS preflights all carry it. Measured.
+
+        One response does not, and it is worth naming rather than implying
+        otherwise: an unhandled exception unwinds past this middleware and the
+        500 is written by Starlette's ServerErrorMiddleware, which sits above
+        the whole stack. Adding a global Exception handler to close that gap
+        would change every endpoint's error body for a case that cannot be a
+        silent authentication -- a crash is not somebody being let in.
+        """
+        response = await call_next(request)
+        response.headers["X-Auth-Mode"] = request.app.state.auth.mode
+        return response
 
     app.include_router(data_routes.router)
     app.include_router(admin_routes.router)
+    app.include_router(auth_routes.router)
 
     @app.get("/api/health")
     def health() -> dict:
