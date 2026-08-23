@@ -95,8 +95,10 @@ mock-minted id is prefixed `mock:`, which no real Discord snowflake can ever
 be (a snowflake is decimal digits only), so every mock-owned row stays
 findable in one query when real Discord lands. `GET /api/auth/callback`
 answers **404** in mock mode (there is nothing to call back to) and **501**
-in Discord mode (the token exchange is not implemented yet — see "Deliberately
-not in scope" below).
+in Discord mode: the Discord token exchange cannot be tested without a real
+registered application and real credentials, and untested OAuth code shipped
+as if it worked is worse than an honest 501 — so, same reasoning as
+`/api/compute`, it is stubbed rather than shipped untested.
 
 The session itself is a signed, `HttpOnly`, `Secure`, `SameSite=Lax` cookie
 (`td2_session`), 7-day expiry. `POST /api/auth/logout` clears it.
