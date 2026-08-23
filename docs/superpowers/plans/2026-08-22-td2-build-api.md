@@ -1022,6 +1022,155 @@ git commit -m "feat: the reference-data endpoints v0 is built against"
 
 ---
 
+## Task 3b: Match the shapes the frontend actually expects
+
+**Files:**
+- Modify: `api/app/models.py`, `api/app/routes/data.py`
+- Create: `api/app/normalise.py`, `api/tests/test_contract.py`
+
+**Why this exists:** Task 3 froze the *paths* and left the response *shapes*
+unspecified. The frontend filled that gap with `lib/types.ts` — camelCase,
+numbers as numbers, a stable `id` on every entity — and its choice is better
+than raw CSV headers with spaces in them. The API adapts, not the frontend.
+The authoritative copy of the target is committed alongside this plan at
+`docs/superpowers/specs/2026-08-23-frontend-contract-types.ts`. **Read it. It
+is the spec for this task; everything below is how to satisfy it from the CSVs.**
+
+**Interfaces:**
+- Produces: `api/app/normalise.py` with one function per entity —
+  `weapon(row)`, `gear(row, slot)`, `brand(row, bonuses)`, `gear_set(row, bonuses)`,
+  `skill(row, stats)`, `specialization(row)`, `talent(row, category)`,
+  `attribute(row, category)`, `mod(row, category)` — each returning a plain dict
+  matching the corresponding TypeScript interface.
+
+### The envelope
+
+Every list endpoint returns `{total, limit, offset, results}`, replacing
+`{count, total, rows}`. `total` stays the match count. `limit` and `offset` echo
+back what was requested, defaulting to 100 and 0 — the frontend reads all four
+(`lib/fetcher.ts`, `ListResponse<T>`).
+
+### Identity
+
+Every entity needs a stable `id`. Item names are unique within a table (76 masks,
+76 distinct names — measured), so derive deterministically: lowercase, spaces and
+punctuation to hyphens, prefixed by kind. `mask` + `Providence Vigilance Mask`
+becomes `mask-providence-vigilance-mask`. It must be stable across a data
+refresh, because a saved build stores these and nothing else — `BuildLoadout` is
+twelve `string | null` item ids.
+
+### Field mapping, weapons
+
+| Target | Source | Note |
+|---|---|---|
+| `name` | `Name` | |
+| `type` | `Weapon Type` | |
+| `quality` | `Quality` | |
+| `damage` | `Base Damage` | to number; the data has decimals like `47364.5` |
+| `rpm` | `RPM` | to number |
+| `magazine` | `Mag Size` | to number |
+| `optimalRange` | `Optimal Range` | to number |
+| `talents` | `Talent` | to a list; single value today, so a one-element list |
+| `image` | `Icon` | omit when empty |
+
+### Field mapping, gear
+
+| Target | Source | Note |
+|---|---|---|
+| `name` | `Item Name` | |
+| `slot` | the table it came from | |
+| `quality` | `Quality` | |
+| `brand` | `Brand` | omit when empty |
+| `gearSet` | `Brand`, when that brand's `Type` in `brands.csv` is `Gearset` | 27 of 66 brands are gear sets |
+| `coreAttribute` | `Core` | |
+| `attributeSlots` | count of non-empty `Attribute N` columns | holster has 3, others 2 |
+| `talent` | `Talent` | omit when empty |
+| `mod` | `Mod` | true when non-empty |
+| `image` | `Icon` | omit when empty |
+
+### The fields the data cannot fill — do NOT invent them
+
+Measured against the real CSVs:
+
+- **Weapon:** `accuracy`, `stability`, `handling`, `brand` — no such columns exist.
+- **GearPiece:** `armor` — no such column.
+- **Specialization:** `signatureWeapon`, `description`, `perks` — `specialization.csv` is `Name,Stat,Val` only.
+- **AttributeCap:** `min` and `unit` — the data has `Max` only.
+- **Skill:** `description` — `skill.csv` has `Desc`, so this one IS fillable; check before assuming.
+
+These are **required** fields in the TypeScript interfaces, so omitting them
+breaks the frontend's types. Return `0` for required numerics and `""` for
+required strings — and then make the lie discoverable rather than silent:
+
+`/api/meta` grows an `unsupportedFields` map, e.g.
+`{"weapon": ["accuracy", "stability", "handling", "brand"], "gear": ["armor"], ...}`,
+so the UI can grey those out instead of rendering a confident zero. A zero the
+frontend cannot distinguish from real data is the same class of defect as a
+green check that verifies nothing.
+
+### Two endpoints that do not exist yet
+
+- `GET /api/gear` — all six slots concatenated, same `GearPiece` shape, for the
+  compare and lookup views.
+- `GET /api/gear-sets` — derived from `brands.csv` rows whose `Type` is
+  `Gearset`, joined to `brandsetBonuses` exactly as `/api/brands` already does.
+  Shape is `GearSet`, which is structurally identical to `Brand`.
+
+Both take `limit`, `offset`, `q`.
+
+### `/api/meta` changes shape
+
+From `{version, snapshot_date, source, table_count, counts, tables, last_refresh}`
+to `{datasetVersion, tables: [{name, rows}], ...}`. **Keep** `lastRefresh` and the
+degraded-snapshot reporting from Task 5 — the frontend ignores extra fields, and
+losing them would undo a resilience feature. Only `datasetVersion` and `tables`
+are load-bearing for the UI.
+
+- [ ] **Step 1: Write the contract test first**
+
+Create `api/tests/test_contract.py`. For each entity, assert the response
+satisfies the TypeScript interface: every required key present, numbers actually
+`int`/`float` rather than `str`, `id` present and stable, and the envelope having
+exactly `total`, `limit`, `offset`, `results`. Assert `id` is stable by building
+it twice from the same row and comparing.
+
+- [ ] **Step 2: Run it and watch it fail**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest tests/test_contract.py -v`
+Expected: failures on the envelope keys and on every camelCase field.
+
+- [ ] **Step 3: Write `api/app/normalise.py`**
+
+One function per entity, per the mapping tables above. Coerce numbers with a
+helper that returns `0` for an unparseable or empty cell rather than raising —
+CSV cells are frequently blank, and a blank `Mag Size` must not 500 the endpoint.
+
+- [ ] **Step 4: Rewrite the endpoints to use it**
+
+Every list endpoint returns the new envelope. `/api/weapons/{name}` and
+`/api/skills/{id}` return a single normalised object. Add `/api/gear` and
+`/api/gear-sets`.
+
+- [ ] **Step 5: Run the whole suite**
+
+Run: `./scripts/dev.sh --profile tools run --rm api-tests pytest -v`
+Existing tests that assert `rows` will fail — update them to `results`. Do not
+delete a test to make it pass.
+
+- [ ] **Step 6: Prove it against the real frontend types**
+
+For each of the 17 routes the frontend calls, curl the live API and check the
+response against the interface in the committed `types.ts`. Paste the output.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add api/ docs/
+git commit -m "feat: serve the shapes the frontend is built against"
+```
+
+---
+
 ## Task 4: Snapshot store and the source interface
 
 **Files:**
