@@ -39,6 +39,19 @@ class Settings(BaseSettings):
     # v0 previews run on vercel.app subdomains; without these the browser
     # blocks every call and the failure looks like the API is down.
     cors_origins: list[str] = ["http://localhost:3000", "https://v0.dev"]
+    # DANGER, read before widening. This pairs with allow_credentials=True, and
+    # since Task 6 the credential is a session cookie rather than nothing. The
+    # regex trusts EVERY *.vercel.app deployment, and anyone can create one.
+    #
+    # What holds it today is SameSite=lax on the cookie: a cross-site request
+    # from an attacker's Vercel app does not carry it, so the permissive origin
+    # cannot be cashed in. Setting SameSite=None to make a cross-site frontend
+    # work -- the obvious next move when the real frontend deploys -- removes
+    # that and turns any attacker-controlled *.vercel.app page into a
+    # credentialed reader of this API.
+    #
+    # If you need cross-site: pin this to the ONE deployment origin first, then
+    # change SameSite. Never both at once. test_cors_credentials_guard pins it.
     cors_origin_regex: str = r"https://.*\.vercel\.app"
 
     auth_mode: str = "discord"

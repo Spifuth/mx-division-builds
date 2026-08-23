@@ -141,6 +141,15 @@ services:
       # so change all three together or the publish forwards to a dead port
       # while the container logs a healthy startup.
       - "${DEV_BIND_IP:?DEV_BIND_IP unset - use ./scripts/dev.sh; refusing to bind all interfaces}:8000:8000"
+      # Loopback as well, and this one is load-bearing rather than convenience.
+      # The session cookie is Secure, so a browser will only store it from a
+      # trustworthy origin. A tailnet IP over plain http is not one -- but
+      # http://localhost IS, by the secure-context rules every browser follows.
+      # Without this line no browser can complete a login at all, and the
+      # symptom is silent: the request 200s and no session appears.
+      # 127.0.0.1 only, never 0.0.0.0 -- this must not widen the exposure the
+      # line above deliberately restricts.
+      - "127.0.0.1:8000:8000"
 
   api-tests:
     build:

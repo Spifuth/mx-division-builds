@@ -31,6 +31,21 @@ from app.auth import (
 from app.config import Settings
 from app.main import create_app
 
+
+def _mock_app():
+    """An app in mock mode, built from explicit settings rather than the ambient
+    environment so this helper cannot be perturbed by another test's monkeypatch."""
+    import os
+
+    for key, value in (
+        ("TD2_AUTH_MODE", "mock"),
+        ("TD2_ALLOW_MOCK_AUTH", "true"),
+        ("TD2_SESSION_SECRET", "test-secret"),
+    ):
+        os.environ[key] = value
+    return create_app()
+
+
 AUTH_ENV = (
     "TD2_AUTH_MODE",
     "TD2_ALLOW_MOCK_AUTH",
@@ -479,3 +494,93 @@ def test_there_is_no_callback_in_mock_mode(monkeypatch):
     _mock_env(monkeypatch)
     with TestClient(create_app(), base_url="https://testserver") as client:
         assert client.get("/api/auth/callback", params={"code": "x"}).status_code == 404
+
+
+def test_enabling_the_mock_logs_a_warning(monkeypatch, caplog):
+    """Of the five ways mock mode announces itself, this was the only one no
+    test held down -- delete the log.warning and all 202 tests stayed green.
+    It is also the only one an operator reading container logs would ever see,
+    which makes it the one that matters when nobody is looking at /api/meta.
+    """
+    import logging
+
+    monkeypatch.setenv("TD2_AUTH_MODE", "mock")
+    monkeypatch.setenv("TD2_ALLOW_MOCK_AUTH", "true")
+    monkeypatch.setenv("TD2_SESSION_SECRET", "test-secret")
+
+    with caplog.at_level(logging.WARNING, logger="td2-api.auth"):
+        create_app()
+
+    warnings = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
+    assert any("MOCK" in m.upper() for m in warnings), (
+        f"enabling mock auth must say so at WARNING; got {warnings}"
+    )
+
+
+def test_discord_login_mints_nothing_even_when_handed_an_identity():
+    """The highest-value assertion on this surface, and it was missing: the
+    mock's `?as=` parameter must be inert under discord mode. A `?as=admin`
+    that quietly worked would be a complete authentication bypass, and the
+    existing discord-login test called the route with no parameter at all."""
+    import os
+
+    for key, value in (
+        ("TD2_AUTH_MODE", "discord"),
+        ("TD2_ALLOW_MOCK_AUTH", "false"),
+        ("TD2_SESSION_SECRET", "test-secret"),
+        ("TD2_DISCORD_CLIENT_ID", "cid"),
+        ("TD2_DISCORD_CLIENT_SECRET", "csecret"),
+        ("TD2_DISCORD_REDIRECT_URI", "https://example.test/api/auth/callback"),
+    ):
+        os.environ[key] = value
+    try:
+        with TestClient(create_app(), base_url="https://testserver") as client:
+            response = client.get(
+                "/api/auth/login", params={"as": "admin"}, follow_redirects=False
+            )
+            assert "set-cookie" not in {k.lower() for k in response.headers}
+            assert client.get("/api/auth/me").json()["user"] is None
+    finally:
+        for key in (
+            "TD2_DISCORD_CLIENT_ID",
+            "TD2_DISCORD_CLIENT_SECRET",
+            "TD2_DISCORD_REDIRECT_URI",
+        ):
+            os.environ.pop(key, None)
+
+
+def test_a_wildcard_cors_origin_and_a_cross_site_cookie_never_ship_together():
+    """The two settings are individually defensible and jointly a bypass.
+
+    allow_credentials=True with a `*.vercel.app` regex trusts every deployment
+    anyone can create; SameSite=lax is the only reason that cannot be cashed in,
+    because the attacker's page cannot make the browser attach the cookie.
+    Relaxing SameSite to None -- the obvious move when the real frontend
+    deploys cross-site -- removes the one thing holding it.
+
+    This test exists to fail at that exact moment, rather than after.
+    """
+    from app.auth import SESSION_COOKIE
+    from app.config import Settings
+
+    settings = Settings(session_secret="x")
+    wildcard = ".*" in settings.cors_origin_regex or "*" in settings.cors_origins
+
+    with TestClient(_mock_app(), base_url="https://testserver") as client:
+        response = client.get(
+            "/api/auth/login", params={"as": "tester"}, follow_redirects=False
+        )
+        cookie = response.headers.get("set-cookie", "")
+
+    assert SESSION_COOKIE in cookie, "no cookie means this test is not looking at anything"
+    same_site = next(
+        (p.split("=", 1)[1].strip().lower() for p in cookie.split(";") if "samesite" in p.lower()),
+        None,
+    )
+
+    if wildcard:
+        assert same_site == "lax", (
+            "CORS still trusts a wildcard origin with credentials, so the session "
+            f"cookie must stay SameSite=lax; it is now {same_site!r}. Pin "
+            "cors_origin_regex to the single deployment origin BEFORE relaxing this."
+        )
