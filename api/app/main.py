@@ -32,6 +32,7 @@ from app.refresh import describe_error
 from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
 from app.routes import builds as builds_routes
+from app.routes import compute as compute_routes
 from app.routes import data as data_routes
 from app.snapshots import SnapshotStore
 from app.sources.buildstation import BuildstationSource
@@ -141,6 +142,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_routes.router)
     app.include_router(auth_routes.router)
     app.include_router(builds_routes.router)
+    app.include_router(compute_routes.router)
 
     @app.get("/api/health")
     def health() -> dict:
