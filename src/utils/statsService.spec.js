@@ -81,11 +81,24 @@ describe("getReloadSpeedModifier", () => {
   it("returns the base stat when there is no magazine", () => {
     expect(statsService.getReloadSpeedModifier(null, 10)).toBe(10);
   });
+  // Spelled the way the shipped data spells it. These two used to say
+  // "Reload Speed %", which no magazine row does, so they certified dead code.
   it("adds a positive magazine reload bonus", () => {
-    expect(statsService.getReloadSpeedModifier({ pos: "Reload Speed %", valPos: "15" }, 10)).toBe(25);
+    expect(statsService.getReloadSpeedModifier({ pos: "Reload Speed", valPos: "15" }, 10)).toBe(25);
   });
   it("adds a negative magazine reload penalty", () => {
-    expect(statsService.getReloadSpeedModifier({ neg: "Reload Speed %", valNeg: "-20" }, 10)).toBe(-10);
+    expect(statsService.getReloadSpeedModifier({ neg: "Reload Speed", valNeg: "-20" }, 10)).toBe(-10);
+  });
+  it("recognises every magazine reload stat the shipped data carries", () => {
+    // The guard the two tests above lacked: if the data ever renames the
+    // stat again, this goes red instead of the bonus silently vanishing.
+    const reloadMags = weaponMods.filter(
+      (m) => m.Slot === "Magazine" && /reload/i.test(`${m.pos} ${m.neg}`),
+    );
+    expect(reloadMags.length, "the data must still have magazine reload rows").toBeGreaterThan(0);
+    for (const m of reloadMags) {
+      expect(statsService.getReloadSpeedModifier(m), m.Name).not.toBe(0);
+    }
   });
 });
 
@@ -177,9 +190,9 @@ describe("getWeaponStats — reload speed, against shipped data", () => {
     withGear();
     const magazine = mod("Short Spring .45 ACP Mag");
     expect(magazine.pos).toBe("Reload Speed");
-    // CURRENT (wrong): 2000 -- the bonus never applies.
+    // Was 2000: the bonus never applied.
     expect(statsService.getWeaponStats(rifle({ magazine }), "Primary").reloadSpeed)
-      .toBe(2000);
+      .toBeCloseTo(2000 / 1.2, 6);
   });
 
   it("applies a magazine's reload penalty", () => {
@@ -189,8 +202,8 @@ describe("getWeaponStats — reload speed, against shipped data", () => {
     expect(magazine.neg).toBe("Reload Speed");
     const s = statsService.getWeaponStats(rifle({ magazine }), "Primary");
     expect(s.totalMagSize).toBe(50);
-    // CURRENT (wrong): 2000 -- the penalty never applies either.
-    expect(s.reloadSpeed).toBe(2000);
+    // Was 2000: the penalty never applied either.
+    expect(s.reloadSpeed).toBeCloseTo(2000 / 0.9, 6);
   });
 
   it("counts gear reload speed once", () => {
