@@ -406,9 +406,11 @@ class StatsService {
 			stats.Offensive,
 			STATS_ENUM.RELOAD_SPEED_PERC
 		);
+		// The magazine's contribution only. Gear "Reload Speed %" is already in
+		// the getStatValueFromGunAndGear sum above; seeding this call with it too
+		// counted every point of gear reload speed twice.
 		reloadSpeedModifier += this.getReloadSpeedModifier(
-			weapon[WEAPON_PROP_ENUM.MAGAZINE],
-			stats.Offensive[STATS_ENUM.RELOAD_SPEED_PERC]
+			weapon[WEAPON_PROP_ENUM.MAGAZINE]
 		);
 		weaponStats.reloadSpeed = this.calcReloadSpeed(
 			weapon[WEAPON_PROP_ENUM.RELOAD_SPEED],

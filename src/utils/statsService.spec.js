@@ -210,8 +210,17 @@ describe("getWeaponStats — reload speed, against shipped data", () => {
     // Fenris Group AB, Ongoing Directive and Umbra Initiative each give
     // +30 Reload Speed % (public/data/brandsetBonuses.csv).
     withGear({ [STATS_ENUM.RELOAD_SPEED_PERC]: 30 });
-    // CURRENT (wrong): 2000 / 1.6 = 1250 -- the 30 is counted twice.
-    expect(statsService.getWeaponStats(rifle(), "Primary").reloadSpeed).toBe(1250);
+    // Was 2000 / 1.6 = 1250: the 30 was counted twice.
+    expect(statsService.getWeaponStats(rifle(), "Primary").reloadSpeed)
+      .toBeCloseTo(2000 / 1.3, 6);
+  });
+
+  it("adds gear and magazine reload together, each once", () => {
+    // +30 from gear and +20 from Short Spring: 2000 / 1.5.
+    withGear({ [STATS_ENUM.RELOAD_SPEED_PERC]: 30 });
+    const magazine = mod("Short Spring .45 ACP Mag");
+    expect(statsService.getWeaponStats(rifle({ magazine }), "Primary").reloadSpeed)
+      .toBeCloseTo(2000 / 1.5, 6);
   });
 
   it("counts a weapon attribute's reload speed once", () => {
