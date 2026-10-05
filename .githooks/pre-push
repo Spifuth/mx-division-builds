@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# GitKeeper pre-push hook
+# Runs: gitkeeper check --scope push
+#
+
+set -euo pipefail
+
+# Find gitkeeper
+GITKEEPER="gitkeeper"
+if [[ ! -x "$GITKEEPER" ]] && ! command -v gitkeeper &>/dev/null; then
+    if [[ -x "$(git rev-parse --show-toplevel)/gitkeeper" ]]; then
+        GITKEEPER="$(git rev-parse --show-toplevel)/gitkeeper"
+    else
+        echo "Error: gitkeeper not found" >&2
+        exit 1
+    fi
+fi
+
+exec "$GITKEEPER" check --scope push
