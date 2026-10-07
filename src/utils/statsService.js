@@ -38,6 +38,10 @@ let stats = new Stats();
 const keyBy = (array, key) =>
 	(array || []).reduce((r, x) => ({ ...r, [key ? x[key] : x]: x }), {});
 
+// The weapon-mod table's name for reload speed. Not STATS_ENUM.RELOAD_SPEED_PERC:
+// mods name their stats without the "%" (cf. "Critical Hit Damage", "Rate of Fire").
+const MOD_RELOAD_SPEED = "Reload Speed";
+
 const statTypes = {
 	O: "Offensive",
 	D: "Defensive",
@@ -402,9 +406,11 @@ class StatsService {
 			stats.Offensive,
 			STATS_ENUM.RELOAD_SPEED_PERC
 		);
+		// The magazine's contribution only. Gear "Reload Speed %" is already in
+		// the getStatValueFromGunAndGear sum above; seeding this call with it too
+		// counted every point of gear reload speed twice.
 		reloadSpeedModifier += this.getReloadSpeedModifier(
-			weapon[WEAPON_PROP_ENUM.MAGAZINE],
-			stats.Offensive[STATS_ENUM.RELOAD_SPEED_PERC]
+			weapon[WEAPON_PROP_ENUM.MAGAZINE]
 		);
 		weaponStats.reloadSpeed = this.calcReloadSpeed(
 			weapon[WEAPON_PROP_ENUM.RELOAD_SPEED],
@@ -590,11 +596,14 @@ class StatsService {
 
 	getReloadSpeedModifier(magazine, statsReloadSpeed) {
 		let modifier = statsReloadSpeed || 0;
+		// Weapon mods spell it "Reload Speed" (public/data/weaponMods.csv); the
+		// "%" form is the gear/SHD stat (STATS_ENUM.RELOAD_SPEED_PERC). Matching
+		// the gear spelling here meant no magazine reload bonus ever applied.
 		if (!magazine) {
 			// boh
-		} else if (magazine.pos == "Reload Speed %") {
+		} else if (magazine.pos == MOD_RELOAD_SPEED) {
 			modifier += Number(magazine.valPos);
-		} else if (magazine.neg == "Reload Speed %") {
+		} else if (magazine.neg == MOD_RELOAD_SPEED) {
 			modifier += Number(magazine.valNeg);
 		}
 		return modifier;
